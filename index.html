@@ -70,6 +70,12 @@
   .read-box{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:12px;padding:12px 14px}
   .foot{text-align:center;color:var(--muted);font-size:11px;margin-top:20px;line-height:1.5}
   .hidden{display:none}
+  .pbar-row{margin-top:12px}
+  .pbar-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px}
+  .pbar-lbl b{color:var(--text);font-weight:700}
+  .pbar-bg{width:100%;height:8px;background:var(--bg);border-radius:6px;overflow:hidden}
+  .pbar-fill{height:100%;border-radius:6px;transition:width .4s}
+  .btn-block{width:100%;padding:13px}
 </style>
 </head>
 <body>
@@ -116,6 +122,36 @@
       <input id="newTask" placeholder="Nouvelle tâche…" />
       <button class="btn btn-amber" id="addBtn">+</button>
     </div>
+  </div>
+
+  <!-- Period stats -->
+  <div class="card">
+    <div class="card-h"><span class="dot" style="background:var(--green)"></span>Semaine · mois</div>
+    <div class="stats">
+      <div>
+        <div class="stat-num" id="streakCur">0</div>
+        <div class="stat-lbl">série actuelle 🔥</div>
+      </div>
+      <div>
+        <div class="stat-num" id="streakBest">0</div>
+        <div class="stat-lbl">meilleure série</div>
+      </div>
+    </div>
+    <div class="pbar-row">
+      <div class="pbar-lbl">Cette semaine <b id="weekPct">0%</b></div>
+      <div class="pbar-bg"><div class="pbar-fill" id="weekBarFill" style="width:0%;background:var(--amber)"></div></div>
+    </div>
+    <div class="pbar-row">
+      <div class="pbar-lbl">Ce mois <b id="monthPct">0%</b></div>
+      <div class="pbar-bg"><div class="pbar-fill" id="monthBarFill" style="width:0%;background:var(--green)"></div></div>
+    </div>
+  </div>
+
+  <!-- Reminder -->
+  <div class="card" id="reminderCard">
+    <div class="card-h"><span class="dot" style="background:var(--amber)"></span>Rappel du soir</div>
+    <div class="sub" id="reminderSub">Une notification à 21h pour cocher tes tâches avant la coupure d'écran.</div>
+    <button class="btn btn-amber btn-block" id="reminderBtn">Activer les rappels</button>
   </div>
 
   <!-- Weight -->
@@ -199,7 +235,7 @@ function renderTasks(){
       d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==t.id);save("tracker:template",tasks);renderTasks();renderScore();};
     }else{
       d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label">${t.label}</span>`;
-      d.onclick=()=>{done[t.id]=!done[t.id];save("tracker:day:"+today(),done);renderTasks();renderScore();renderHist();};
+      d.onclick=()=>{done[t.id]=!done[t.id];save("tracker:day:"+today(),done);renderTasks();renderScore();renderHist();renderPeriodStats();};
     }
     el.appendChild(d);
   });
@@ -239,6 +275,101 @@ function renderReading(){
   document.getElementById("bookInput").value=reading.book||"";
 }
 
+const DAY_MS=86400000;
+function dateFromKey(k){const[y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d);}
+function startOfWeek(d){const dt=new Date(d);const dow=(dt.getDay()+6)%7;dt.setDate(dt.getDate()-dow);dt.setHours(0,0,0,0);return dt;}
+function startOfMonth(d){return new Date(d.getFullYear(),d.getMonth(),1);}
+function getAllDoneRecords(){
+  const out={};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&k.startsWith("tracker:day:"))out[k.slice(12)]=load(k,{});
+  }
+  out[today()]=done;
+  return out;
+}
+function dayRatio(doneObj){if(!tasks.length)return 0;return tasks.filter(t=>doneObj[t.id]).length/tasks.length;}
+function isPerfectDay(doneObj){return tasks.length>0&&tasks.every(t=>doneObj[t.id]);}
+function periodAvg(startDate,records){
+  const now=new Date();now.setHours(0,0,0,0);
+  let sum=0,count=0;
+  for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1)){
+    sum+=dayRatio(records[keyFor(d)]||{});count++;
+  }
+  return count?sum/count:0;
+}
+function computeStreaks(records){
+  let cur=0;
+  let d=new Date();d.setHours(0,0,0,0);
+  if(!isPerfectDay(records[keyFor(d)]||{}))d.setDate(d.getDate()-1);
+  while(isPerfectDay(records[keyFor(d)]||{})){cur++;d.setDate(d.getDate()-1);}
+  const perfectDates=Object.keys(records).filter(k=>isPerfectDay(records[k])).sort();
+  let best=0,run=0,prev=null;
+  for(const k of perfectDates){
+    const dt=dateFromKey(k);
+    run=(prev&&(dt-prev)/DAY_MS===1)?run+1:1;
+    best=Math.max(best,run);prev=dt;
+  }
+  return{current:cur,best:Math.max(best,cur)};
+}
+function renderPeriodStats(){
+  const records=getAllDoneRecords();
+  const now=new Date();
+  const weekPct=Math.round(periodAvg(startOfWeek(now),records)*100);
+  const monthPct=Math.round(periodAvg(startOfMonth(now),records)*100);
+  const{current,best}=computeStreaks(records);
+  document.getElementById("weekPct").textContent=weekPct+"%";
+  document.getElementById("monthPct").textContent=monthPct+"%";
+  document.getElementById("weekBarFill").style.width=weekPct+"%";
+  document.getElementById("monthBarFill").style.width=monthPct+"%";
+  document.getElementById("streakCur").textContent=current;
+  document.getElementById("streakBest").textContent=best;
+}
+
+const VAPID_PUBLIC_KEY="BH-IbiXBYm_V4K8ZsXdItoqqVeLntLETs6t9atSpRpSs88LXjBDisam8ysuxAds_a3JLiun1rNHBIpfeCWgk6w8";
+const PUSH_API="https://discipline.178-105-186-53.sslip.io";
+function urlBase64ToUint8Array(base64String){
+  const padding="=".repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,"+").replace(/_/g,"/");
+  const rawData=atob(base64);
+  return Uint8Array.from([...rawData].map(c=>c.charCodeAt(0)));
+}
+function setReminderBtnState(on){
+  const btn=document.getElementById("reminderBtn");
+  btn.textContent=on?"Rappels activés ✓ (touche pour désactiver)":"Activer les rappels";
+  btn.style.background=on?"var(--green)":"var(--amber)";
+}
+async function initReminder(){
+  const card=document.getElementById("reminderCard");
+  const sub=document.getElementById("reminderSub");
+  const btn=document.getElementById("reminderBtn");
+  if(!("serviceWorker"in navigator)||!("PushManager"in window)){card.classList.add("hidden");return;}
+  const isStandalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+  if(!isStandalone){
+    sub.textContent="Ajoute d'abord l'app à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis reviens ici pour activer les rappels.";
+    btn.classList.add("hidden");
+    return;
+  }
+  const reg=await navigator.serviceWorker.ready;
+  const existing=await reg.pushManager.getSubscription();
+  setReminderBtnState(!!existing);
+  btn.onclick=async()=>{
+    const reg=await navigator.serviceWorker.ready;
+    const current=await reg.pushManager.getSubscription();
+    if(current){
+      await current.unsubscribe();
+      fetch(PUSH_API+"/unsubscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({endpoint:current.endpoint})}).catch(()=>{});
+      setReminderBtnState(false);
+      return;
+    }
+    const perm=await Notification.requestPermission();
+    if(perm!=="granted"){sub.textContent="Notifications refusées — active-les dans Réglages iOS > Notifications > Discipline.";return;}
+    const newSub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
+    await fetch(PUSH_API+"/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(newSub)});
+    setReminderBtnState(true);
+  };
+}
+
 document.getElementById("editBtn").onclick=()=>{editMode=!editMode;document.getElementById("editBtn").textContent=editMode?"Terminé":"Modifier";document.getElementById("addRow").classList.toggle("hidden",!editMode);renderTasks();};
 document.getElementById("addBtn").onclick=addTask;
 document.getElementById("newTask").addEventListener("keydown",e=>{if(e.key==="Enter")addTask();});
@@ -249,13 +380,17 @@ document.getElementById("wInput").addEventListener("keydown",e=>{if(e.key==="Ent
 function logW(){const i=document.getElementById("wInput");const kg=parseFloat(i.value.replace(",","."));if(!kg||kg<30||kg>200)return;weights.push({date:today(),kg});save("tracker:weights",weights);i.value="";renderWeight();}
 
 document.getElementById("bookInput").addEventListener("blur",()=>{reading.book=document.getElementById("bookInput").value.trim();save("tracker:reading",reading);});
+document.getElementById("bookInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
 document.getElementById("chapBtn").onclick=()=>{reading.chapters++;save("tracker:reading",reading);renderReading();};
 document.getElementById("finishBtn").onclick=()=>{reading={book:"",chapters:0,booksThisYear:reading.booksThisYear+1};save("tracker:reading",reading);renderReading();};
 
-renderScore();renderTasks();renderHist();renderWeight();renderReading();
+renderScore();renderTasks();renderHist();renderWeight();renderReading();renderPeriodStats();
 
 if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+    initReminder();
+  });
 }
 </script>
 </body>

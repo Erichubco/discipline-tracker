@@ -1,4 +1,4 @@
-const CACHE = "discipline-v1";
+const CACHE = "discipline-v2";
 const ASSETS = ["./", "./index.html", "./manifest.json",
   "./icons/icon-192.png", "./icons/icon-512.png"];
 
@@ -23,6 +23,29 @@ self.addEventListener("fetch", e => {
         return res;
       }).catch(() => cached);
       return cached || fetchPromise;
+    })
+  );
+});
+
+self.addEventListener("push", e => {
+  let data = {};
+  try { data = e.data ? e.data.json() : {}; } catch (err) {}
+  const title = data.title || "Discipline";
+  const body = data.body || "Coche tes tâches du jour.";
+  e.waitUntil(self.registration.showNotification(title, {
+    body,
+    icon: "icons/icon-192.png",
+    badge: "icons/icon-192.png",
+    tag: "discipline-daily",
+  }));
+});
+
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
+      for (const c of list) { if ("focus" in c) return c.focus(); }
+      if (clients.openWindow) return clients.openWindow("./");
     })
   );
 });
