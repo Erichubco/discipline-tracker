@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Discipline" />
+<meta name="theme-color" content="#141110" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" type="image/png" />
+<link rel="apple-touch-icon" href="icons/icon-180.png" />
+<title>Discipline · Eric</title>
+<style>
+  :root{
+    --bg:#141110; --card:#1e1a16; --cardHi:#26211b; --border:#332c24;
+    --text:#f6f1e9; --muted:#9c9285; --amber:#f2a83a; --green:#5ec27a;
+    --greenDim:#2f5c3d; --red:#c05555;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--text);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  body{padding:calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 48px);min-height:100vh}
+  .wrap{max-width:460px;margin:0 auto}
+  .eyebrow{color:var(--amber);font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:800}
+  .date{color:var(--muted);font-size:14px;text-transform:capitalize;margin-top:2px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;margin-top:16px}
+  .card-h{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;font-weight:700}
+  .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .score-card{display:flex;align-items:center;gap:20px;padding:24px}
+  .ring-wrap{position:relative;width:128px;height:128px;flex-shrink:0}
+  .ring-wrap svg{transform:rotate(-90deg)}
+  .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ring-num{font-size:34px;font-weight:800;line-height:1}
+  .ring-den{color:var(--muted);font-size:20px;font-weight:600}
+  .ring-lbl{color:var(--muted);font-size:11px;margin-top:2px}
+  .score-title{font-size:22px;font-weight:800}
+  .score-sub{color:var(--muted);font-size:14px;margin-top:6px;line-height:1.4}
+  .hist{display:flex;gap:6px;align-items:flex-end;height:56px}
+  .hist-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .hist-bar-bg{width:100%;height:44px;background:var(--bg);border-radius:6px;display:flex;align-items:flex-end;overflow:hidden}
+  .hist-bar{width:100%;border-radius:6px;transition:height .4s}
+  .hist-day{font-size:10px;color:var(--muted)}
+  .hist-day.today{color:var(--amber);font-weight:700}
+  .task{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg);border-radius:12px;cursor:pointer;border:1px solid transparent;transition:all .15s;margin-bottom:8px}
+  .task.done{background:var(--cardHi);border-color:var(--greenDim)}
+  .check{width:24px;height:24px;border-radius:8px;flex-shrink:0;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .task.done .check{background:var(--green);border-color:var(--green)}
+  .check svg{opacity:0;transition:opacity .15s}
+  .task.done .check svg{opacity:1}
+  .task-label{font-size:15px}
+  .task.done .task-label{color:var(--muted);text-decoration:line-through}
+  .del{background:none;border:none;cursor:pointer;display:flex;padding:0;color:var(--red)}
+  .btn-link{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:4px;font-family:inherit}
+  .row{display:flex;gap:8px}
+  input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit;width:100%}
+  input:focus{border-color:var(--amber)}
+  .btn{border:none;border-radius:10px;cursor:pointer;font-weight:700;font-size:14px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+  .btn-amber{background:var(--amber);color:var(--bg);padding:0 14px}
+  .btn-green{background:var(--green);color:var(--bg);padding:10px 16px}
+  .btn-ghost{background:var(--cardHi);border:1px solid var(--border);color:var(--green);padding:10px 12px}
+  .stats{display:flex;gap:16px;margin-bottom:14px}
+  .stat-num{font-size:28px;font-weight:800}
+  .stat-lbl{font-size:11px;color:var(--muted)}
+  .sub{color:var(--muted);font-size:12px;margin-bottom:14px}
+  .wbars{margin-top:12px;display:flex;gap:4px;align-items:flex-end;height:40px}
+  .wbar{flex:1;background:var(--greenDim);border-radius:4px}
+  .read-box{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:12px;padding:12px 14px}
+  .foot{text-align:center;color:var(--muted);font-size:11px;margin-top:20px;line-height:1.5}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <div class="eyebrow">Discipline · Eric</div>
+    <div class="date" id="date"></div>
+  </div>
+
+  <!-- Score -->
+  <div class="card score-card">
+    <div class="ring-wrap">
+      <svg width="128" height="128">
+        <circle cx="64" cy="64" r="52" fill="none" stroke="var(--border)" stroke-width="12"/>
+        <circle id="ring" cx="64" cy="64" r="52" fill="none" stroke="var(--amber)" stroke-width="12"
+          stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7"
+          style="transition:stroke-dashoffset .5s ease, stroke .3s"/>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-num"><span id="doneCount">0</span><span class="ring-den">/<span id="totalCount">0</span></span></div>
+        <div class="ring-lbl">tâches</div>
+      </div>
+    </div>
+    <div>
+      <div class="score-title" id="scoreTitle">On y va</div>
+      <div class="score-sub" id="scoreSub"></div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="card">
+    <div class="card-h"><span class="dot" style="background:var(--amber)"></span>7 derniers jours</div>
+    <div class="hist" id="hist"></div>
+  </div>
+
+  <!-- Tasks -->
+  <div class="card">
+    <div class="card-h" style="justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:var(--amber)"></span>Tâches du jour</span>
+      <button class="btn-link" id="editBtn">Modifier</button>
+    </div>
+    <div id="tasks"></div>
+    <div class="row hidden" id="addRow" style="margin-top:12px">
+      <input id="newTask" placeholder="Nouvelle tâche…" />
+      <button class="btn btn-amber" id="addBtn">+</button>
+    </div>
+  </div>
+
+  <!-- Weight -->
+  <div class="card">
+    <div class="card-h"><span class="dot" style="background:var(--green)"></span>Poids · objectif +2 kg/mois</div>
+    <div class="sub">Pèse-toi 1×/semaine, le matin. Pas tous les jours.</div>
+    <div class="stats" id="wstats"></div>
+    <div class="row">
+      <input id="wInput" inputmode="decimal" placeholder="Ton poids (kg)" />
+      <button class="btn btn-green" id="wBtn">Enregistrer</button>
+    </div>
+    <div class="wbars" id="wbars"></div>
+  </div>
+
+  <!-- Reading -->
+  <div class="card">
+    <div class="card-h"><span class="dot" style="background:var(--amber)"></span>Lecture · 1 chapitre/jour → 1 livre/mois</div>
+    <div class="sub" id="booksSub"></div>
+    <div class="row" style="margin-bottom:12px">
+      <input id="bookInput" placeholder="Livre en cours…" />
+    </div>
+    <div class="read-box">
+      <div class="stat-num"><span id="chapCount">0</span> <span style="font-size:13px;color:var(--muted);font-weight:600">chapitres</span></div>
+      <div class="row">
+        <button class="btn btn-amber" id="chapBtn" style="padding:10px 14px">+ Chapitre</button>
+        <button class="btn btn-ghost" id="finishBtn">Terminé ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">Tes données restent sur ton téléphone et se sauvegardent toutes seules.<br/>Coche chaque jour — c'est la régularité qui gagne.</div>
+</div>
+
+<script>
+const CHECK_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#141110" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+const DEFAULT_TASKS = [
+  {id:"wake",label:"🌞 Réveil sans téléphone + marche"},
+  {id:"read",label:"📖 Lire 1 chapitre"},
+  {id:"gym",label:"💪 Muscu"},
+  {id:"ecom",label:"💻 Tâche e-com du jour"},
+  {id:"shake",label:"🥤 Shake + créatine"},
+  {id:"supps",label:"💊 Compléments (matin + soir)"},
+  {id:"meals",label:"🍽️ 3 repas complets"},
+  {id:"screens",label:"🌙 Écrans coupés à 21h30"},
+];
+const pad=n=>String(n).padStart(2,"0");
+const keyFor=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today=()=>keyFor(new Date());
+const load=(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch(e){return f;}};
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
+
+let tasks=load("tracker:template",DEFAULT_TASKS); if(!tasks.length)tasks=DEFAULT_TASKS;
+let done=load("tracker:day:"+today(),{});
+let weights=load("tracker:weights",[]);
+let reading=load("tracker:reading",{book:"",chapters:0,booksThisYear:0});
+let editMode=false;
+
+document.getElementById("date").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+
+function renderScore(){
+  const total=tasks.length, comp=tasks.filter(t=>done[t.id]).length, pct=total?comp/total:0;
+  document.getElementById("doneCount").textContent=comp;
+  document.getElementById("totalCount").textContent=total;
+  const C=2*Math.PI*52;
+  const ring=document.getElementById("ring");
+  ring.style.strokeDashoffset=C*(1-pct);
+  ring.style.stroke=pct===1?"var(--green)":"var(--amber)";
+  const t=document.getElementById("scoreTitle"), s=document.getElementById("scoreSub");
+  if(pct===1){t.textContent="Journée pleine 🔥";t.style.color="var(--green)";s.textContent="Toutes tes tâches cochées. C'est ça qui construit le résultat.";}
+  else{t.style.color="var(--text)";
+    t.textContent=pct>=0.7?"Solide, continue":pct>0?"En marche":"On y va";
+    const left=total-comp;s.textContent=`${left} restante${left>1?"s":""} pour boucler la journée.`;}
+}
+function renderTasks(){
+  const el=document.getElementById("tasks");el.innerHTML="";
+  tasks.forEach(t=>{
+    const d=document.createElement("div");
+    d.className="task"+(done[t.id]&&!editMode?" done":"");
+    if(editMode){
+      d.innerHTML=`<button class="del">✕</button><span class="task-label">${t.label}</span>`;
+      d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==t.id);save("tracker:template",tasks);renderTasks();renderScore();};
+    }else{
+      d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label">${t.label}</span>`;
+      d.onclick=()=>{done[t.id]=!done[t.id];save("tracker:day:"+today(),done);renderTasks();renderScore();renderHist();};
+    }
+    el.appendChild(d);
+  });
+}
+function renderHist(){
+  const el=document.getElementById("hist");el.innerHTML="";
+  const total=tasks.length;
+  for(let i=6;i>=0;i--){
+    const dt=new Date();dt.setDate(dt.getDate()-i);const k=keyFor(dt);
+    const dd=i===0?done:load("tracker:day:"+k,{});
+    const dc=Object.values(dd).filter(Boolean).length;
+    const ratio=total?dc/total:0;
+    const col=document.createElement("div");col.className="hist-col";
+    const h=ratio>0?Math.max(ratio*100,8):0;
+    col.innerHTML=`<div class="hist-bar-bg"><div class="hist-bar" style="height:${h}%;background:${ratio===1?"var(--green)":"var(--amber)"}"></div></div>
+      <div class="hist-day${i===0?" today":""}">${["D","L","M","M","J","V","S"][dt.getDay()]}</div>`;
+    el.appendChild(col);
+  }
+}
+function renderWeight(){
+  const first=weights[0], last=weights[weights.length-1];
+  let goal=null;
+  if(first){const months=(new Date()-new Date(first.date))/(1000*60*60*24*30.44);goal=first.kg+2*months;}
+  const s=document.getElementById("wstats");s.innerHTML="";
+  s.innerHTML=`<div><div class="stat-num">${last?last.kg.toFixed(1):"—"}<span style="font-size:15px;color:var(--muted);font-weight:600"> kg</span></div><div class="stat-lbl">actuel</div></div>`;
+  if(goal!=null)s.innerHTML+=`<div><div class="stat-num" style="color:var(--amber)">${goal.toFixed(1)}<span style="font-size:15px;color:var(--muted);font-weight:600"> kg</span></div><div class="stat-lbl">cible du moment</div></div>`;
+  if(first&&last){const diff=last.kg-first.kg;s.innerHTML+=`<div><div class="stat-num" style="color:${diff>=0?"var(--green)":"var(--muted)"}">${diff>=0?"+":""}${diff.toFixed(1)}</div><div class="stat-lbl">depuis le début</div></div>`;}
+  const wb=document.getElementById("wbars");wb.innerHTML="";
+  if(weights.length>1){
+    const slice=weights.slice(-12);const vals=slice.map(x=>x.kg);const min=Math.min(...vals)-.5,max=Math.max(...vals)+.5;
+    slice.forEach(w=>{const h=max>min?((w.kg-min)/(max-min))*100:50;const b=document.createElement("div");b.className="wbar";b.style.height=Math.max(h,6)+"%";b.title=w.kg+"kg";wb.appendChild(b);});
+  }
+}
+function renderReading(){
+  document.getElementById("booksSub").textContent=`${reading.booksThisYear} livre${reading.booksThisYear>1?"s":""} terminé${reading.booksThisYear>1?"s":""} cette année`;
+  document.getElementById("chapCount").textContent=reading.chapters;
+  document.getElementById("bookInput").value=reading.book||"";
+}
+
+document.getElementById("editBtn").onclick=()=>{editMode=!editMode;document.getElementById("editBtn").textContent=editMode?"Terminé":"Modifier";document.getElementById("addRow").classList.toggle("hidden",!editMode);renderTasks();};
+document.getElementById("addBtn").onclick=addTask;
+document.getElementById("newTask").addEventListener("keydown",e=>{if(e.key==="Enter")addTask();});
+function addTask(){const i=document.getElementById("newTask");const v=i.value.trim();if(!v)return;tasks.push({id:"t"+Date.now(),label:v});save("tracker:template",tasks);i.value="";renderTasks();renderScore();}
+
+document.getElementById("wBtn").onclick=logW;
+document.getElementById("wInput").addEventListener("keydown",e=>{if(e.key==="Enter")logW();});
+function logW(){const i=document.getElementById("wInput");const kg=parseFloat(i.value.replace(",","."));if(!kg||kg<30||kg>200)return;weights.push({date:today(),kg});save("tracker:weights",weights);i.value="";renderWeight();}
+
+document.getElementById("bookInput").addEventListener("blur",()=>{reading.book=document.getElementById("bookInput").value.trim();save("tracker:reading",reading);});
+document.getElementById("chapBtn").onclick=()=>{reading.chapters++;save("tracker:reading",reading);renderReading();};
+document.getElementById("finishBtn").onclick=()=>{reading={book:"",chapters:0,booksThisYear:reading.booksThisYear+1};save("tracker:reading",reading);renderReading();};
+
+renderScore();renderTasks();renderHist();renderWeight();renderReading();
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
