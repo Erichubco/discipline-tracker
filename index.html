@@ -76,6 +76,14 @@
   .pbar-bg{width:100%;height:8px;background:var(--bg);border-radius:6px;overflow:hidden}
   .pbar-fill{height:100%;border-radius:6px;transition:width .4s}
   .btn-block{width:100%;padding:13px}
+  .celebration{position:fixed;inset:0;background:rgba(20,17,16,.85);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px;backdrop-filter:blur(4px);animation:fadeIn .2s ease}
+  .celebration-inner{background:var(--card);border:1px solid var(--amber);border-radius:20px;padding:32px 24px;text-align:center;max-width:340px;animation:popIn .3s ease}
+  .celebration-emoji{font-size:48px;margin-bottom:12px;line-height:1}
+  .celebration-title{font-size:21px;font-weight:800;margin-bottom:8px}
+  .celebration-sub{color:var(--muted);font-size:14px;line-height:1.4}
+  .celebration-tap{color:var(--muted);font-size:11px;margin-top:18px;text-transform:uppercase;letter-spacing:1px}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes popIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
 </style>
 </head>
 <body>
@@ -184,6 +192,15 @@
 
   <div class="foot">Tes données restent sur ton téléphone et se sauvegardent toutes seules.<br/>Coche chaque jour — c'est la régularité qui gagne.<br/>
     <button class="btn-link" id="exportBtn" style="margin-top:8px">Exporter mes données (JSON)</button>
+  </div>
+</div>
+
+<div class="celebration hidden" id="celebration">
+  <div class="celebration-inner">
+    <div class="celebration-emoji" id="celebEmoji">🔥</div>
+    <div class="celebration-title" id="celebTitle"></div>
+    <div class="celebration-sub" id="celebSub"></div>
+    <div class="celebration-tap">Touche pour continuer</div>
   </div>
 </div>
 
@@ -326,6 +343,47 @@ function renderPeriodStats(){
   document.getElementById("monthBarFill").style.width=monthPct+"%";
   document.getElementById("streakCur").textContent=current;
   document.getElementById("streakBest").textContent=best;
+  checkCelebrations(current,weekPct,monthPct);
+}
+
+const MILESTONES=[3,7,14,21,30,45,60,90,120,180,365];
+function milestoneInfo(n){
+  if(n>=365)return{emoji:"👑",title:`${n} jours d'affilée`,sub:"Une année de discipline. Rien à ajouter, c'est qui tu es maintenant."};
+  if(n>=90)return{emoji:"💎",title:`${n} jours d'affilée`,sub:"3 mois de régularité. C'est plus une habitude, c'est un mode de vie."};
+  if(n>=30)return{emoji:"🏆",title:`${n} jours d'affilée`,sub:"Un mois complet sans craquer. Le résultat commence à suivre."};
+  if(n>=14)return{emoji:"⚡",title:`${n} jours d'affilée`,sub:"Deux semaines pleines. Ça devient un réflexe, pas un effort."};
+  if(n>=7)return{emoji:"🔥",title:"Une semaine complète !",sub:"7 jours d'affilée, journée pleine à chaque fois."};
+  return{emoji:"🔥",title:`${n} jours d'affilée`,sub:"Ça prend forme. Continue comme ça."};
+}
+function showCelebration(emoji,title,sub){
+  document.getElementById("celebEmoji").textContent=emoji;
+  document.getElementById("celebTitle").textContent=title;
+  document.getElementById("celebSub").textContent=sub;
+  document.getElementById("celebration").classList.remove("hidden");
+}
+document.getElementById("celebration").addEventListener("click",()=>document.getElementById("celebration").classList.add("hidden"));
+
+function checkCelebrations(streakCurrent,weekPct,monthPct){
+  const now=new Date();
+  const wId=keyFor(startOfWeek(now));
+  const mId=`${now.getFullYear()}-${pad(now.getMonth()+1)}`;
+  if(weekPct===100&&load("tracker:lastPerfectWeek","")!==wId){
+    save("tracker:lastPerfectWeek",wId);
+    showCelebration("🎉","Semaine parfaite !","100% cette semaine. Toutes les cases cochées, tous les jours.");
+    return;
+  }
+  if(monthPct===100&&load("tracker:lastPerfectMonth","")!==mId){
+    save("tracker:lastPerfectMonth",mId);
+    showCelebration("👑","Mois parfait !","100% ce mois-ci. C'est du très, très haut niveau.");
+    return;
+  }
+  const lastMilestone=load("tracker:lastMilestone",0);
+  const hit=MILESTONES.filter(m=>m<=streakCurrent&&m>lastMilestone).pop();
+  if(hit){
+    save("tracker:lastMilestone",hit);
+    const{emoji,title,sub}=milestoneInfo(hit);
+    showCelebration(emoji,title,sub);
+  }
 }
 
 const VAPID_PUBLIC_KEY="BH-IbiXBYm_V4K8ZsXdItoqqVeLntLETs6t9atSpRpSs88LXjBDisam8ysuxAds_a3JLiun1rNHBIpfeCWgk6w8";
