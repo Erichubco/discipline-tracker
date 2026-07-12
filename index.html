@@ -182,7 +182,9 @@
     </div>
   </div>
 
-  <div class="foot">Tes données restent sur ton téléphone et se sauvegardent toutes seules.<br/>Coche chaque jour — c'est la régularité qui gagne.</div>
+  <div class="foot">Tes données restent sur ton téléphone et se sauvegardent toutes seules.<br/>Coche chaque jour — c'est la régularité qui gagne.<br/>
+    <button class="btn-link" id="exportBtn" style="margin-top:8px">Exporter mes données (JSON)</button>
+  </div>
 </div>
 
 <script>
@@ -352,6 +354,9 @@ async function initReminder(){
   }
   const reg=await navigator.serviceWorker.ready;
   const existing=await reg.pushManager.getSubscription();
+  if(existing){
+    fetch(PUSH_API+"/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(existing)}).catch(()=>{});
+  }
   setReminderBtnState(!!existing);
   btn.onclick=async()=>{
     const reg=await navigator.serviceWorker.ready;
@@ -383,6 +388,20 @@ document.getElementById("bookInput").addEventListener("blur",()=>{reading.book=d
 document.getElementById("bookInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
 document.getElementById("chapBtn").onclick=()=>{reading.chapters++;save("tracker:reading",reading);renderReading();};
 document.getElementById("finishBtn").onclick=()=>{reading={book:"",chapters:0,booksThisYear:reading.booksThisYear+1};save("tracker:reading",reading);renderReading();};
+
+document.getElementById("exportBtn").onclick=()=>{
+  const out={};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&k.startsWith("tracker:"))out[k]=load(k,null);
+  }
+  const blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=`discipline-export-${today()}.json`;
+  document.body.appendChild(a);a.click();a.remove();
+  URL.revokeObjectURL(url);
+};
 
 renderScore();renderTasks();renderHist();renderWeight();renderReading();renderPeriodStats();
 
