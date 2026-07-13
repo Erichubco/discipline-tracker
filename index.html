@@ -38,12 +38,16 @@
   .ring-lbl{color:var(--muted);font-size:11px;margin-top:2px}
   .score-title{font-size:22px;font-weight:800}
   .score-sub{color:var(--muted);font-size:14px;margin-top:6px;line-height:1.4}
-  .hist{display:flex;gap:6px;align-items:flex-end;height:56px}
-  .hist-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
-  .hist-bar-bg{width:100%;height:44px;background:var(--bg);border-radius:6px;display:flex;align-items:flex-end;overflow:hidden}
-  .hist-bar{width:100%;border-radius:6px;transition:height .4s}
-  .hist-day{font-size:10px;color:var(--muted)}
-  .hist-day.today{color:var(--amber);font-weight:700}
+  .heatmap{display:flex;gap:3px;overflow-x:auto;padding-bottom:2px}
+  .heatmap-week{display:flex;flex-direction:column;gap:3px}
+  .heatmap-cell{width:11px;height:11px;border-radius:3px;background:var(--bg);border:1px solid var(--border)}
+  .heatmap-legend{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:10px;font-size:10px;color:var(--muted)}
+  .heatmap-legend .heatmap-cell{width:9px;height:9px}
+  .period-h{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px}
+  .period-h:first-child{margin-top:0}
+  .period-picker{display:flex;gap:6px}
+  .period-opt{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px;font-size:18px;cursor:pointer;line-height:1}
+  .period-opt.active{border-color:var(--amber);background:var(--cardHi)}
   .task{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg);border-radius:12px;cursor:pointer;border:1px solid transparent;transition:all .15s;margin-bottom:8px}
   .task.done{background:var(--cardHi);border-color:var(--greenDim)}
   .check{width:24px;height:24px;border-radius:8px;flex-shrink:0;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all .15s}
@@ -117,8 +121,15 @@
 
   <!-- History -->
   <div class="card">
-    <div class="card-h"><span class="dot" style="background:var(--amber)"></span>7 derniers jours</div>
-    <div class="hist" id="hist"></div>
+    <div class="card-h"><span class="dot" style="background:var(--amber)"></span>16 dernières semaines</div>
+    <div class="heatmap" id="heatmap"></div>
+    <div class="heatmap-legend">Moins
+      <div class="heatmap-cell" style="background:var(--bg)"></div>
+      <div class="heatmap-cell" style="background:#5c4520"></div>
+      <div class="heatmap-cell" style="background:var(--amber)"></div>
+      <div class="heatmap-cell" style="background:var(--green)"></div>
+      Plus
+    </div>
   </div>
 
   <!-- Tasks -->
@@ -128,9 +139,16 @@
       <button class="btn-link" id="editBtn">Modifier</button>
     </div>
     <div id="tasks"></div>
-    <div class="row hidden" id="addRow" style="margin-top:12px">
-      <input id="newTask" placeholder="Nouvelle tâche…" />
-      <button class="btn btn-amber" id="addBtn">+</button>
+    <div class="row hidden" id="addRow" style="margin-top:12px;flex-direction:column;gap:8px">
+      <div class="period-picker" id="periodPicker">
+        <button type="button" class="period-opt" data-period="morning">🌅</button>
+        <button type="button" class="period-opt active" data-period="day">☀️</button>
+        <button type="button" class="period-opt" data-period="evening">🌙</button>
+      </div>
+      <div class="row">
+        <input id="newTask" placeholder="Nouvelle tâche…" />
+        <button class="btn btn-amber" id="addBtn">+</button>
+      </div>
     </div>
   </div>
 
@@ -209,15 +227,17 @@
 <script>
 const CHECK_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#141110" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 const DEFAULT_TASKS = [
-  {id:"wake",label:"🌞 Réveil sans téléphone + marche"},
-  {id:"read",label:"📖 Lire 1 chapitre"},
-  {id:"gym",label:"💪 Muscu"},
-  {id:"ecom",label:"💻 Tâche e-com du jour"},
-  {id:"shake",label:"🥤 Shake + créatine"},
-  {id:"supps",label:"💊 Compléments (matin + soir)"},
-  {id:"meals",label:"🍽️ 3 repas complets"},
-  {id:"screens",label:"🌙 Écrans coupés à 21h30"},
+  {id:"wake",label:"🌞 Réveil sans téléphone + marche",period:"morning"},
+  {id:"gym",label:"💪 Muscu",period:"day"},
+  {id:"ecom",label:"💻 Tâche e-com du jour",period:"day"},
+  {id:"shake",label:"🥤 Shake + créatine",period:"day"},
+  {id:"supps",label:"💊 Compléments (matin + soir)",period:"day"},
+  {id:"meals",label:"🍽️ 3 repas complets",period:"day"},
+  {id:"read",label:"📖 Lire 1 chapitre",period:"evening"},
+  {id:"screens",label:"🌙 Écrans coupés à 21h30",period:"evening"},
 ];
+const DEFAULT_PERIODS={wake:"morning",read:"evening",gym:"day",ecom:"day",shake:"day",supps:"day",meals:"day",screens:"evening"};
+const PERIOD_META={morning:{emoji:"🌅",label:"Matin"},day:{emoji:"☀️",label:"Journée"},evening:{emoji:"🌙",label:"Soir"}};
 const pad=n=>String(n).padStart(2,"0");
 const keyFor=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const today=()=>keyFor(new Date());
@@ -225,6 +245,8 @@ const load=(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
 
 let tasks=load("tracker:template",DEFAULT_TASKS); if(!tasks.length)tasks=DEFAULT_TASKS;
+tasks=tasks.map(t=>t.period?t:{...t,period:DEFAULT_PERIODS[t.id]||"day"});
+save("tracker:template",tasks);
 let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
 let reading=load("tracker:reading",{book:"",chapters:0,booksThisYear:0});
@@ -248,31 +270,72 @@ function renderScore(){
 }
 function renderTasks(){
   const el=document.getElementById("tasks");el.innerHTML="";
-  tasks.forEach(t=>{
-    const d=document.createElement("div");
-    d.className="task"+(done[t.id]&&!editMode?" done":"");
-    if(editMode){
-      d.innerHTML=`<button class="del">✕</button><span class="task-label">${t.label}</span>`;
-      d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==t.id);save("tracker:template",tasks);renderTasks();renderScore();};
-    }else{
-      d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label">${t.label}</span>`;
-      d.onclick=()=>{done[t.id]=!done[t.id];save("tracker:day:"+today(),done);renderTasks();renderScore();renderHist();renderPeriodStats();};
-    }
-    el.appendChild(d);
+  const groups={morning:[],day:[],evening:[]};
+  tasks.forEach(t=>groups[t.period||"day"].push(t));
+  ["morning","day","evening"].forEach(period=>{
+    const list=groups[period];
+    if(!list.length)return;
+    const meta=PERIOD_META[period];
+    const h=document.createElement("div");
+    h.className="period-h";
+    h.textContent=`${meta.emoji} ${meta.label}`;
+    el.appendChild(h);
+    list.forEach(t=>{
+      const d=document.createElement("div");
+      d.className="task"+(done[t.id]&&!editMode?" done":"");
+      d.dataset.taskId=t.id;
+      if(editMode){
+        d.innerHTML=`<button class="del">✕</button><span class="task-label">${t.label}</span>`;
+        d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==t.id);save("tracker:template",tasks);renderTasks();renderScore();};
+      }else{
+        d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label">${t.label}</span>`;
+        d.onclick=()=>{
+          done[t.id]=!done[t.id];
+          save("tracker:day:"+today(),done);
+          const wasCompleted=done[t.id];
+          renderTasks();renderScore();renderHeatmap();renderPeriodStats();
+          if(wasCompleted){
+            const freshCheck=document.querySelector(`[data-task-id="${t.id}"] .check`);
+            if(freshCheck)freshCheck.animate(
+              [{transform:"scale(1)"},{transform:"scale(1.3)"},{transform:"scale(1)"}],
+              {duration:320,easing:"cubic-bezier(.34,1.56,.64,1)"}
+            );
+          }
+        };
+      }
+      el.appendChild(d);
+    });
   });
 }
-function renderHist(){
-  const el=document.getElementById("hist");el.innerHTML="";
+function heatColor(ratio){
+  if(ratio<=0)return null;
+  if(ratio<0.5)return "#5c4520";
+  if(ratio<1)return "var(--amber)";
+  return "var(--green)";
+}
+function renderHeatmap(){
+  const el=document.getElementById("heatmap");el.innerHTML="";
   const total=tasks.length;
-  for(let i=6;i>=0;i--){
-    const dt=new Date();dt.setDate(dt.getDate()-i);const k=keyFor(dt);
-    const dd=i===0?done:load("tracker:day:"+k,{});
-    const dc=Object.values(dd).filter(Boolean).length;
-    const ratio=total?dc/total:0;
-    const col=document.createElement("div");col.className="hist-col";
-    const h=ratio>0?Math.max(ratio*100,8):0;
-    col.innerHTML=`<div class="hist-bar-bg"><div class="hist-bar" style="height:${h}%;background:${ratio===1?"var(--green)":"var(--amber)"}"></div></div>
-      <div class="hist-day${i===0?" today":""}">${["D","L","M","M","J","V","S"][dt.getDay()]}</div>`;
+  const weeksCount=16;
+  const now=new Date();now.setHours(0,0,0,0);
+  const thisWeekStart=startOfWeek(now);
+  for(let w=weeksCount-1;w>=0;w--){
+    const weekStart=new Date(thisWeekStart);weekStart.setDate(weekStart.getDate()-w*7);
+    const col=document.createElement("div");col.className="heatmap-week";
+    for(let d=0;d<7;d++){
+      const dt=new Date(weekStart);dt.setDate(dt.getDate()+d);
+      const cell=document.createElement("div");cell.className="heatmap-cell";
+      if(dt<=now){
+        const k=keyFor(dt);
+        const dd=k===today()?done:load("tracker:day:"+k,{});
+        const dc=Object.values(dd).filter(Boolean).length;
+        const ratio=total?dc/total:0;
+        const color=heatColor(ratio);
+        if(color)cell.style.background=color;
+        cell.title=`${dt.toLocaleDateString("fr-FR")} · ${Math.round(ratio*100)}%`;
+      }
+      col.appendChild(cell);
+    }
     el.appendChild(col);
   }
 }
@@ -439,7 +502,14 @@ async function initReminder(){
 document.getElementById("editBtn").onclick=()=>{editMode=!editMode;document.getElementById("editBtn").textContent=editMode?"Terminé":"Modifier";document.getElementById("addRow").classList.toggle("hidden",!editMode);renderTasks();};
 document.getElementById("addBtn").onclick=addTask;
 document.getElementById("newTask").addEventListener("keydown",e=>{if(e.key==="Enter")addTask();});
-function addTask(){const i=document.getElementById("newTask");const v=i.value.trim();if(!v)return;tasks.push({id:"t"+Date.now(),label:v});save("tracker:template",tasks);i.value="";renderTasks();renderScore();}
+let newTaskPeriod="day";
+document.querySelectorAll(".period-opt").forEach(btn=>{
+  btn.onclick=()=>{
+    newTaskPeriod=btn.dataset.period;
+    document.querySelectorAll(".period-opt").forEach(b=>b.classList.toggle("active",b===btn));
+  };
+});
+function addTask(){const i=document.getElementById("newTask");const v=i.value.trim();if(!v)return;tasks.push({id:"t"+Date.now(),label:v,period:newTaskPeriod});save("tracker:template",tasks);i.value="";renderTasks();renderScore();}
 
 document.getElementById("wBtn").onclick=logW;
 document.getElementById("wInput").addEventListener("keydown",e=>{if(e.key==="Enter")logW();});
@@ -464,7 +534,7 @@ document.getElementById("exportBtn").onclick=()=>{
   URL.revokeObjectURL(url);
 };
 
-renderScore();renderTasks();renderHist();renderWeight();renderReading();renderPeriodStats();
+renderScore();renderTasks();renderHeatmap();renderWeight();renderReading();renderPeriodStats();
 
 async function loadHealthToday(){
   try{
