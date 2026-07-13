@@ -93,6 +93,12 @@
   .book-cover{width:56px;height:76px;border-radius:8px;background:var(--bg);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:20px}
   .book-cover img{width:100%;height:100%;object-fit:cover}
   .book-info{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+  .archive-title{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+  .book-archive{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
+  .book-archive-item{flex-shrink:0;width:52px;text-align:center}
+  .book-archive-cover{width:52px;height:70px;border-radius:6px;object-fit:cover;background:var(--bg);border:1px solid var(--border);display:block}
+  .book-archive-cover.placeholder{display:flex;align-items:center;justify-content:center;font-size:18px}
+  .book-archive-title{font-size:9px;color:var(--muted);margin-top:4px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .pbar-row{margin-top:12px}
   .pbar-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px}
   .pbar-lbl b{color:var(--text);font-weight:700}
@@ -173,6 +179,10 @@
         <button type="button" class="period-opt active" data-period="day">☀️</button>
         <button type="button" class="period-opt" data-period="evening">🌙</button>
       </div>
+      <div class="period-picker" id="categoryPicker">
+        <button type="button" class="period-opt active" data-category="dev">🌱 <span id="catDevLbl">Dev</span></button>
+        <button type="button" class="period-opt" data-category="business">💼 <span id="catBusinessLbl">Business</span></button>
+      </div>
       <div class="row">
         <input id="newTask" placeholder="Nouvelle tâche…" />
         <button class="btn btn-amber" id="addBtn">+</button>
@@ -200,6 +210,14 @@
     <div class="pbar-row">
       <div class="pbar-lbl"><span id="thisMonthLbl">Ce mois</span> <b id="monthPct">0%</b></div>
       <div class="pbar-bg"><div class="pbar-fill" id="monthBarFill" style="width:0%;background:var(--green)"></div></div>
+    </div>
+    <div class="pbar-row hidden" id="businessRow" style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+      <div class="pbar-lbl"><span id="businessWeekLbl">💼 Business (semaine)</span> <b id="businessPct">0%</b></div>
+      <div class="pbar-bg"><div class="pbar-fill" id="businessBarFill" style="width:0%;background:var(--amber)"></div></div>
+    </div>
+    <div class="pbar-row hidden" id="devRow">
+      <div class="pbar-lbl"><span id="devWeekLbl">🌱 Développement (semaine)</span> <b id="devPct">0%</b></div>
+      <div class="pbar-bg"><div class="pbar-fill" id="devBarFill" style="width:0%;background:var(--green)"></div></div>
     </div>
   </div>
 
@@ -254,6 +272,10 @@
       </div>
     </div>
     <div class="sub hidden" id="paceInfo" style="margin-top:10px;margin-bottom:0"></div>
+    <div class="hidden" id="archiveWrap" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <div class="archive-title" id="archiveTitle">📚 Livres lus</div>
+      <div class="book-archive" id="bookArchive"></div>
+    </div>
   </div>
 
   <div class="foot-spacer"></div>
@@ -310,6 +332,9 @@ const STRINGS = {
     bookLookupLoading:"🔍 Identification du livre…",
     bookNotIdentified:"Livre non identifié — tape le titre toi-même.",
     pageCountBadge:n=>`📄 ${n} pages (info Google Books)`,
+    archiveTitle:"📚 Livres lus",
+    catDevLbl:"Dev", catBusinessLbl:"Business",
+    businessWeekLbl:"💼 Business (semaine)", devWeekLbl:"🌱 Développement (semaine)",
     paceInfo:(pace,date)=>`📈 ${pace} chap./jour · fin estimée le ${date}`,
     footerLine:"Tes données restent sur ton téléphone et se sauvegardent toutes seules.<br/>Coche chaque jour — c'est la régularité qui gagne.",
     exportBtn:"Exporter mes données (JSON)", sheetClose:"Fermer",
@@ -330,14 +355,14 @@ const STRINGS = {
     milestoneSuffix:n=>`${n} jours d'affilée`,
     ecomFocus:["Bilan semaine + plan + veille","Planning semaine + revue chiffres + angles","Production créatifs (UGC, montages)","Optimisation boutique / page produit","Gestion des tests + recherche produit","Analyse + décisions scaling","Gros chantier de la semaine"],
     defaultTasks:[
-      {id:"wake",label:"🌞 Réveil sans téléphone + marche",period:"morning"},
-      {id:"gym",label:"💪 Muscu",period:"day"},
-      {id:"ecom",label:"💻 Tâche e-com du jour",period:"day"},
-      {id:"shake",label:"🥤 Shake + créatine",period:"day"},
-      {id:"supps",label:"💊 Compléments (matin + soir)",period:"day"},
-      {id:"meals",label:"🍽️ 3 repas complets",period:"day"},
-      {id:"read",label:"📖 Lire 1 chapitre",period:"evening"},
-      {id:"screens",label:"🌙 Écrans coupés à 21h30",period:"evening"},
+      {id:"wake",label:"🌞 Réveil sans téléphone + marche",period:"morning",category:"dev"},
+      {id:"gym",label:"💪 Muscu",period:"day",category:"dev"},
+      {id:"ecom",label:"💻 Tâche e-com du jour",period:"day",category:"business"},
+      {id:"shake",label:"🥤 Shake + créatine",period:"day",category:"dev"},
+      {id:"supps",label:"💊 Compléments (matin + soir)",period:"day",category:"dev"},
+      {id:"meals",label:"🍽️ 3 repas complets",period:"day",category:"dev"},
+      {id:"read",label:"📖 Lire 1 chapitre",period:"evening",category:"dev"},
+      {id:"screens",label:"🌙 Écrans coupés à 21h30",period:"evening",category:"dev"},
     ],
   },
   en: {
@@ -370,6 +395,9 @@ const STRINGS = {
     bookLookupLoading:"🔍 Identifying the book…",
     bookNotIdentified:"Book not identified — type the title yourself.",
     pageCountBadge:n=>`📄 ${n} pages (Google Books info)`,
+    archiveTitle:"📚 Books read",
+    catDevLbl:"Dev", catBusinessLbl:"Business",
+    businessWeekLbl:"💼 Business (this week)", devWeekLbl:"🌱 Development (this week)",
     paceInfo:(pace,date)=>`📈 ${pace} ch./day · estimated finish ${date}`,
     footerLine:"Your data stays on your phone and saves itself automatically.<br/>Check every day — consistency wins.",
     exportBtn:"Export my data (JSON)", sheetClose:"Close",
@@ -390,14 +418,14 @@ const STRINGS = {
     milestoneSuffix:n=>`${n}-day streak`,
     ecomFocus:["Weekly review + plan + watch trends","Weekly planning + numbers review + angles","Creative production (UGC, edits)","Store / product page optimization","Test management + product research","Analysis + scaling decisions","Big weekly project"],
     defaultTasks:[
-      {id:"wake",label:"🌞 Wake up phone-free + walk",period:"morning"},
-      {id:"gym",label:"💪 Workout",period:"day"},
-      {id:"ecom",label:"💻 Today's e-com task",period:"day"},
-      {id:"shake",label:"🥤 Shake + creatine",period:"day"},
-      {id:"supps",label:"💊 Supplements (morning + evening)",period:"day"},
-      {id:"meals",label:"🍽️ 3 full meals",period:"day"},
-      {id:"read",label:"📖 Read 1 chapter",period:"evening"},
-      {id:"screens",label:"🌙 Screens off at 9:30pm",period:"evening"},
+      {id:"wake",label:"🌞 Wake up phone-free + walk",period:"morning",category:"dev"},
+      {id:"gym",label:"💪 Workout",period:"day",category:"dev"},
+      {id:"ecom",label:"💻 Today's e-com task",period:"day",category:"business"},
+      {id:"shake",label:"🥤 Shake + creatine",period:"day",category:"dev"},
+      {id:"supps",label:"💊 Supplements (morning + evening)",period:"day",category:"dev"},
+      {id:"meals",label:"🍽️ 3 full meals",period:"day",category:"dev"},
+      {id:"read",label:"📖 Read 1 chapter",period:"evening",category:"dev"},
+      {id:"screens",label:"🌙 Screens off at 9:30pm",period:"evening",category:"dev"},
     ],
   },
 };
@@ -411,6 +439,7 @@ function load2(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f
 
 const CHECK_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#141110" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 const DEFAULT_PERIODS={wake:"morning",read:"evening",gym:"day",ecom:"day",shake:"day",supps:"day",meals:"day",screens:"evening"};
+const DEFAULT_CATEGORIES={wake:"dev",read:"dev",gym:"dev",ecom:"business",shake:"dev",supps:"dev",meals:"dev",screens:"dev"};
 const pad=n=>String(n).padStart(2,"0");
 const keyFor=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const today=()=>keyFor(new Date());
@@ -418,11 +447,16 @@ const load=(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
 
 let tasks=load("tracker:template",STRINGS.fr.defaultTasks); if(!tasks.length)tasks=STRINGS.fr.defaultTasks;
-tasks=tasks.map(tk=>tk.period?tk:{...tk,period:DEFAULT_PERIODS[tk.id]||"day"});
+tasks=tasks.map(tk=>({
+  ...tk,
+  period:tk.period||DEFAULT_PERIODS[tk.id]||"day",
+  category:tk.category||DEFAULT_CATEGORIES[tk.id]||"dev",
+}));
 save("tracker:template",tasks);
 let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
 let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,booksThisYear:0});
+let booksArchive=load("tracker:booksArchive",[]);
 let editMode=false;
 
 function taskDisplayLabel(tk){
@@ -438,6 +472,10 @@ function applyStaticI18n(){
   document.getElementById("legendLess").textContent=t("legendLess");
   document.getElementById("legendMore").textContent=t("legendMore");
   document.getElementById("tasksTitle").textContent=t("tasksTitle");
+  document.getElementById("catDevLbl").textContent=t("catDevLbl");
+  document.getElementById("catBusinessLbl").textContent=t("catBusinessLbl");
+  document.getElementById("businessWeekLbl").textContent=t("businessWeekLbl");
+  document.getElementById("devWeekLbl").textContent=t("devWeekLbl");
   document.getElementById("editBtn").textContent=editMode?t("editBtnDone"):t("editBtn");
   document.getElementById("newTask").placeholder=t("newTaskPlaceholder");
   document.getElementById("periodStatsTitle").textContent=t("periodStatsTitle");
@@ -460,6 +498,7 @@ function applyStaticI18n(){
   document.getElementById("footerLine").innerHTML=t("footerLine");
   document.getElementById("exportBtn").textContent=t("exportBtn");
   document.getElementById("sheetCloseBtn").textContent=t("sheetClose");
+  document.getElementById("archiveTitle").textContent=t("archiveTitle");
   document.getElementById("celebTap").textContent=t("celebTap");
   document.querySelectorAll(".lang-opt").forEach(b=>b.classList.toggle("active",b.dataset.lang===lang));
 }
@@ -655,6 +694,21 @@ function renderReading(){
       paceEl.classList.remove("hidden");
     }else{paceEl.classList.add("hidden");}
   }else{paceEl.classList.add("hidden");}
+
+  const archiveWrap=document.getElementById("archiveWrap"),archiveEl=document.getElementById("bookArchive");
+  if(booksArchive.length){
+    archiveWrap.classList.remove("hidden");
+    archiveEl.innerHTML=booksArchive.slice().reverse().map(b=>`
+      <div class="book-archive-item" title="${b.title.replace(/"/g,"&quot;")}">
+        ${b.coverPhoto
+          ? `<img class="book-archive-cover" src="${b.coverPhoto}" />`
+          : `<div class="book-archive-cover placeholder">📖</div>`}
+        <div class="book-archive-title">${b.title}</div>
+      </div>
+    `).join("");
+  }else{
+    archiveWrap.classList.add("hidden");
+  }
 }
 
 const DAY_MS=86400000;
@@ -677,6 +731,17 @@ function periodAvg(startDate,records){
   let sum=0,count=0;
   for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1)){
     sum+=dayRatio(records[keyFor(d)]||{});count++;
+  }
+  return count?sum/count:0;
+}
+function periodAvgForCategory(startDate,records,category){
+  const catTasks=tasks.filter(tk=>tk.category===category);
+  if(!catTasks.length)return null;
+  const now=new Date();now.setHours(0,0,0,0);
+  let sum=0,count=0;
+  for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1)){
+    const doneObj=records[keyFor(d)]||{};
+    sum+=catTasks.filter(tk=>doneObj[tk.id]).length/catTasks.length;count++;
   }
   return count?sum/count:0;
 }
@@ -706,6 +771,25 @@ function renderPeriodStats(){
   document.getElementById("monthBarFill").style.width=monthPct+"%";
   document.getElementById("streakCur").textContent=current;
   document.getElementById("streakBest").textContent=best;
+
+  const businessAvg=periodAvgForCategory(startOfWeek(now),records,"business");
+  const businessRow=document.getElementById("businessRow");
+  if(businessAvg!=null){
+    const pct=Math.round(businessAvg*100);
+    document.getElementById("businessPct").textContent=pct+"%";
+    document.getElementById("businessBarFill").style.width=pct+"%";
+    businessRow.classList.remove("hidden");
+  }else{businessRow.classList.add("hidden");}
+
+  const devAvg=periodAvgForCategory(startOfWeek(now),records,"dev");
+  const devRow=document.getElementById("devRow");
+  if(devAvg!=null){
+    const pct=Math.round(devAvg*100);
+    document.getElementById("devPct").textContent=pct+"%";
+    document.getElementById("devBarFill").style.width=pct+"%";
+    devRow.classList.remove("hidden");
+  }else{devRow.classList.add("hidden");}
+
   checkCelebrations(current,weekPct,monthPct);
   fetch(PUSH_API+"/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({weekPct,monthPct,streakCurrent:current,streakBest:best})}).catch(()=>{});
 }
@@ -822,13 +906,20 @@ document.getElementById("editBtn").onclick=()=>{editMode=!editMode;document.getE
 document.getElementById("addBtn").onclick=addTask;
 document.getElementById("newTask").addEventListener("keydown",e=>{if(e.key==="Enter")addTask();});
 let newTaskPeriod="day";
-document.querySelectorAll(".period-opt").forEach(btn=>{
+document.querySelectorAll("#periodPicker .period-opt").forEach(btn=>{
   btn.onclick=()=>{
     newTaskPeriod=btn.dataset.period;
-    document.querySelectorAll(".period-opt").forEach(b=>b.classList.toggle("active",b===btn));
+    document.querySelectorAll("#periodPicker .period-opt").forEach(b=>b.classList.toggle("active",b===btn));
   };
 });
-function addTask(){const i=document.getElementById("newTask");const v=i.value.trim();if(!v)return;tasks.push({id:"t"+Date.now(),label:v,period:newTaskPeriod});save("tracker:template",tasks);i.value="";renderTasks();renderScore();}
+let newTaskCategory="dev";
+document.querySelectorAll("#categoryPicker .period-opt").forEach(btn=>{
+  btn.onclick=()=>{
+    newTaskCategory=btn.dataset.category;
+    document.querySelectorAll("#categoryPicker .period-opt").forEach(b=>b.classList.toggle("active",b===btn));
+  };
+});
+function addTask(){const i=document.getElementById("newTask");const v=i.value.trim();if(!v)return;tasks.push({id:"t"+Date.now(),label:v,period:newTaskPeriod,category:newTaskCategory});save("tracker:template",tasks);i.value="";renderTasks();renderScore();}
 
 document.getElementById("wBtn").onclick=logW;
 document.getElementById("wInput").addEventListener("keydown",e=>{if(e.key==="Enter")logW();});
@@ -898,7 +989,14 @@ document.getElementById("coverInput").addEventListener("change",e=>{
 });
 document.getElementById("chapBtn").onclick=()=>{reading.chapters++;save("tracker:reading",reading);renderReading();};
 document.getElementById("chapMinusBtn").onclick=()=>{if(reading.chapters>0){reading.chapters--;save("tracker:reading",reading);renderReading();}};
-document.getElementById("finishBtn").onclick=()=>{reading={book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,booksThisYear:reading.booksThisYear+1};save("tracker:reading",reading);renderReading();};
+document.getElementById("finishBtn").onclick=()=>{
+  if(reading.book){
+    booksArchive.push({title:reading.book,coverPhoto:reading.coverPhoto,chapters:reading.chapters,totalChapters:reading.totalChapters,pageCount:reading.pageCount,finishedDate:today()});
+    save("tracker:booksArchive",booksArchive);
+  }
+  reading={book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,booksThisYear:reading.booksThisYear+1};
+  save("tracker:reading",reading);renderReading();
+};
 
 document.getElementById("exportBtn").onclick=()=>{
   const out={};
