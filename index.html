@@ -73,7 +73,12 @@
   .wbar{flex:1;background:var(--greenDim);border-radius:4px}
   .read-box{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:12px;padding:12px 14px}
   .foot{text-align:center;color:var(--muted);font-size:11px;margin-top:20px;line-height:1.5}
+  .foot-export{background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;padding:6px;font-family:inherit;margin-top:10px;opacity:.6}
   .hidden{display:none}
+  .book-row{display:flex;gap:12px;margin-bottom:12px}
+  .book-cover{width:56px;height:76px;border-radius:8px;background:var(--bg);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:20px}
+  .book-cover img{width:100%;height:100%;object-fit:cover}
+  .book-info{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
   .pbar-row{margin-top:12px}
   .pbar-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px}
   .pbar-lbl b{color:var(--text);font-weight:700}
@@ -198,8 +203,16 @@
   <div class="card">
     <div class="card-h"><span class="dot" style="background:var(--amber)"></span>Lecture · 1 chapitre/jour → 1 livre/mois</div>
     <div class="sub" id="booksSub"></div>
-    <div class="row" style="margin-bottom:12px">
-      <input id="bookInput" placeholder="Livre en cours…" />
+    <div class="book-row">
+      <button class="book-cover" id="coverBtn" type="button">
+        <img id="coverImg" class="hidden" />
+        <span id="coverPlaceholder">📷</span>
+      </button>
+      <input type="file" accept="image/*" capture="environment" id="coverInput" class="hidden" />
+      <div class="book-info">
+        <input id="bookInput" placeholder="Titre du livre…" />
+        <input id="totalChapInput" inputmode="numeric" placeholder="Nb de chapitres total (optionnel)" />
+      </div>
     </div>
     <div class="read-box">
       <div class="stat-num"><span id="chapCount">0</span> <span style="font-size:13px;color:var(--muted);font-weight:600">chapitres</span></div>
@@ -208,11 +221,11 @@
         <button class="btn btn-ghost" id="finishBtn">Terminé ✓</button>
       </div>
     </div>
+    <div class="sub hidden" id="paceInfo" style="margin-top:10px;margin-bottom:0"></div>
   </div>
 
-  <div class="foot">Tes données restent sur ton téléphone et se sauvegardent toutes seules.<br/>Coche chaque jour — c'est la régularité qui gagne.<br/>
-    <button class="btn-link" id="exportBtn" style="margin-top:8px">Exporter mes données (JSON)</button>
-  </div>
+  <div class="foot">Tes données restent sur ton téléphone et se sauvegardent toutes seules.<br/>Coche chaque jour — c'est la régularité qui gagne.</div>
+  <button class="foot-export" id="exportBtn">Exporter mes données (JSON)</button>
 </div>
 
 <div class="celebration hidden" id="celebration">
@@ -249,8 +262,13 @@ tasks=tasks.map(t=>t.period?t:{...t,period:DEFAULT_PERIODS[t.id]||"day"});
 save("tracker:template",tasks);
 let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
-let reading=load("tracker:reading",{book:"",chapters:0,booksThisYear:0});
+let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,booksThisYear:0});
 let editMode=false;
+const ECOM_DAILY_FOCUS=["Bilan semaine + plan + veille","Planning semaine + revue chiffres + angles","Production créatifs (UGC, montages)","Optimisation boutique / page produit","Gestion des tests + recherche produit","Analyse + décisions scaling","Gros chantier de la semaine"];
+function taskDisplayLabel(t){
+  if(t.id==="ecom")return `💻 ${ECOM_DAILY_FOCUS[new Date().getDay()]}`;
+  return t.label;
+}
 
 document.getElementById("date").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
 
@@ -285,10 +303,10 @@ function renderTasks(){
       d.className="task"+(done[t.id]&&!editMode?" done":"");
       d.dataset.taskId=t.id;
       if(editMode){
-        d.innerHTML=`<button class="del">✕</button><span class="task-label">${t.label}</span>`;
+        d.innerHTML=`<button class="del">✕</button><span class="task-label">${taskDisplayLabel(t)}</span>`;
         d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==t.id);save("tracker:template",tasks);renderTasks();renderScore();};
       }else{
-        d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label">${t.label}</span>`;
+        d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label">${taskDisplayLabel(t)}</span>`;
         d.onclick=()=>{
           done[t.id]=!done[t.id];
           save("tracker:day:"+today(),done);
@@ -346,17 +364,50 @@ function renderWeight(){
   const s=document.getElementById("wstats");s.innerHTML="";
   s.innerHTML=`<div><div class="stat-num">${last?last.kg.toFixed(1):"—"}<span style="font-size:15px;color:var(--muted);font-weight:600"> kg</span></div><div class="stat-lbl">actuel</div></div>`;
   if(goal!=null)s.innerHTML+=`<div><div class="stat-num" style="color:var(--amber)">${goal.toFixed(1)}<span style="font-size:15px;color:var(--muted);font-weight:600"> kg</span></div><div class="stat-lbl">cible du moment</div></div>`;
-  if(first&&last){const diff=last.kg-first.kg;s.innerHTML+=`<div><div class="stat-num" style="color:${diff>=0?"var(--green)":"var(--muted)"}">${diff>=0?"+":""}${diff.toFixed(1)}</div><div class="stat-lbl">depuis le début</div></div>`;}
+  if(first&&last&&first!==last){
+    const weeks=Math.max((new Date(last.date)-new Date(first.date))/(1000*60*60*24*7),1/7);
+    const rate=(last.kg-first.kg)/weeks;
+    s.innerHTML+=`<div><div class="stat-num" style="color:${rate>=0?"var(--green)":"var(--muted)"}">${rate>=0?"+":""}${rate.toFixed(2)}</div><div class="stat-lbl">kg/semaine</div></div>`;
+  }
   const wb=document.getElementById("wbars");wb.innerHTML="";
   if(weights.length>1){
     const slice=weights.slice(-12);const vals=slice.map(x=>x.kg);const min=Math.min(...vals)-.5,max=Math.max(...vals)+.5;
-    slice.forEach(w=>{const h=max>min?((w.kg-min)/(max-min))*100:50;const b=document.createElement("div");b.className="wbar";b.style.height=Math.max(h,6)+"%";b.title=w.kg+"kg";wb.appendChild(b);});
+    slice.forEach(w=>{
+      const h=max>min?((w.kg-min)/(max-min))*100:50;
+      const b=document.createElement("div");b.className="wbar";b.style.height=Math.max(h,6)+"%";
+      b.title=`${w.kg}kg — touche pour supprimer`;
+      b.onclick=()=>{
+        if(confirm(`Supprimer l'entrée ${w.kg}kg du ${new Date(w.date).toLocaleDateString("fr-FR")} ?`)){
+          weights=weights.filter(x=>x!==w);save("tracker:weights",weights);renderWeight();
+        }
+      };
+      wb.appendChild(b);
+    });
   }
 }
 function renderReading(){
   document.getElementById("booksSub").textContent=`${reading.booksThisYear} livre${reading.booksThisYear>1?"s":""} terminé${reading.booksThisYear>1?"s":""} cette année`;
   document.getElementById("chapCount").textContent=reading.chapters;
   document.getElementById("bookInput").value=reading.book||"";
+  document.getElementById("totalChapInput").value=reading.totalChapters||"";
+  const img=document.getElementById("coverImg"),ph=document.getElementById("coverPlaceholder");
+  if(reading.coverPhoto){img.src=reading.coverPhoto;img.classList.remove("hidden");ph.classList.add("hidden");}
+  else{img.classList.add("hidden");ph.classList.remove("hidden");}
+  const paceEl=document.getElementById("paceInfo");
+  if(reading.totalChapters&&reading.startDate&&reading.chapters>0){
+    const days=Math.max(1,Math.round((new Date()-new Date(reading.startDate))/DAY_MS));
+    const pace=reading.chapters/days;
+    const remaining=reading.totalChapters-reading.chapters;
+    if(remaining<=0){
+      paceEl.textContent="Tu as fini tous les chapitres — tape Terminé ✓ !";
+      paceEl.classList.remove("hidden");
+    }else if(pace>0){
+      const daysLeft=Math.ceil(remaining/pace);
+      const finishDate=new Date();finishDate.setDate(finishDate.getDate()+daysLeft);
+      paceEl.textContent=`📈 ${pace.toFixed(1)} chap./jour · fin estimée le ${finishDate.toLocaleDateString("fr-FR",{day:"numeric",month:"long"})}`;
+      paceEl.classList.remove("hidden");
+    }else{paceEl.classList.add("hidden");}
+  }else{paceEl.classList.add("hidden");}
 }
 
 const DAY_MS=86400000;
@@ -515,10 +566,39 @@ document.getElementById("wBtn").onclick=logW;
 document.getElementById("wInput").addEventListener("keydown",e=>{if(e.key==="Enter")logW();});
 function logW(){const i=document.getElementById("wInput");const kg=parseFloat(i.value.replace(",","."));if(!kg||kg<30||kg>200)return;weights.push({date:today(),kg});save("tracker:weights",weights);i.value="";renderWeight();}
 
-document.getElementById("bookInput").addEventListener("blur",()=>{reading.book=document.getElementById("bookInput").value.trim();save("tracker:reading",reading);});
+document.getElementById("bookInput").addEventListener("blur",()=>{
+  const v=document.getElementById("bookInput").value.trim();
+  if(v&&!reading.book)reading.startDate=today();
+  reading.book=v;
+  save("tracker:reading",reading);renderReading();
+});
 document.getElementById("bookInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
+document.getElementById("totalChapInput").addEventListener("change",()=>{
+  const v=parseInt(document.getElementById("totalChapInput").value);
+  reading.totalChapters=v>0?v:null;
+  save("tracker:reading",reading);renderReading();
+});
+document.getElementById("coverBtn").onclick=()=>document.getElementById("coverInput").click();
+document.getElementById("coverInput").addEventListener("change",e=>{
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const maxW=240;
+      const scale=Math.min(1,maxW/img.width);
+      const canvas=document.createElement("canvas");
+      canvas.width=img.width*scale;canvas.height=img.height*scale;
+      canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+      reading.coverPhoto=canvas.toDataURL("image/jpeg",0.75);
+      save("tracker:reading",reading);renderReading();
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
 document.getElementById("chapBtn").onclick=()=>{reading.chapters++;save("tracker:reading",reading);renderReading();};
-document.getElementById("finishBtn").onclick=()=>{reading={book:"",chapters:0,booksThisYear:reading.booksThisYear+1};save("tracker:reading",reading);renderReading();};
+document.getElementById("finishBtn").onclick=()=>{reading={book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,booksThisYear:reading.booksThisYear+1};save("tracker:reading",reading);renderReading();};
 
 document.getElementById("exportBtn").onclick=()=>{
   const out={};
