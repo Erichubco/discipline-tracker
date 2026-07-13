@@ -74,9 +74,9 @@
   .task-tabs{display:flex;gap:8px;margin-bottom:14px}
   .task-tab{flex:1;background:var(--cardHi);border:1px solid var(--border);border-radius:10px;padding:9px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
   .task-tab.active{background:var(--green);color:#fff;border-color:var(--green)}
-  .task-slider{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
-  .task-slider::-webkit-scrollbar{display:none}
-  .task-panel{flex:0 0 100%;scroll-snap-align:start;min-width:100%}
+  .task-slider-viewport{overflow:hidden}
+  .task-slider{display:flex;transition:transform .32s cubic-bezier(.4,0,.2,1);will-change:transform}
+  .task-panel{flex:0 0 100%;min-width:100%}
   .task-panel-empty{color:var(--muted);font-size:13px;text-align:center;padding:24px 0}
   .task{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff;border-radius:14px;cursor:pointer;border:1px solid var(--border);transition:all .15s;margin-bottom:8px;box-shadow:var(--shadow)}
   .task.done{background:#ede9ff;border-color:var(--greenDim)}
@@ -86,7 +86,7 @@
   .task.done .check svg{opacity:1}
   .task-label{font-size:14px}
   .task.done .task-label{color:var(--muted);text-decoration:line-through}
-  .del{background:none;border:none;cursor:pointer;display:flex;padding:0;color:var(--red)}
+  .del{background:#fdecea;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--red);width:32px;height:32px;border-radius:50%;flex-shrink:0;font-size:14px}
   .btn-link{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:4px;font-family:inherit}
   .row{display:flex;gap:8px}
   input{flex:1;background:var(--cardHi);border:1px solid transparent;border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit;width:100%}
@@ -102,7 +102,12 @@
   .weight-chart{width:100%;height:90px;display:block;margin-top:4px}
   .goal-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:13px;color:var(--muted);font-weight:600}
   .goal-row input{flex:none;width:64px;padding:7px 8px;font-size:14px;text-align:right}
-  .weight-status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;background:var(--cardHi);margin-bottom:14px;color:var(--green)}
+  .weight-status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;background:var(--cardHi);color:var(--green)}
+  .weight-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .weight-current-target{font-size:13px;color:var(--muted);font-weight:600}
+  .weight-current-target b{color:var(--text);font-weight:700}
+  .weight-remaining-block{text-align:right;flex-shrink:0}
+  .weight-remaining-num{font-size:18px;font-weight:700;font-family:'Quicksand',sans-serif;color:var(--green);margin-bottom:6px;white-space:nowrap}
   .status-dot{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse-dot 1.6s ease-in-out infinite}
   @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
   .streak-card{border-left:4px solid var(--red)}
@@ -245,9 +250,11 @@
         <button type="button" class="task-tab active" data-panel="personal" id="taskTabPersonalLbl">Perso</button>
         <button type="button" class="task-tab" data-panel="business" id="taskTabBusinessLbl">Business</button>
       </div>
-      <div class="task-slider" id="taskSlider">
-        <div class="task-panel" id="panel-personal"></div>
-        <div class="task-panel" id="panel-business"></div>
+      <div class="task-slider-viewport" id="taskSliderViewport">
+        <div class="task-slider" id="taskSlider">
+          <div class="task-panel" id="panel-personal"></div>
+          <div class="task-panel" id="panel-business"></div>
+        </div>
       </div>
       <div class="row hidden" id="addRow" style="margin-top:12px;flex-direction:column;gap:8px">
         <div class="period-picker" id="periodPicker">
@@ -282,7 +289,8 @@
 
     <!-- History -->
     <div class="card">
-      <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="heatmapTitle">16 dernières semaines</span></div>
+      <div class="biz-h-title" id="heatmapTitle" style="display:block;margin-bottom:2px">Activité</div>
+      <div class="sub" id="heatmapSub" style="margin-bottom:14px">Un carré = un jour. Plus foncé = plus de tâches cochées ce jour-là. 16 dernières semaines.</div>
       <div class="heatmap" id="heatmap"></div>
       <div class="heatmap-legend"><span id="legendLess">Moins</span>
         <div class="heatmap-cell" style="background:var(--bg)"></div>
@@ -411,18 +419,25 @@
 
     <!-- Weight -->
     <div class="card">
-      <div class="card-h"><span class="dot" style="background:var(--green)"></span><span id="weightTitle">Poids</span></div>
-      <div class="sub" id="weightSub">Pèse-toi 1×/semaine, le matin. Pas tous les jours.</div>
-      <div class="goal-row">
+      <div class="weight-head">
+        <div>
+          <div class="card-h" style="margin-bottom:6px"><span class="dot" style="background:var(--green)"></span><span id="weightTitle">Poids</span></div>
+          <div class="weight-current-target" id="weightCurrentTarget">Actuel : — · Objectif : —</div>
+        </div>
+        <div class="weight-remaining-block hidden" id="weightRemainingBlock">
+          <div class="weight-remaining-num" id="weightRemainingNum"></div>
+          <div class="weight-status hidden" id="weightStatus"></div>
+        </div>
+      </div>
+      <div class="sub" id="weightSub" style="margin-top:10px">Pèse-toi 1×/semaine, le matin. Pas tous les jours.</div>
+      <svg class="weight-chart hidden" id="weightChart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
+      <div class="sub hidden" id="weightPaceInfo" style="margin:10px 0 0"></div>
+      <div class="goal-row" style="margin-top:14px">
         <span id="weightGoalLbl">Objectif</span>
         <input id="weightGoalInput" inputmode="decimal" placeholder="kg" />
         <span>kg</span>
       </div>
-      <div class="weight-status hidden" id="weightStatus"></div>
-      <div class="stats" id="wstats"></div>
-      <svg class="weight-chart hidden" id="weightChart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
-      <div class="sub hidden" id="weightPaceInfo" style="margin:10px 0 0"></div>
-      <div class="row" style="margin-top:14px">
+      <div class="row" style="margin-top:10px">
         <input id="wInput" inputmode="decimal" placeholder="Ton poids (kg)" />
         <button class="btn btn-green" id="wBtn">Enregistrer</button>
       </div>
@@ -491,7 +506,7 @@
 const STRINGS = {
   fr: {
     dateLocale:"fr-FR",
-    heatmapTitle:"16 dernières semaines", legendLess:"Moins", legendMore:"Plus",
+    heatmapTitle:"Activité", heatmapSub:"Un carré = un jour. Plus foncé = plus de tâches cochées ce jour-là. 16 dernières semaines.", legendLess:"Moins", legendMore:"Plus",
     tasksTitle:"Tâches du jour", editBtn:"Modifier", editBtnDone:"Terminé",
     newTaskPlaceholder:"Nouvelle tâche…",
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
@@ -569,7 +584,7 @@ const STRINGS = {
   },
   en: {
     dateLocale:"en-US",
-    heatmapTitle:"Last 16 weeks", legendLess:"Less", legendMore:"More",
+    heatmapTitle:"Activity", heatmapSub:"One square = one day. Darker = more tasks checked that day. Last 16 weeks.", legendLess:"Less", legendMore:"More",
     tasksTitle:"Today's tasks", editBtn:"Edit", editBtnDone:"Done",
     newTaskPlaceholder:"New task…",
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
@@ -727,6 +742,7 @@ function applyStaticI18n(){
   document.getElementById("date").textContent=new Date().toLocaleDateString(t("dateLocale"),{weekday:"long",day:"numeric",month:"long"});
   document.getElementById("ringLbl").textContent=t("ringLbl");
   document.getElementById("heatmapTitle").textContent=t("heatmapTitle");
+  document.getElementById("heatmapSub").textContent=t("heatmapSub");
   document.getElementById("legendLess").textContent=t("legendLess");
   document.getElementById("legendMore").textContent=t("legendMore");
   document.getElementById("tasksTitle").textContent=t("tasksTitle");
@@ -913,20 +929,27 @@ function renderWeight(){
   document.getElementById("weightGoalInput").value=weightGoal??"";
   const last=weights[weights.length-1];
   const rate=weightRateKgPerWeek();
-  const s=document.getElementById("wstats");s.innerHTML="";
-  s.innerHTML=`<div><div class="stat-num">${last?last.kg.toFixed(1):"—"}<span style="font-size:15px;color:var(--muted);font-weight:600"> kg</span></div><div class="stat-lbl">${t("weightCurrent")}</div></div>`;
-  if(weightGoal!=null)s.innerHTML+=`<div><div class="stat-num" style="color:var(--amber)">${weightGoal.toFixed(1)}<span style="font-size:15px;color:var(--muted);font-weight:600"> kg</span></div><div class="stat-lbl">${t("weightGoal")}</div></div>`;
-  if(weightGoal!=null&&last){
-    const remaining=weightGoal-last.kg;
-    s.innerHTML+=`<div><div class="stat-num" style="color:${Math.abs(remaining)<=0.3?"var(--green)":"var(--text)"}">${remaining>=0?"+":""}${remaining.toFixed(1)}</div><div class="stat-lbl">${t("weightRemaining")}</div></div>`;
-  }
+  const firstDaysAgo=weights.length>1?Math.round((new Date(last.date)-new Date(weights[0].date))/DAY_MS):0;
+  const reliableRate=firstDaysAgo>=3;
 
+  document.getElementById("weightCurrentTarget").innerHTML=
+    `${t("weightCurrent")} : <b>${last?last.kg.toFixed(1)+"kg":"—"}</b> · ${t("weightGoal")} : <b>${weightGoal!=null?weightGoal.toFixed(1)+"kg":"—"}</b>`;
+
+  const remainingBlock=document.getElementById("weightRemainingBlock");
+  const remainingNumEl=document.getElementById("weightRemainingNum");
   const statusEl=document.getElementById("weightStatus");
   const paceEl=document.getElementById("weightPaceInfo");
   if(weightGoal!=null&&last){
     const remaining=weightGoal-last.kg;
+    remainingBlock.classList.remove("hidden");
+    if(Math.abs(remaining)<=0.3){
+      remainingNumEl.textContent=t("weightGoalReached");
+    }else{
+      remainingNumEl.textContent=`${Math.abs(remaining).toFixed(1)}kg ${t("weightRemaining")}`;
+    }
     let info;
     if(Math.abs(remaining)<=0.3)info={key:"weightGoalReached",color:"var(--green)"};
+    else if(!reliableRate)info={key:"weightOnTrack",color:"var(--amber)"};
     else{
       const needsGain=remaining>0;
       const progressing=needsGain?rate>0.05:rate<-0.05;
@@ -940,13 +963,14 @@ function renderWeight(){
     statusEl.classList.remove("hidden");
     const needsGain=remaining>0;
     const isProgressing=needsGain?rate>0.05:rate<-0.05;
-    if(Math.abs(remaining)>0.3&&isProgressing){
+    if(reliableRate&&Math.abs(remaining)>0.3&&isProgressing){
       const weeksLeft=Math.abs(remaining/rate);
       const eta=new Date();eta.setDate(eta.getDate()+Math.round(weeksLeft*7));
       paceEl.textContent=t("weightPaceInfo",(rate>=0?"+":"")+rate.toFixed(2),eta.toLocaleDateString(t("dateLocale"),{day:"numeric",month:"long"}));
       paceEl.classList.remove("hidden");
     }else{paceEl.classList.add("hidden");}
   }else{
+    remainingBlock.classList.add("hidden");
     statusEl.classList.add("hidden");
     if(last&&weightGoal==null){paceEl.textContent=t("weightSetGoalHint");paceEl.classList.remove("hidden");}
     else paceEl.classList.add("hidden");
@@ -1031,16 +1055,18 @@ function renderReading(){
   const paceEl=document.getElementById("paceInfo");
   if(reading.totalChapters&&reading.startDate&&reading.chapters>0){
     const days=Math.max(1,Math.round((new Date()-new Date(reading.startDate))/DAY_MS));
-    const pace=reading.chapters/days;
     const remaining=reading.totalChapters-reading.chapters;
     if(remaining<=0){
       paceEl.textContent=t("paceAllDone");
       paceEl.classList.remove("hidden");
-    }else if(pace>0){
-      const daysLeft=Math.ceil(remaining/pace);
-      const finishDate=new Date();finishDate.setDate(finishDate.getDate()+daysLeft);
-      paceEl.textContent=t("paceInfo",pace.toFixed(1),finishDate.toLocaleDateString(t("dateLocale"),{day:"numeric",month:"long"}));
-      paceEl.classList.remove("hidden");
+    }else if(days>=3){
+      const pace=reading.chapters/days;
+      if(pace>0){
+        const daysLeft=Math.ceil(remaining/pace);
+        const finishDate=new Date();finishDate.setDate(finishDate.getDate()+daysLeft);
+        paceEl.textContent=t("paceInfo",pace.toFixed(1),finishDate.toLocaleDateString(t("dateLocale"),{day:"numeric",month:"long"}));
+        paceEl.classList.remove("hidden");
+      }else{paceEl.classList.add("hidden");}
     }else{paceEl.classList.add("hidden");}
   }else{paceEl.classList.add("hidden");}
 
@@ -1332,11 +1358,14 @@ document.querySelectorAll("#categoryPicker .period-opt").forEach(btn=>{
 function addTask(){const i=document.getElementById("newTask");const v=i.value.trim();if(!v)return;tasks.push({id:"t"+Date.now(),label:v,period:newTaskPeriod,category:newTaskCategory});save("tracker:template",tasks);i.value="";renderTasks();renderScore();}
 
 const taskSlider=document.getElementById("taskSlider");
+const taskSliderViewport=document.getElementById("taskSliderViewport");
 const taskTabs=document.querySelectorAll(".task-tab");
 const taskPanelOrder=["personal","business"];
+let currentTaskPanelIdx=0;
 function goToTaskPanel(panel){
-  const idx=taskPanelOrder.indexOf(panel);
-  taskSlider.scrollTo({left:idx*taskSlider.clientWidth,behavior:"smooth"});
+  currentTaskPanelIdx=Math.max(0,taskPanelOrder.indexOf(panel));
+  taskSlider.style.transform=`translateX(-${currentTaskPanelIdx*100}%)`;
+  taskTabs.forEach(b=>b.classList.toggle("active",b.dataset.panel===taskPanelOrder[currentTaskPanelIdx]));
 }
 taskTabs.forEach(btn=>{
   btn.onclick=()=>{
@@ -1344,14 +1373,29 @@ taskTabs.forEach(btn=>{
     setNewTaskCategory(btn.dataset.panel==="business"?"business":"dev");
   };
 });
-let taskScrollTimer=null;
-taskSlider.addEventListener("scroll",()=>{
-  clearTimeout(taskScrollTimer);
-  taskScrollTimer=setTimeout(()=>{
-    const idx=Math.round(taskSlider.scrollLeft/Math.max(taskSlider.clientWidth,1));
-    const panel=taskPanelOrder[idx]||"personal";
-    taskTabs.forEach(b=>b.classList.toggle("active",b.dataset.panel===panel));
-  },80);
+let touchStartX=null,touchDeltaX=0;
+taskSliderViewport.addEventListener("touchstart",e=>{
+  touchStartX=e.touches[0].clientX;
+  touchDeltaX=0;
+  taskSlider.style.transition="none";
+},{passive:true});
+taskSliderViewport.addEventListener("touchmove",e=>{
+  if(touchStartX==null)return;
+  touchDeltaX=e.touches[0].clientX-touchStartX;
+  const basePercent=-currentTaskPanelIdx*100;
+  const dragPercent=(touchDeltaX/taskSliderViewport.clientWidth)*100;
+  taskSlider.style.transform=`translateX(${basePercent+dragPercent}%)`;
+},{passive:true});
+taskSliderViewport.addEventListener("touchend",()=>{
+  taskSlider.style.transition="";
+  const threshold=taskSliderViewport.clientWidth*0.22;
+  let targetIdx=currentTaskPanelIdx;
+  if(touchDeltaX<-threshold&&currentTaskPanelIdx<taskPanelOrder.length-1)targetIdx=currentTaskPanelIdx+1;
+  else if(touchDeltaX>threshold&&currentTaskPanelIdx>0)targetIdx=currentTaskPanelIdx-1;
+  const targetPanel=taskPanelOrder[targetIdx];
+  goToTaskPanel(targetPanel);
+  setNewTaskCategory(targetPanel==="business"?"business":"dev");
+  touchStartX=null;
 });
 
 document.getElementById("wBtn").onclick=logW;
