@@ -182,7 +182,9 @@
   .tab{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;font-size:10px;font-weight:600;color:var(--muted);padding:2px;cursor:pointer;font-family:inherit}
   .tab-pill{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 14px;border-radius:9999px;transition:background .15s,color .15s}
   .tab.active .tab-pill{background:var(--cardHi);color:var(--green)}
-  .tab-icon{font-size:19px}
+  .tab-icon{display:flex;color:var(--muted)}
+  .tab-icon svg{width:21px;height:21px}
+  .tab.active .tab-icon{color:var(--green)}
 </style>
 </head>
 <body>
@@ -266,10 +268,12 @@
   <button class="fab" id="fabAdd" type="button">+</button>
 
   <!-- STATS -->
-  <div class="view" id="view-stats">
+  <div class="view" id="view-progression">
     <div class="head-row">
       <div class="eyebrow display">Discipline</div>
     </div>
+    <div class="greeting-title display" id="progressionTitle">Progression</div>
+    <div class="greeting-sub" id="progressionSub">Ta progression, jour après jour.</div>
 
     <!-- History -->
     <div class="card">
@@ -319,34 +323,6 @@
         <div class="pbar-bg"><div class="pbar-fill" id="monthBarFill" style="width:0%;background:var(--green)"></div></div>
       </div>
     </div>
-
-    <!-- Weight -->
-    <div class="card">
-      <div class="card-h"><span class="dot" style="background:var(--green)"></span><span id="weightTitle">Poids</span></div>
-      <div class="sub" id="weightSub">Pèse-toi 1×/semaine, le matin. Pas tous les jours.</div>
-      <div class="goal-row">
-        <span id="weightGoalLbl">Objectif</span>
-        <input id="weightGoalInput" inputmode="decimal" placeholder="kg" />
-        <span>kg</span>
-      </div>
-      <div class="weight-status hidden" id="weightStatus"></div>
-      <div class="stats" id="wstats"></div>
-      <svg class="weight-chart hidden" id="weightChart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
-      <div class="sub hidden" id="weightPaceInfo" style="margin:10px 0 0"></div>
-      <div class="row" style="margin-top:14px">
-        <input id="wInput" inputmode="decimal" placeholder="Ton poids (kg)" />
-        <button class="btn btn-green" id="wBtn">Enregistrer</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- GOALS -->
-  <div class="view" id="view-goals">
-    <div class="head-row">
-      <div class="eyebrow display">Discipline</div>
-    </div>
-    <div class="greeting-title display" id="goalsTitle">Objectifs du mois</div>
-    <div class="greeting-sub" id="goalsSub">Une progression consciente, un pas à la fois.</div>
 
     <!-- Business goal -->
     <div class="card">
@@ -407,11 +383,30 @@
     </div>
 
     <!-- Books read -->
-    <div class="hidden" id="archiveWrap">
+    <div class="hidden" id="archiveWrap" style="margin-bottom:16px">
       <div class="archive-head">
         <div class="archive-title" id="archiveTitle">📚 Livres lus</div>
       </div>
       <div class="book-archive" id="bookArchive"></div>
+    </div>
+
+    <!-- Weight -->
+    <div class="card">
+      <div class="card-h"><span class="dot" style="background:var(--green)"></span><span id="weightTitle">Poids</span></div>
+      <div class="sub" id="weightSub">Pèse-toi 1×/semaine, le matin. Pas tous les jours.</div>
+      <div class="goal-row">
+        <span id="weightGoalLbl">Objectif</span>
+        <input id="weightGoalInput" inputmode="decimal" placeholder="kg" />
+        <span>kg</span>
+      </div>
+      <div class="weight-status hidden" id="weightStatus"></div>
+      <div class="stats" id="wstats"></div>
+      <svg class="weight-chart hidden" id="weightChart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
+      <div class="sub hidden" id="weightPaceInfo" style="margin:10px 0 0"></div>
+      <div class="row" style="margin-top:14px">
+        <input id="wInput" inputmode="decimal" placeholder="Ton poids (kg)" />
+        <button class="btn btn-green" id="wBtn">Enregistrer</button>
+      </div>
     </div>
   </div>
 
@@ -456,10 +451,9 @@
   <!-- Tab bar -->
   <nav class="tabbar">
     <div class="tabbar-inner">
-      <button class="tab active" data-view="home" type="button"><span class="tab-pill"><span class="tab-icon">🏠</span><span id="tabHomeLbl">Home</span></span></button>
-      <button class="tab" data-view="stats" type="button"><span class="tab-pill"><span class="tab-icon">📊</span><span id="tabStatsLbl">Stats</span></span></button>
-      <button class="tab" data-view="goals" type="button"><span class="tab-pill"><span class="tab-icon">🎯</span><span id="tabGoalsLbl">Goals</span></span></button>
-      <button class="tab" data-view="settings" type="button"><span class="tab-pill"><span class="tab-icon">⚙️</span><span id="tabSettingsLbl">Settings</span></span></button>
+      <button class="tab active" data-view="home" type="button"><span class="tab-pill"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg></span><span id="tabHomeLbl">Home</span></span></button>
+      <button class="tab" data-view="progression" type="button"><span class="tab-pill"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V10"/><path d="M10 20V4"/><path d="M17 20v-7"/></svg></span><span id="tabProgressionLbl">Progression</span></span></button>
+      <button class="tab" data-view="settings" type="button"><span class="tab-pill"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span><span id="tabSettingsLbl">Settings</span></span></button>
     </div>
   </nav>
 </div>
@@ -497,7 +491,7 @@ const STRINGS = {
     weightAhead:"En progression vers l'objectif", weightOnTrack:"Stable", weightBehind:"S'éloigne de l'objectif", weightGoalReached:"Objectif atteint !",
     weightPaceInfo:(rate,date)=>`${rate} kg/semaine · objectif estimé le ${date}`,
     weightSetGoalHint:"Entre ton objectif pour suivre ta progression.",
-    goalsTitle:"Objectifs du mois", goalsSub:"Une progression consciente, un pas à la fois.",
+    progressionTitle:"Progression", progressionSub:"Ta progression, jour après jour.",
     bizTitle:"Chiffre d'affaires mensuel", bizEyebrow:"Objectif business", bizGoalLbl:"Objectif CA", bizPlaceholder:"CA actuel (€)",
     bizPctCompleted:pct=>`${pct}% complété`, bizRemainingAmt:amt=>`${amt} restant`,
     readingTitle:"Lecture · 1 chapitre/jour → 1 livre/mois",
@@ -534,7 +528,7 @@ const STRINGS = {
     ecomFocus:["Bilan semaine + plan + veille","Planning semaine + revue chiffres + angles","Production créatifs (UGC, montages)","Optimisation boutique / page produit","Gestion des tests + recherche produit","Analyse + décisions scaling","Gros chantier de la semaine"],
     greetMorning:"Bonjour", greetAfternoon:"Bon après-midi", greetEvening:"Bonsoir",
     greetingSub:"Prêt à avancer sur tes objectifs aujourd'hui ?",
-    tabHome:"Accueil", tabStats:"Stats", tabGoals:"Objectifs", tabSettings:"Réglages",
+    tabHome:"Accueil", tabProgression:"Progression", tabSettings:"Réglages",
     dayShort:["L","M","M","J","V","S","D"], todayLbl:"Auj.",
     defaultTasks:[
       {id:"wake",label:"🌞 Réveil sans téléphone + marche",period:"morning",category:"dev"},
@@ -569,7 +563,7 @@ const STRINGS = {
     weightAhead:"Progressing toward goal", weightOnTrack:"Stable", weightBehind:"Moving away from goal", weightGoalReached:"Goal reached!",
     weightPaceInfo:(rate,date)=>`${rate} kg/week · goal estimated ${date}`,
     weightSetGoalHint:"Enter your goal to track progress.",
-    goalsTitle:"Monthly goals", goalsSub:"Mindful progress, one step at a time.",
+    progressionTitle:"Progress", progressionSub:"Your progress, day by day.",
     bizTitle:"Monthly revenue", bizEyebrow:"Business goal", bizGoalLbl:"Revenue goal", bizPlaceholder:"Current revenue (€)",
     bizPctCompleted:pct=>`${pct}% completed`, bizRemainingAmt:amt=>`${amt} remaining`,
     readingTitle:"Reading · 1 chapter/day → 1 book/month",
@@ -606,7 +600,7 @@ const STRINGS = {
     ecomFocus:["Weekly review + plan + watch trends","Weekly planning + numbers review + angles","Creative production (UGC, edits)","Store / product page optimization","Test management + product research","Analysis + scaling decisions","Big weekly project"],
     greetMorning:"Good morning", greetAfternoon:"Good afternoon", greetEvening:"Good evening",
     greetingSub:"Ready to focus on your goals today?",
-    tabHome:"Home", tabStats:"Stats", tabGoals:"Goals", tabSettings:"Settings",
+    tabHome:"Home", tabProgression:"Progress", tabSettings:"Settings",
     dayShort:["M","T","W","T","F","S","S"], todayLbl:"Today",
     defaultTasks:[
       {id:"wake",label:"🌞 Wake up phone-free + walk",period:"morning",category:"dev"},
@@ -643,6 +637,9 @@ tasks=tasks.map(tk=>({
   period:tk.period||DEFAULT_PERIODS[tk.id]||"day",
   category:tk.category||DEFAULT_CATEGORIES[tk.id]||"dev",
 }));
+if(!tasks.some(tk=>tk.category==="business")){
+  tasks=tasks.concat(STRINGS.fr.defaultTasks.filter(tk=>tk.category==="business"));
+}
 save("tracker:template",tasks);
 let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
@@ -705,8 +702,8 @@ function applyStaticI18n(){
   document.getElementById("weightTitle").textContent=t("weightTitle");
   document.getElementById("weightSub").textContent=t("weightSub");
   document.getElementById("weightGoalLbl").textContent=t("weightGoalLbl");
-  document.getElementById("goalsTitle").textContent=t("goalsTitle");
-  document.getElementById("goalsSub").textContent=t("goalsSub");
+  document.getElementById("progressionTitle").textContent=t("progressionTitle");
+  document.getElementById("progressionSub").textContent=t("progressionSub");
   document.getElementById("bizTitle").textContent=t("bizTitle");
   document.getElementById("bizEyebrow").textContent=t("bizEyebrow");
   document.getElementById("bizGoalLbl").textContent=t("bizGoalLbl");
@@ -728,8 +725,7 @@ function applyStaticI18n(){
   document.getElementById("archiveTitle").textContent=t("archiveTitle");
   document.getElementById("celebTap").textContent=t("celebTap");
   document.getElementById("tabHomeLbl").textContent=t("tabHome");
-  document.getElementById("tabStatsLbl").textContent=t("tabStats");
-  document.getElementById("tabGoalsLbl").textContent=t("tabGoals");
+  document.getElementById("tabProgressionLbl").textContent=t("tabProgression");
   document.getElementById("tabSettingsLbl").textContent=t("tabSettings");
   document.getElementById("langIconBtn").textContent=lang.toUpperCase();
   renderGreeting();
@@ -1297,6 +1293,7 @@ async function lookupBook(imageDataUrl){
       if(!reading.book)reading.startDate=today();
       reading.book=data.title;
       reading.pageCount=data.pageCount||null;
+      if(data.chapters&&!reading.totalChapters)reading.totalChapters=data.chapters;
       save("tracker:reading",reading);
     }else{
       infoEl.textContent=t("bookNotIdentified");
