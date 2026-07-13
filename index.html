@@ -48,14 +48,18 @@
   .day-chip.active .day-num{background:var(--green);color:#fff}
   .day-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600}
   .day-chip.active .day-lbl{color:var(--green)}
-  .ring-wrap{position:relative;width:128px;height:128px;flex-shrink:0}
-  .ring-wrap svg{transform:rotate(-90deg)}
-  .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-  .ring-num{font-size:32px;font-weight:700;line-height:1;font-family:'Quicksand',sans-serif;color:var(--green)}
-  .ring-den{color:var(--muted);font-size:18px;font-weight:600}
-  .ring-lbl{color:var(--muted);font-size:11px;margin-top:2px}
-  .score-title{font-size:19px;font-weight:700;font-family:'Quicksand',sans-serif}
-  .score-sub{color:var(--muted);font-size:13px;margin-top:6px;line-height:1.4}
+  .ring-wrap{position:relative;width:200px;height:200px;margin:0 auto}
+  .ring-wrap svg{transform:rotate(-90deg);position:relative;z-index:1}
+  .ring-glow{position:absolute;inset:12%;background:var(--amber);opacity:.18;filter:blur(28px);border-radius:50%}
+  .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2}
+  .ring-num{font-size:38px;font-weight:700;line-height:1;font-family:'Quicksand',sans-serif;color:var(--green)}
+  .ring-den{color:var(--muted);font-size:22px;font-weight:600}
+  .ring-lbl{color:var(--muted);font-size:12px;margin-top:4px}
+  .score-title{display:inline-block;margin:18px auto 0;padding:8px 20px;background:var(--cardHi);border:1px solid var(--border);border-radius:9999px;font-size:13px;font-weight:700;color:var(--green);font-family:'Plus Jakarta Sans',sans-serif}
+  .score-sub{color:var(--muted);font-size:12px;margin-top:10px;line-height:1.4;text-align:center}
+  .fab{position:fixed;right:20px;bottom:96px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--amber));color:#fff;border:none;font-size:26px;box-shadow:var(--shadow-lg);cursor:pointer;z-index:41;display:flex;align-items:center;justify-content:center}
+  .task-menu{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px 6px;flex-shrink:0;line-height:1}
+  .edit-footer{text-align:center;margin-top:14px}
   .heatmap{display:flex;gap:3px;overflow-x:auto;padding-bottom:2px}
   .heatmap-week{display:flex;flex-direction:column;gap:3px}
   .heatmap-cell{width:11px;height:11px;border-radius:3px;background:var(--bg);border:1px solid var(--border)}
@@ -73,7 +77,7 @@
   .task-slider::-webkit-scrollbar{display:none}
   .task-panel{flex:0 0 100%;scroll-snap-align:start;min-width:100%}
   .task-panel-empty{color:var(--muted);font-size:13px;text-align:center;padding:24px 0}
-  .task{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--cardHi);border-radius:14px;cursor:pointer;border:1px solid transparent;transition:all .15s;margin-bottom:8px}
+  .task{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff;border-radius:14px;cursor:pointer;border:1px solid var(--border);transition:all .15s;margin-bottom:8px;box-shadow:var(--shadow)}
   .task.done{background:#ede9ff;border-color:var(--greenDim)}
   .check{width:24px;height:24px;border-radius:8px;flex-shrink:0;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;transition:all .15s}
   .task.done .check{background:var(--green);border-color:var(--green)}
@@ -92,12 +96,21 @@
   .btn-ghost{background:var(--cardHi);border:1px solid var(--border);color:var(--green);padding:10px 12px}
   .stats{display:flex;gap:16px;margin-bottom:14px}
   .stat-num{font-size:26px;font-weight:700;font-family:'Quicksand',sans-serif}
-  .stat-lbl{font-size:11px;color:var(--muted)}
+  .stat-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;font-weight:700}
   .sub{color:var(--muted);font-size:12px;margin-bottom:14px}
   .weight-chart{width:100%;height:90px;display:block;margin-top:4px}
   .goal-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:13px;color:var(--muted);font-weight:600}
   .goal-row input{flex:none;width:64px;padding:7px 8px;font-size:14px;text-align:right}
   .weight-status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;background:var(--cardHi);margin-bottom:14px;color:var(--green)}
+  .status-dot{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse-dot 1.6s ease-in-out infinite}
+  @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+  .streak-card{border-left:4px solid var(--red)}
+  .streak-icon{font-size:16px}
+  .streak-big{display:flex;align-items:baseline;gap:6px;margin:4px 0 16px}
+  .streak-big .stat-num{font-size:36px}
+  .streak-unit{font-size:14px;color:var(--muted);font-weight:600}
+  .streak-sep{height:1px;background:var(--border);margin:0 0 14px}
+  .streak-best{display:flex;align-items:baseline;gap:6px;font-size:20px;font-weight:700;font-family:'Quicksand',sans-serif}
   .read-box{display:flex;align-items:center;justify-content:space-between;background:var(--cardHi);border-radius:12px;padding:12px 14px}
   .icon-btn{background:var(--cardHi);border:1px solid var(--border);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;color:var(--muted);flex-shrink:0;padding:0}
   .hidden{display:none}
@@ -106,11 +119,27 @@
   .book-cover img{width:100%;height:100%;object-fit:cover}
   .book-info{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
   .archive-title{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
-  .book-archive{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
-  .book-archive-item{flex-shrink:0;width:52px;text-align:center}
-  .book-archive-cover{width:52px;height:70px;border-radius:6px;object-fit:cover;background:var(--cardHi);border:1px solid var(--border);display:block}
-  .book-archive-cover.placeholder{display:flex;align-items:center;justify-content:center;font-size:18px}
-  .book-archive-title{font-size:9px;color:var(--muted);margin-top:4px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .book-archive{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px}
+  .book-archive-item{flex-shrink:0;width:72px;text-align:center}
+  .book-archive-cover{width:72px;height:100px;border-radius:10px;object-fit:cover;background:var(--cardHi);border:1px solid var(--border);display:block;box-shadow:var(--shadow)}
+  .book-archive-cover.placeholder{display:flex;align-items:center;justify-content:center;font-size:22px}
+  .book-archive-title{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .reading-card{border-left:4px solid var(--amber)}
+  .reading-hero{display:flex;gap:14px;margin-bottom:16px}
+  .book-cover-lg{width:96px;height:132px;border-radius:12px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:26px;box-shadow:var(--shadow)}
+  .book-cover-lg img{width:100%;height:100%;object-fit:cover}
+  .reading-hero-info{flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;min-width:0}
+  .chapter-counter-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .chapter-pill{display:flex;align-items:center;gap:16px;background:var(--cardHi);border-radius:12px;padding:6px 10px}
+  .chapter-pill-btn{width:34px;height:34px;border-radius:9px;border:none;background:#fff;box-shadow:var(--shadow);color:var(--green);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .chapter-pill-btn-primary{background:var(--green);color:#fff;box-shadow:none}
+  .chapter-pill-count{font-family:'Quicksand',sans-serif;font-weight:700;font-size:19px;min-width:26px;text-align:center}
+  .biz-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px}
+  .biz-h-title{display:block;font-size:16px;font-weight:700;color:var(--text);margin-top:2px;font-family:'Quicksand',sans-serif}
+  .biz-icon-badge{width:44px;height:44px;border-radius:12px;background:var(--cardHi);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .biz-amount{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+  .biz-amount-cur{font-size:30px;font-weight:700;font-family:'Quicksand',sans-serif;color:var(--green)}
+  .biz-amount-goal{font-size:14px;color:var(--muted);font-weight:600}
   .pbar-row{margin-top:12px}
   .pbar-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px}
   .pbar-lbl b{color:var(--text);font-weight:700}
@@ -134,10 +163,24 @@
   .toggle-info b{font-size:14px;display:block}
   .toggle-info span{font-size:12px;color:var(--muted)}
   .privacy-box{background:var(--cardHi);border-radius:14px;padding:14px;margin-top:12px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px}
+  .switch{width:50px;height:29px;border-radius:9999px;background:var(--border);border:none;position:relative;cursor:pointer;flex-shrink:0;padding:0;transition:background .2s}
+  .switch-knob{position:absolute;top:3px;left:3px;width:23px;height:23px;border-radius:50%;background:#fff;box-shadow:var(--shadow);transition:transform .2s}
+  .switch[aria-checked="true"]{background:var(--green)}
+  .switch[aria-checked="true"] .switch-knob{transform:translateX(21px)}
+  .switch:disabled{opacity:.4;cursor:not-allowed}
+  .settings-bento{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .bento-tile{background:var(--cardHi);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:96px}
+  .bento-tile p{font-size:12px;color:var(--text);font-weight:600;line-height:1.35;margin:0}
+  .bento-icon{font-size:18px}
+  .bento-tile-head{display:flex;justify-content:space-between;align-items:flex-start}
+  .bento-icon-sm{font-size:15px;color:var(--muted)}
+  .bento-tile-value{font-size:20px;font-weight:700;font-family:'Quicksand',sans-serif;color:var(--green)}
+  .btn-export{width:100%;margin-top:16px;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--green),var(--amber));color:#fff;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--shadow-lg);font-family:inherit}
   .tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:40;box-shadow:0 -4px 20px rgba(83,65,205,.06)}
   .tabbar-inner{max-width:460px;margin:0 auto;display:flex;width:100%}
-  .tab{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:600;color:var(--muted);padding:4px;cursor:pointer;font-family:inherit}
-  .tab.active{color:var(--green)}
+  .tab{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;font-size:10px;font-weight:600;color:var(--muted);padding:2px;cursor:pointer;font-family:inherit}
+  .tab-pill{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 14px;border-radius:9999px;transition:background .15s,color .15s}
+  .tab.active .tab-pill{background:var(--cardHi);color:var(--green)}
   .tab-icon{font-size:19px}
 </style>
 </head>
@@ -147,13 +190,16 @@
   <!-- HOME -->
   <div class="view active" id="view-home">
     <div class="head-row">
-      <div>
-        <div class="eyebrow display">Discipline</div>
-        <div class="date" id="date"></div>
+      <div class="head-row" style="margin-bottom:0;gap:10px">
+        <div class="icon-btn" style="border-radius:50%;background:var(--cardHi)">👤</div>
+        <div>
+          <div class="eyebrow display">Discipline</div>
+          <div class="date" id="date"></div>
+        </div>
       </div>
-      <div class="lang-toggle" id="langToggle">
-        <button type="button" class="lang-opt" data-lang="fr">FR</button>
-        <button type="button" class="lang-opt" data-lang="en">EN</button>
+      <div class="head-actions">
+        <button class="icon-btn" style="border-radius:50%;font-size:11px;font-weight:800;color:var(--green)" id="langIconBtn" type="button">FR</button>
+        <button class="icon-btn" style="border-radius:50%" id="settingsIconBtn" type="button">⚙️</button>
       </div>
     </div>
 
@@ -163,12 +209,13 @@
     <div class="day-strip" id="dayStrip"></div>
 
     <!-- Score -->
-    <div class="card score-card">
+    <div class="card" style="text-align:center;padding:28px 20px">
       <div class="ring-wrap">
-        <svg width="128" height="128">
-          <circle cx="64" cy="64" r="52" fill="none" stroke="var(--cardHi)" stroke-width="12"/>
-          <circle id="ring" cx="64" cy="64" r="52" fill="none" stroke="var(--amber)" stroke-width="12"
-            stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7"
+        <div class="ring-glow"></div>
+        <svg width="200" height="200" viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="86" fill="none" stroke="var(--cardHi)" stroke-width="14"/>
+          <circle id="ring" cx="100" cy="100" r="86" fill="none" stroke="var(--amber)" stroke-width="14"
+            stroke-linecap="round" stroke-dasharray="540.35" stroke-dashoffset="540.35"
             style="transition:stroke-dashoffset .5s ease, stroke .3s"/>
         </svg>
         <div class="ring-center">
@@ -176,18 +223,15 @@
           <div class="ring-lbl" id="ringLbl">tâches</div>
         </div>
       </div>
-      <div>
-        <div class="score-title" id="scoreTitle">On y va</div>
-        <div class="score-sub" id="scoreSub"></div>
-        <div class="sub hidden" id="healthLine" style="margin-top:8px;margin-bottom:0"></div>
-      </div>
+      <div class="score-title" id="scoreTitle">On y va</div>
+      <div class="score-sub" id="scoreSub"></div>
+      <div class="sub hidden" id="healthLine" style="margin-top:8px;margin-bottom:0;text-align:center"></div>
     </div>
 
     <!-- Tasks -->
     <div class="card">
       <div class="card-h" style="justify-content:space-between">
         <span style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:var(--amber)"></span><span id="tasksTitle">Tâches du jour</span></span>
-        <button class="btn-link" id="editBtn">Modifier</button>
       </div>
       <div class="task-tabs" id="taskTabs">
         <button type="button" class="task-tab active" data-panel="personal" id="taskTabPersonalLbl">Perso</button>
@@ -212,8 +256,13 @@
           <button class="btn btn-amber" id="addBtn">+</button>
         </div>
       </div>
+      <div class="edit-footer">
+        <button class="btn-link" id="editBtn">Modifier</button>
+      </div>
     </div>
   </div>
+
+  <button class="fab" id="fabAdd" type="button">+</button>
 
   <!-- STATS -->
   <div class="view" id="view-stats">
@@ -234,19 +283,19 @@
       </div>
     </div>
 
+    <!-- Streak -->
+    <div class="card streak-card">
+      <div class="card-h"><span class="streak-icon">🔥</span><span id="streakCardTitle">Consistance</span></div>
+      <div class="stat-lbl" id="streakCurLbl">série actuelle</div>
+      <div class="streak-big"><span class="stat-num" id="streakCur">0</span><span class="streak-unit" id="streakCurUnit">jours</span></div>
+      <div class="streak-sep"></div>
+      <div class="stat-lbl" id="streakBestLbl">meilleure série</div>
+      <div class="streak-best"><span id="streakBest">0</span><span class="streak-unit" id="streakBestUnit">jours</span></div>
+    </div>
+
     <!-- Period stats -->
     <div class="card">
       <div class="card-h"><span class="dot" style="background:var(--green)"></span><span id="periodStatsTitle">Semaine · mois</span></div>
-      <div class="stats">
-        <div>
-          <div class="stat-num" id="streakCur">0</div>
-          <div class="stat-lbl" id="streakCurLbl">série actuelle 🔥</div>
-        </div>
-        <div>
-          <div class="stat-num" id="streakBest">0</div>
-          <div class="stat-lbl" id="streakBestLbl">meilleure série</div>
-        </div>
-      </div>
       <div class="pbar-row">
         <div class="pbar-lbl"><span id="thisWeekLbl">Cette semaine</span> <b id="weekPct">0%</b></div>
         <div class="pbar-bg"><div class="pbar-fill" id="weekBarFill" style="width:0%;background:var(--amber)"></div></div>
@@ -293,15 +342,25 @@
 
     <!-- Business goal -->
     <div class="card">
-      <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="bizTitle">Objectif business du mois</span></div>
-      <div class="goal-row">
+      <div class="biz-head">
+        <div>
+          <span class="stat-lbl" id="bizEyebrow">Objectif business</span>
+          <span class="biz-h-title" id="bizTitle">Chiffre d'affaires mensuel</span>
+        </div>
+        <div class="biz-icon-badge">💳</div>
+      </div>
+      <div class="biz-amount">
+        <span class="biz-amount-cur" id="bizCurrentAmt">—</span>
+        <span class="biz-amount-goal" id="bizGoalAmt">/ 0€</span>
+      </div>
+      <div class="pbar-row" style="margin-top:2px">
+        <div class="pbar-lbl"><span id="bizPctLbl">0% complété</span><b id="bizRemainingLbl" style="color:var(--green)"></b></div>
+        <div class="pbar-bg"><div class="pbar-fill" id="bizBarFill" style="width:0%;background:var(--amber)"></div></div>
+      </div>
+      <div class="goal-row" style="margin-top:16px">
         <span id="bizGoalLbl">Objectif CA</span>
         <input id="bizGoalInput" inputmode="numeric" placeholder="€" style="width:80px" />
         <span>€</span>
-      </div>
-      <div class="stats" id="bizStats"></div>
-      <div class="pbar-row">
-        <div class="pbar-bg"><div class="pbar-fill" id="bizBarFill" style="width:0%;background:var(--amber)"></div></div>
       </div>
       <div class="row" style="margin-top:14px">
         <input id="bizInput" inputmode="numeric" placeholder="CA actuel (€)" />
@@ -310,30 +369,33 @@
     </div>
 
     <!-- Reading -->
-    <div class="card">
+    <div class="card reading-card">
       <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="readingTitle">Lecture · 1 chapitre/jour → 1 livre/mois</span></div>
       <div class="sub" id="booksSub"></div>
-      <div class="book-row">
-        <button class="book-cover" id="coverBtn" type="button">
+      <div class="reading-hero">
+        <button class="book-cover-lg" id="coverBtn" type="button">
           <img id="coverImg" class="hidden" />
           <span id="coverPlaceholder">📷</span>
         </button>
         <input type="file" accept="image/*" capture="environment" id="coverInput" class="hidden" />
-        <div class="book-info">
+        <div class="reading-hero-info">
           <input id="bookInput" placeholder="Titre du livre…" />
           <input id="totalChapInput" inputmode="numeric" placeholder="Nb de chapitres total (optionnel)" />
           <div class="sub hidden" id="bookLookupInfo" style="margin:0"></div>
+          <div class="sub hidden" id="paceInfo" style="margin:0"></div>
         </div>
       </div>
-      <div class="read-box">
-        <div class="stat-num"><span id="chapCount">0</span> <span id="chaptersLbl" style="font-size:13px;color:var(--muted);font-weight:600">chapitres</span></div>
-        <div class="row">
-          <button class="btn btn-ghost" id="chapMinusBtn" style="padding:10px 14px;flex:0 0 auto">−</button>
-          <button class="btn btn-amber" id="chapBtn" style="padding:10px 14px">+ Chapitre</button>
-          <button class="btn btn-ghost" id="finishBtn">Terminé ✓</button>
+      <div class="chapter-counter-row">
+        <span class="stat-lbl" id="chaptersLbl">chapitres</span>
+        <div class="chapter-pill">
+          <button class="chapter-pill-btn" id="chapMinusBtn" type="button">−</button>
+          <span class="chapter-pill-count" id="chapCount">0</span>
+          <button class="chapter-pill-btn chapter-pill-btn-primary" id="chapBtn" type="button">+</button>
         </div>
       </div>
-      <div class="sub hidden" id="paceInfo" style="margin-top:10px;margin-bottom:0"></div>
+      <div class="row">
+        <button class="btn btn-ghost" id="finishBtn" style="flex:1">Terminé ✓</button>
+      </div>
       <div class="hidden" id="archiveWrap" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
         <div class="archive-title" id="archiveTitle">Livres lus</div>
         <div class="book-archive" id="bookArchive"></div>
@@ -358,22 +420,34 @@
           <b id="reminderTitle">Rappel du soir</b>
           <span id="reminderSub">Une notification à 21h pour cocher tes tâches avant la coupure d'écran.</span>
         </div>
+        <button class="switch" id="reminderBtn" type="button" role="switch" aria-checked="false"><span class="switch-knob"></span></button>
       </div>
-      <button class="btn btn-amber btn-block" id="reminderBtn" style="margin-top:12px">Activer les rappels</button>
 
-      <div class="privacy-box" id="footerLine">Tes données restent sur ton téléphone et se sauvegardent toutes seules.</div>
+      <div class="settings-bento">
+        <div class="bento-tile">
+          <span class="bento-icon">🔒</span>
+          <p id="footerLine">Tes données restent sur ton téléphone et se sauvegardent toutes seules.</p>
+        </div>
+        <div class="bento-tile">
+          <div class="bento-tile-head">
+            <span class="stat-lbl" id="storageLbl">Stockage</span>
+            <span class="bento-icon-sm">🗄</span>
+          </div>
+          <span class="bento-tile-value" id="storageValue">—</span>
+        </div>
+      </div>
 
-      <button class="btn btn-ghost btn-block" id="exportBtn" style="margin-top:12px">Exporter mes données (JSON)</button>
+      <button class="btn-export" id="exportBtn"><span>⇪</span><span id="exportBtnLbl">Exporter mes données (JSON)</span></button>
     </div>
   </div>
 
   <!-- Tab bar -->
   <nav class="tabbar">
     <div class="tabbar-inner">
-      <button class="tab active" data-view="home" type="button"><span class="tab-icon">🏠</span><span id="tabHomeLbl">Home</span></button>
-      <button class="tab" data-view="stats" type="button"><span class="tab-icon">📊</span><span id="tabStatsLbl">Stats</span></button>
-      <button class="tab" data-view="goals" type="button"><span class="tab-icon">🎯</span><span id="tabGoalsLbl">Goals</span></button>
-      <button class="tab" data-view="settings" type="button"><span class="tab-icon">⚙️</span><span id="tabSettingsLbl">Settings</span></button>
+      <button class="tab active" data-view="home" type="button"><span class="tab-pill"><span class="tab-icon">🏠</span><span id="tabHomeLbl">Home</span></span></button>
+      <button class="tab" data-view="stats" type="button"><span class="tab-pill"><span class="tab-icon">📊</span><span id="tabStatsLbl">Stats</span></span></button>
+      <button class="tab" data-view="goals" type="button"><span class="tab-pill"><span class="tab-icon">🎯</span><span id="tabGoalsLbl">Goals</span></span></button>
+      <button class="tab" data-view="settings" type="button"><span class="tab-pill"><span class="tab-icon">⚙️</span><span id="tabSettingsLbl">Settings</span></span></button>
     </div>
   </nav>
 </div>
@@ -395,7 +469,7 @@ const STRINGS = {
     tasksTitle:"Tâches du jour", editBtn:"Modifier", editBtnDone:"Terminé",
     newTaskPlaceholder:"Nouvelle tâche…",
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
-    periodStatsTitle:"Semaine · mois", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série",
+    streakCardTitle:"Consistance", periodStatsTitle:"Semaine · mois", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série", daysUnit:"jours",
     thisWeekLbl:"Cette semaine", thisMonthLbl:"Ce mois",
     reminderTitle:"Rappel du soir",
     reminderSubDefault:"Une notification à 21h pour cocher tes tâches avant la coupure d'écran.",
@@ -411,11 +485,12 @@ const STRINGS = {
     weightAhead:"En progression vers l'objectif", weightOnTrack:"Stable", weightBehind:"S'éloigne de l'objectif", weightGoalReached:"Objectif atteint !",
     weightPaceInfo:(rate,date)=>`${rate} kg/semaine · objectif estimé le ${date}`,
     weightSetGoalHint:"Entre ton objectif pour suivre ta progression.",
-    bizTitle:"Objectif business du mois", bizGoalLbl:"Objectif CA", bizPlaceholder:"CA actuel (€)",
+    bizTitle:"Chiffre d'affaires mensuel", bizEyebrow:"Objectif business", bizGoalLbl:"Objectif CA", bizPlaceholder:"CA actuel (€)",
+    bizPctCompleted:pct=>`${pct}% complété`, bizRemainingAmt:amt=>`${amt} restant`,
     readingTitle:"Lecture · 1 chapitre/jour → 1 livre/mois",
     booksThisYear:n=>`${n} livre${n>1?"s":""} terminé${n>1?"s":""} cette année`,
     bookPlaceholder:"Titre du livre…", totalChapPlaceholder:"Nb de chapitres total (optionnel)",
-    chaptersLbl:"chapitres", addChapter:"+ Chapitre", finishBook:"Terminé ✓",
+    chaptersLbl:"chapitres", addChapter:"+", finishBook:"Terminé ✓",
     paceAllDone:"Tu as fini tous les chapitres — tape Terminé ✓ !",
     bookLookupLoading:"🔍 Identification du livre…",
     bookNotIdentified:"Livre non identifié — tape le titre toi-même.",
@@ -426,6 +501,7 @@ const STRINGS = {
     businessWeekLbl:"Business (semaine)", devWeekLbl:"Développement (semaine)",
     paceInfo:(pace,date)=>`${pace} chap./jour · fin estimée le ${date}`,
     footerLine:"Tes données restent sur ton téléphone et se sauvegardent toutes seules.",
+    storageLbl:"Stockage",
     exportBtn:"Exporter mes données (JSON)", sheetClose:"Fermer",
     celebTap:"Touche pour continuer",
     scoreFull:"Journée pleine", scoreSolid:"Solide, continue", scoreMoving:"En marche", scoreStart:"On y va",
@@ -464,7 +540,7 @@ const STRINGS = {
     tasksTitle:"Today's tasks", editBtn:"Edit", editBtnDone:"Done",
     newTaskPlaceholder:"New task…",
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
-    periodStatsTitle:"Week · month", streakCurLbl:"current streak", streakBestLbl:"best streak",
+    streakCardTitle:"Consistency", periodStatsTitle:"Week · month", streakCurLbl:"current streak", streakBestLbl:"best streak", daysUnit:"days",
     thisWeekLbl:"This week", thisMonthLbl:"This month",
     reminderTitle:"Evening reminder",
     reminderSubDefault:"A notification at 9pm to check off your tasks before screens go off.",
@@ -480,11 +556,12 @@ const STRINGS = {
     weightAhead:"Progressing toward goal", weightOnTrack:"Stable", weightBehind:"Moving away from goal", weightGoalReached:"Goal reached!",
     weightPaceInfo:(rate,date)=>`${rate} kg/week · goal estimated ${date}`,
     weightSetGoalHint:"Enter your goal to track progress.",
-    bizTitle:"Monthly business goal", bizGoalLbl:"Revenue goal", bizPlaceholder:"Current revenue (€)",
+    bizTitle:"Monthly revenue", bizEyebrow:"Business goal", bizGoalLbl:"Revenue goal", bizPlaceholder:"Current revenue (€)",
+    bizPctCompleted:pct=>`${pct}% completed`, bizRemainingAmt:amt=>`${amt} remaining`,
     readingTitle:"Reading · 1 chapter/day → 1 book/month",
     booksThisYear:n=>`${n} book${n>1?"s":""} finished this year`,
     bookPlaceholder:"Book title…", totalChapPlaceholder:"Total chapters (optional)",
-    chaptersLbl:"chapters", addChapter:"+ Chapter", finishBook:"Done ✓",
+    chaptersLbl:"chapters", addChapter:"+", finishBook:"Done ✓",
     paceAllDone:"You've finished all the chapters — tap Done ✓!",
     bookLookupLoading:"🔍 Identifying the book…",
     bookNotIdentified:"Book not identified — type the title yourself.",
@@ -495,6 +572,7 @@ const STRINGS = {
     businessWeekLbl:"Business (this week)", devWeekLbl:"Development (this week)",
     paceInfo:(pace,date)=>`${pace} ch./day · estimated finish ${date}`,
     footerLine:"Your data stays on your phone and saves itself automatically.",
+    storageLbl:"Storage",
     exportBtn:"Export my data (JSON)", sheetClose:"Close",
     celebTap:"Tap to continue",
     scoreFull:"Full day", scoreSolid:"Solid, keep going", scoreMoving:"Moving", scoreStart:"Let's go",
@@ -565,14 +643,15 @@ function taskDisplayLabel(tk){
 
 function renderDayStrip(){
   const el=document.getElementById("dayStrip");el.innerHTML="";
-  const start=startOfWeek(new Date());
   const labels=t("dayShort");
-  for(let i=0;i<7;i++){
-    const d=new Date(start);d.setDate(d.getDate()+i);
-    const isToday=keyFor(d)===today();
+  const now=new Date();
+  for(let i=-3;i<=3;i++){
+    const d=new Date(now);d.setDate(d.getDate()+i);
+    const isToday=i===0;
+    const dow=(d.getDay()+6)%7;
     const chip=document.createElement("div");
     chip.className="day-chip"+(isToday?" active":"");
-    chip.innerHTML=`<div class="day-num">${d.getDate()}</div><div class="day-lbl">${isToday?t("todayLbl"):labels[i]}</div>`;
+    chip.innerHTML=`<div class="day-num">${d.getDate()}</div><div class="day-lbl">${isToday?t("todayLbl"):labels[dow]}</div>`;
     el.appendChild(chip);
   }
 }
@@ -600,8 +679,11 @@ function applyStaticI18n(){
   document.getElementById("editBtn").textContent=editMode?t("editBtnDone"):t("editBtn");
   document.getElementById("newTask").placeholder=t("newTaskPlaceholder");
   document.getElementById("periodStatsTitle").textContent=t("periodStatsTitle");
+  document.getElementById("streakCardTitle").textContent=t("streakCardTitle");
   document.getElementById("streakCurLbl").textContent=t("streakCurLbl");
   document.getElementById("streakBestLbl").textContent=t("streakBestLbl");
+  document.getElementById("streakCurUnit").textContent=t("daysUnit");
+  document.getElementById("streakBestUnit").textContent=t("daysUnit");
   document.getElementById("thisWeekLbl").textContent=t("thisWeekLbl");
   document.getElementById("thisMonthLbl").textContent=t("thisMonthLbl");
   document.getElementById("reminderTitle").textContent=t("reminderTitle");
@@ -609,6 +691,7 @@ function applyStaticI18n(){
   document.getElementById("weightSub").textContent=t("weightSub");
   document.getElementById("weightGoalLbl").textContent=t("weightGoalLbl");
   document.getElementById("bizTitle").textContent=t("bizTitle");
+  document.getElementById("bizEyebrow").textContent=t("bizEyebrow");
   document.getElementById("bizGoalLbl").textContent=t("bizGoalLbl");
   document.getElementById("bizInput").placeholder=t("bizPlaceholder");
   document.getElementById("wInput").placeholder=t("weightPlaceholder");
@@ -620,14 +703,18 @@ function applyStaticI18n(){
   document.getElementById("chapBtn").textContent=t("addChapter");
   document.getElementById("finishBtn").textContent=t("finishBook");
   document.getElementById("footerLine").textContent=t("footerLine");
-  document.getElementById("exportBtn").textContent=t("exportBtn");
+  document.getElementById("exportBtnLbl").textContent=t("exportBtn");
+  document.getElementById("storageLbl").textContent=t("storageLbl");
+  let bytes=0;
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);bytes+=(k.length+(localStorage.getItem(k)||"").length)*2;}
+  document.getElementById("storageValue").textContent=bytes<1024*1024?`${(bytes/1024).toFixed(1)} KB`:`${(bytes/1024/1024).toFixed(1)} MB`;
   document.getElementById("archiveTitle").textContent=t("archiveTitle");
   document.getElementById("celebTap").textContent=t("celebTap");
   document.getElementById("tabHomeLbl").textContent=t("tabHome");
   document.getElementById("tabStatsLbl").textContent=t("tabStats");
   document.getElementById("tabGoalsLbl").textContent=t("tabGoals");
   document.getElementById("tabSettingsLbl").textContent=t("tabSettings");
-  document.querySelectorAll(".lang-opt").forEach(b=>b.classList.toggle("active",b.dataset.lang===lang));
+  document.getElementById("langIconBtn").textContent=lang.toUpperCase();
   renderGreeting();
   renderDayStrip();
 }
@@ -636,7 +723,7 @@ function renderScore(){
   const total=tasks.length, comp=tasks.filter(tk=>done[tk.id]).length, pct=total?comp/total:0;
   document.getElementById("doneCount").textContent=comp;
   document.getElementById("totalCount").textContent=total;
-  const C=2*Math.PI*52;
+  const C=2*Math.PI*86;
   const ring=document.getElementById("ring");
   ring.style.strokeDashoffset=C*(1-pct);
   ring.style.stroke=pct===1?"var(--green)":"var(--amber)";
@@ -656,7 +743,8 @@ function renderTaskRow(tk){
     d.innerHTML=`<button class="del">✕</button><span class="task-label">${taskDisplayLabel(tk)}</span>`;
     d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==tk.id);save("tracker:template",tasks);renderTasks();renderScore();};
   }else{
-    d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label">${taskDisplayLabel(tk)}</span>`;
+    d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label">${taskDisplayLabel(tk)}</span><button class="task-menu" type="button">⋮</button>`;
+    d.querySelector(".task-menu").onclick=(e)=>{e.stopPropagation();toggleEditMode();};
     d.onclick=()=>{
       done[tk.id]=!done[tk.id];
       save("tracker:day:"+today(),done);
@@ -737,14 +825,18 @@ let bizRevenue=load("tracker:bizRevenue",[]);
 function renderBiz(){
   document.getElementById("bizGoalInput").value=bizGoal??"";
   const last=bizRevenue[bizRevenue.length-1];
-  const s=document.getElementById("bizStats");s.innerHTML="";
-  s.innerHTML=`<div><div class="stat-num">${last?last.amount.toLocaleString(t("dateLocale")):"—"}<span style="font-size:15px;color:var(--muted);font-weight:600"> €</span></div><div class="stat-lbl">${t("weightCurrent")}</div></div>`;
-  if(bizGoal!=null)s.innerHTML+=`<div><div class="stat-num" style="color:var(--amber)">${bizGoal.toLocaleString(t("dateLocale"))}<span style="font-size:15px;color:var(--muted);font-weight:600"> €</span></div><div class="stat-lbl">${t("weightGoal")}</div></div>`;
+  document.getElementById("bizCurrentAmt").textContent=last?`${last.amount.toLocaleString(t("dateLocale"))}€`:"—";
+  document.getElementById("bizGoalAmt").textContent=`/ ${bizGoal!=null?bizGoal.toLocaleString(t("dateLocale")):"0"}€`;
+  const pct=(bizGoal&&last)?Math.min(100,Math.round((last.amount/bizGoal)*100)):0;
+  document.getElementById("bizPctLbl").textContent=t("bizPctCompleted",pct);
+  const remainingEl=document.getElementById("bizRemainingLbl");
   if(bizGoal!=null&&last){
     const remaining=bizGoal-last.amount;
-    s.innerHTML+=`<div><div class="stat-num" style="color:${remaining<=0?"var(--green)":"var(--text)"}">${remaining>0?remaining.toLocaleString(t("dateLocale")):"0"}</div><div class="stat-lbl">${t("weightRemaining")}</div></div>`;
+    remainingEl.textContent=t("bizRemainingAmt",`${remaining>0?remaining.toLocaleString(t("dateLocale")):"0"}€`);
+    remainingEl.style.color=remaining<=0?"var(--green)":"var(--amber)";
+  }else{
+    remainingEl.textContent="";
   }
-  const pct=(bizGoal&&last)?Math.min(100,Math.round((last.amount/bizGoal)*100)):0;
   document.getElementById("bizBarFill").style.width=pct+"%";
 }
 function weightRateKgPerWeek(){
@@ -770,16 +862,16 @@ function renderWeight(){
   if(weightGoal!=null&&last){
     const remaining=weightGoal-last.kg;
     let info;
-    if(Math.abs(remaining)<=0.3)info={emoji:"🎉",key:"weightGoalReached",color:"var(--green)"};
+    if(Math.abs(remaining)<=0.3)info={key:"weightGoalReached",color:"var(--green)"};
     else{
       const needsGain=remaining>0;
       const progressing=needsGain?rate>0.05:rate<-0.05;
       const regressing=needsGain?rate<-0.05:rate>0.05;
-      if(progressing)info={emoji:"🟢",key:"weightAhead",color:"var(--green)"};
-      else if(regressing)info={emoji:"🔴",key:"weightBehind",color:"var(--red)"};
-      else info={emoji:"🟡",key:"weightOnTrack",color:"var(--amber)"};
+      if(progressing)info={key:"weightAhead",color:"var(--green)"};
+      else if(regressing)info={key:"weightBehind",color:"var(--red)"};
+      else info={key:"weightOnTrack",color:"var(--amber)"};
     }
-    statusEl.textContent=`${info.emoji} ${t(info.key)}`;
+    statusEl.innerHTML=`<span class="status-dot"></span>${t(info.key)}`;
     statusEl.style.color=info.color;
     statusEl.classList.remove("hidden");
     const needsGain=remaining>0;
@@ -805,7 +897,7 @@ function renderWeight(){
     const x=i=>slice.length>1?PAD+(i/(slice.length-1))*(W-2*PAD):W/2;
     const y=v=>max>min?H-PAD-((v-min)/(max-min))*(H-2*PAD):H/2;
     const actualPts=slice.map((w,i)=>`${x(i)},${y(w.kg)}`).join(" ");
-    const goalLine=weightGoal!=null?`<line x1="${PAD}" y1="${y(weightGoal)}" x2="${W-PAD}" y2="${y(weightGoal)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3"/>`:"";
+    const goalLine=weightGoal!=null?`<line x1="${PAD}" y1="${y(weightGoal)}" x2="${W-PAD}" y2="${y(weightGoal)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3"/><text x="${W-PAD}" y="${y(weightGoal)-4}" text-anchor="end" font-size="8" fill="var(--muted)" font-family="'Plus Jakarta Sans',sans-serif">${t("weightGoal")} (${weightGoal}kg)</text>`:"";
     const dots=slice.map((w,i)=>`<circle data-idx="${i}" cx="${x(i)}" cy="${y(w.kg)}" r="7" fill="transparent" style="cursor:pointer"/><circle cx="${x(i)}" cy="${y(w.kg)}" r="2.5" fill="var(--amber)" style="pointer-events:none"/>`).join("");
     svgEl.innerHTML=`
       ${goalLine}
@@ -1010,8 +1102,8 @@ function urlBase64ToUint8Array(base64String){
 }
 function setReminderBtnState(on){
   const btn=document.getElementById("reminderBtn");
-  btn.textContent=on?t("reminderBtnOff"):t("reminderBtnOn");
-  btn.style.background=on?"var(--green)":"";
+  btn.setAttribute("aria-checked",on?"true":"false");
+  btn.title=on?t("reminderBtnOff"):t("reminderBtnOn");
 }
 let pushSubscribed=false;
 async function initReminder(){
@@ -1055,6 +1147,7 @@ async function initReminder(){
 function switchView(view){
   document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${view}`));
   document.querySelectorAll(".tab").forEach(tb=>tb.classList.toggle("active",tb.dataset.view===view));
+  document.getElementById("fabAdd").classList.toggle("hidden",view!=="home");
 }
 document.querySelectorAll(".tab").forEach(btn=>{
   btn.onclick=()=>switchView(btn.dataset.view);
@@ -1072,11 +1165,17 @@ function setLang(l){
     }
   }
 }
-document.querySelectorAll(".lang-opt").forEach(btn=>{
-  btn.onclick=()=>setLang(btn.dataset.lang);
-});
+document.getElementById("langIconBtn").onclick=()=>setLang(lang==="fr"?"en":"fr");
+document.getElementById("settingsIconBtn").onclick=()=>switchView("settings");
 
-document.getElementById("editBtn").onclick=()=>{editMode=!editMode;document.getElementById("editBtn").textContent=editMode?t("editBtnDone"):t("editBtn");document.getElementById("addRow").classList.toggle("hidden",!editMode);renderTasks();};
+function toggleEditMode(){
+  editMode=!editMode;
+  document.getElementById("editBtn").textContent=editMode?t("editBtnDone"):t("editBtn");
+  document.getElementById("addRow").classList.toggle("hidden",!editMode);
+  renderTasks();
+}
+document.getElementById("editBtn").onclick=toggleEditMode;
+document.getElementById("fabAdd").onclick=toggleEditMode;
 document.getElementById("addBtn").onclick=addTask;
 document.getElementById("newTask").addEventListener("keydown",e=>{if(e.key==="Enter")addTask();});
 let newTaskPeriod="day";
