@@ -66,6 +66,13 @@
   .period-picker{display:flex;gap:6px}
   .period-opt{flex:1;background:var(--cardHi);border:1px solid var(--border);border-radius:10px;padding:8px;font-size:16px;cursor:pointer;line-height:1;color:var(--muted);font-family:inherit}
   .period-opt.active{border-color:var(--green);background:var(--green);color:#fff}
+  .task-tabs{display:flex;gap:8px;margin-bottom:14px}
+  .task-tab{flex:1;background:var(--cardHi);border:1px solid var(--border);border-radius:10px;padding:9px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
+  .task-tab.active{background:var(--green);color:#fff;border-color:var(--green)}
+  .task-slider{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+  .task-slider::-webkit-scrollbar{display:none}
+  .task-panel{flex:0 0 100%;scroll-snap-align:start;min-width:100%}
+  .task-panel-empty{color:var(--muted);font-size:13px;text-align:center;padding:24px 0}
   .task{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--cardHi);border-radius:14px;cursor:pointer;border:1px solid transparent;transition:all .15s;margin-bottom:8px}
   .task.done{background:#ede9ff;border-color:var(--greenDim)}
   .check{width:24px;height:24px;border-radius:8px;flex-shrink:0;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;transition:all .15s}
@@ -182,7 +189,14 @@
         <span style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:var(--amber)"></span><span id="tasksTitle">Tâches du jour</span></span>
         <button class="btn-link" id="editBtn">Modifier</button>
       </div>
-      <div id="tasks"></div>
+      <div class="task-tabs" id="taskTabs">
+        <button type="button" class="task-tab active" data-panel="personal" id="taskTabPersonalLbl">Perso</button>
+        <button type="button" class="task-tab" data-panel="business" id="taskTabBusinessLbl">Business</button>
+      </div>
+      <div class="task-slider" id="taskSlider">
+        <div class="task-panel" id="panel-personal"></div>
+        <div class="task-panel" id="panel-business"></div>
+      </div>
       <div class="row hidden" id="addRow" style="margin-top:12px;flex-direction:column;gap:8px">
         <div class="period-picker" id="periodPicker">
           <button type="button" class="period-opt" data-period="morning">🌅</button>
@@ -190,8 +204,8 @@
           <button type="button" class="period-opt" data-period="evening">🌙</button>
         </div>
         <div class="period-picker" id="categoryPicker">
-          <button type="button" class="period-opt active" data-category="dev">🌱 <span id="catDevLbl">Dev</span></button>
-          <button type="button" class="period-opt" data-category="business">💼 <span id="catBusinessLbl">Business</span></button>
+          <button type="button" class="period-opt active" data-category="dev" id="catDevBtn"><span id="catDevLbl">Perso</span></button>
+          <button type="button" class="period-opt" data-category="business" id="catBusinessBtn"><span id="catBusinessLbl">Business</span></button>
         </div>
         <div class="row">
           <input id="newTask" placeholder="Nouvelle tâche…" />
@@ -242,11 +256,11 @@
         <div class="pbar-bg"><div class="pbar-fill" id="monthBarFill" style="width:0%;background:var(--green)"></div></div>
       </div>
       <div class="pbar-row hidden" id="businessRow" style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
-        <div class="pbar-lbl"><span id="businessWeekLbl">💼 Business (semaine)</span> <b id="businessPct">0%</b></div>
+        <div class="pbar-lbl"><span id="businessWeekLbl">Business (semaine)</span> <b id="businessPct">0%</b></div>
         <div class="pbar-bg"><div class="pbar-fill" id="businessBarFill" style="width:0%;background:var(--amber)"></div></div>
       </div>
       <div class="pbar-row hidden" id="devRow">
-        <div class="pbar-lbl"><span id="devWeekLbl">🌱 Développement (semaine)</span> <b id="devPct">0%</b></div>
+        <div class="pbar-lbl"><span id="devWeekLbl">Développement (semaine)</span> <b id="devPct">0%</b></div>
         <div class="pbar-bg"><div class="pbar-fill" id="devBarFill" style="width:0%;background:var(--green)"></div></div>
       </div>
     </div>
@@ -256,7 +270,7 @@
       <div class="card-h"><span class="dot" style="background:var(--green)"></span><span id="weightTitle">Poids</span></div>
       <div class="sub" id="weightSub">Pèse-toi 1×/semaine, le matin. Pas tous les jours.</div>
       <div class="goal-row">
-        <span id="weightGoalLbl">🎯 Objectif</span>
+        <span id="weightGoalLbl">Objectif</span>
         <input id="weightGoalInput" inputmode="decimal" placeholder="kg" />
         <span>kg</span>
       </div>
@@ -279,9 +293,9 @@
 
     <!-- Business goal -->
     <div class="card">
-      <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="bizTitle">💼 Objectif business du mois</span></div>
+      <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="bizTitle">Objectif business du mois</span></div>
       <div class="goal-row">
-        <span id="bizGoalLbl">🎯 Objectif CA</span>
+        <span id="bizGoalLbl">Objectif CA</span>
         <input id="bizGoalInput" inputmode="numeric" placeholder="€" style="width:80px" />
         <span>€</span>
       </div>
@@ -321,7 +335,7 @@
       </div>
       <div class="sub hidden" id="paceInfo" style="margin-top:10px;margin-bottom:0"></div>
       <div class="hidden" id="archiveWrap" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-        <div class="archive-title" id="archiveTitle">📚 Livres lus</div>
+        <div class="archive-title" id="archiveTitle">Livres lus</div>
         <div class="book-archive" id="bookArchive"></div>
       </div>
     </div>
@@ -335,7 +349,7 @@
 
     <div class="card">
       <div class="settings-brand">
-        <div class="display">✦ Discipline</div>
+        <div class="display">Discipline</div>
       </div>
 
       <div class="toggle-row" id="reminderCard">
@@ -347,7 +361,7 @@
       </div>
       <button class="btn btn-amber btn-block" id="reminderBtn" style="margin-top:12px">Activer les rappels</button>
 
-      <div class="privacy-box" id="footerLine">🔒 Tes données restent sur ton téléphone et se sauvegardent toutes seules.</div>
+      <div class="privacy-box" id="footerLine">Tes données restent sur ton téléphone et se sauvegardent toutes seules.</div>
 
       <button class="btn btn-ghost btn-block" id="exportBtn" style="margin-top:12px">Exporter mes données (JSON)</button>
     </div>
@@ -381,7 +395,7 @@ const STRINGS = {
     tasksTitle:"Tâches du jour", editBtn:"Modifier", editBtnDone:"Terminé",
     newTaskPlaceholder:"Nouvelle tâche…",
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
-    periodStatsTitle:"Semaine · mois", streakCurLbl:"série actuelle 🔥", streakBestLbl:"meilleure série",
+    periodStatsTitle:"Semaine · mois", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série",
     thisWeekLbl:"Cette semaine", thisMonthLbl:"Ce mois",
     reminderTitle:"Rappel du soir",
     reminderSubDefault:"Une notification à 21h pour cocher tes tâches avant la coupure d'écran.",
@@ -389,15 +403,15 @@ const STRINGS = {
     reminderSubDenied:"Notifications refusées — active-les dans Réglages iOS > Notifications > Discipline.",
     reminderBtnOn:"Activer les rappels", reminderBtnOff:"Rappels activés ✓ (touche pour désactiver)",
     weightTitle:"Poids", weightSub:"Pèse-toi 1×/semaine, le matin. Pas tous les jours.",
-    weightGoalLbl:"🎯 Objectif",
+    weightGoalLbl:"Objectif",
     weightCurrent:"actuel", weightGoal:"objectif", weightRemaining:"reste à faire", weightRate:"kg/semaine", weightSinceStart:"depuis le début",
     weightPlaceholder:"Ton poids (kg)", weightSave:"Enregistrer",
     weightDeleteConfirm:(kg,date)=>`Supprimer l'entrée ${kg}kg du ${date} ?`,
     weightBarTitle:"touche pour supprimer",
     weightAhead:"En progression vers l'objectif", weightOnTrack:"Stable", weightBehind:"S'éloigne de l'objectif", weightGoalReached:"Objectif atteint !",
-    weightPaceInfo:(rate,date)=>`📈 ${rate} kg/semaine · objectif estimé le ${date}`,
+    weightPaceInfo:(rate,date)=>`${rate} kg/semaine · objectif estimé le ${date}`,
     weightSetGoalHint:"Entre ton objectif pour suivre ta progression.",
-    bizTitle:"💼 Objectif business du mois", bizGoalLbl:"🎯 Objectif CA", bizPlaceholder:"CA actuel (€)",
+    bizTitle:"Objectif business du mois", bizGoalLbl:"Objectif CA", bizPlaceholder:"CA actuel (€)",
     readingTitle:"Lecture · 1 chapitre/jour → 1 livre/mois",
     booksThisYear:n=>`${n} livre${n>1?"s":""} terminé${n>1?"s":""} cette année`,
     bookPlaceholder:"Titre du livre…", totalChapPlaceholder:"Nb de chapitres total (optionnel)",
@@ -406,18 +420,19 @@ const STRINGS = {
     bookLookupLoading:"🔍 Identification du livre…",
     bookNotIdentified:"Livre non identifié — tape le titre toi-même.",
     pageCountBadge:n=>`📄 ${n} pages (info Google Books)`,
-    archiveTitle:"📚 Livres lus",
-    catDevLbl:"Dev", catBusinessLbl:"Business",
-    businessWeekLbl:"💼 Business (semaine)", devWeekLbl:"🌱 Développement (semaine)",
-    paceInfo:(pace,date)=>`📈 ${pace} chap./jour · fin estimée le ${date}`,
-    footerLine:"🔒 Tes données restent sur ton téléphone et se sauvegardent toutes seules.",
+    archiveTitle:"Livres lus",
+    catDevLbl:"Perso", catBusinessLbl:"Business",
+    noTasksInPanel:"Aucune tâche ici pour l'instant. Ajoute-en une avec Modifier.",
+    businessWeekLbl:"Business (semaine)", devWeekLbl:"Développement (semaine)",
+    paceInfo:(pace,date)=>`${pace} chap./jour · fin estimée le ${date}`,
+    footerLine:"Tes données restent sur ton téléphone et se sauvegardent toutes seules.",
     exportBtn:"Exporter mes données (JSON)", sheetClose:"Fermer",
     celebTap:"Touche pour continuer",
-    scoreFull:"Journée pleine 🔥", scoreSolid:"Solide, continue", scoreMoving:"En marche", scoreStart:"On y va",
+    scoreFull:"Journée pleine", scoreSolid:"Solide, continue", scoreMoving:"En marche", scoreStart:"On y va",
     scoreFullSub:"Toutes tes tâches cochées. C'est ça qui construit le résultat.",
     scoreRemainingSub:n=>`${n} restante${n>1?"s":""} pour boucler la journée.`,
     ringLbl:"tâches",
-    healthSteps:n=>`🏃 ${n} pas`, healthActive:n=>`💪 ${n} min actif`,
+    healthSteps:n=>`${n} pas`, healthActive:n=>`${n} min actif`,
     perfectWeekTitle:"Semaine parfaite !", perfectWeekSub:"100% cette semaine. Toutes les cases cochées, tous les jours.",
     perfectMonthTitle:"Mois parfait !", perfectMonthSub:"100% ce mois-ci. C'est du très, très haut niveau.",
     milestone365:"Une année de discipline. Rien à ajouter, c'est qui tu es maintenant.",
@@ -449,7 +464,7 @@ const STRINGS = {
     tasksTitle:"Today's tasks", editBtn:"Edit", editBtnDone:"Done",
     newTaskPlaceholder:"New task…",
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
-    periodStatsTitle:"Week · month", streakCurLbl:"current streak 🔥", streakBestLbl:"best streak",
+    periodStatsTitle:"Week · month", streakCurLbl:"current streak", streakBestLbl:"best streak",
     thisWeekLbl:"This week", thisMonthLbl:"This month",
     reminderTitle:"Evening reminder",
     reminderSubDefault:"A notification at 9pm to check off your tasks before screens go off.",
@@ -457,15 +472,15 @@ const STRINGS = {
     reminderSubDenied:"Notifications denied — enable them in iOS Settings > Notifications > Discipline.",
     reminderBtnOn:"Enable reminders", reminderBtnOff:"Reminders on ✓ (tap to disable)",
     weightTitle:"Weight", weightSub:"Weigh yourself 1×/week, in the morning. Not every day.",
-    weightGoalLbl:"🎯 Goal",
+    weightGoalLbl:"Goal",
     weightCurrent:"current", weightGoal:"goal", weightRemaining:"remaining", weightRate:"kg/week", weightSinceStart:"since start",
     weightPlaceholder:"Your weight (kg)", weightSave:"Save",
     weightDeleteConfirm:(kg,date)=>`Delete the ${kg}kg entry from ${date}?`,
     weightBarTitle:"tap to delete",
     weightAhead:"Progressing toward goal", weightOnTrack:"Stable", weightBehind:"Moving away from goal", weightGoalReached:"Goal reached!",
-    weightPaceInfo:(rate,date)=>`📈 ${rate} kg/week · goal estimated ${date}`,
+    weightPaceInfo:(rate,date)=>`${rate} kg/week · goal estimated ${date}`,
     weightSetGoalHint:"Enter your goal to track progress.",
-    bizTitle:"💼 Monthly business goal", bizGoalLbl:"🎯 Revenue goal", bizPlaceholder:"Current revenue (€)",
+    bizTitle:"Monthly business goal", bizGoalLbl:"Revenue goal", bizPlaceholder:"Current revenue (€)",
     readingTitle:"Reading · 1 chapter/day → 1 book/month",
     booksThisYear:n=>`${n} book${n>1?"s":""} finished this year`,
     bookPlaceholder:"Book title…", totalChapPlaceholder:"Total chapters (optional)",
@@ -474,18 +489,19 @@ const STRINGS = {
     bookLookupLoading:"🔍 Identifying the book…",
     bookNotIdentified:"Book not identified — type the title yourself.",
     pageCountBadge:n=>`📄 ${n} pages (Google Books info)`,
-    archiveTitle:"📚 Books read",
-    catDevLbl:"Dev", catBusinessLbl:"Business",
-    businessWeekLbl:"💼 Business (this week)", devWeekLbl:"🌱 Development (this week)",
-    paceInfo:(pace,date)=>`📈 ${pace} ch./day · estimated finish ${date}`,
-    footerLine:"🔒 Your data stays on your phone and saves itself automatically.",
+    archiveTitle:"Books read",
+    catDevLbl:"Personal", catBusinessLbl:"Business",
+    noTasksInPanel:"No tasks here yet. Add one with Edit.",
+    businessWeekLbl:"Business (this week)", devWeekLbl:"Development (this week)",
+    paceInfo:(pace,date)=>`${pace} ch./day · estimated finish ${date}`,
+    footerLine:"Your data stays on your phone and saves itself automatically.",
     exportBtn:"Export my data (JSON)", sheetClose:"Close",
     celebTap:"Tap to continue",
-    scoreFull:"Full day 🔥", scoreSolid:"Solid, keep going", scoreMoving:"Moving", scoreStart:"Let's go",
+    scoreFull:"Full day", scoreSolid:"Solid, keep going", scoreMoving:"Moving", scoreStart:"Let's go",
     scoreFullSub:"All your tasks checked. That's what builds the result.",
     scoreRemainingSub:n=>`${n} left to close out the day.`,
     ringLbl:"tasks",
-    healthSteps:n=>`🏃 ${n} steps`, healthActive:n=>`💪 ${n} min active`,
+    healthSteps:n=>`${n} steps`, healthActive:n=>`${n} min active`,
     perfectWeekTitle:"Perfect week!", perfectWeekSub:"100% this week. Every box checked, every day.",
     perfectMonthTitle:"Perfect month!", perfectMonthSub:"100% this month. That's a very high level.",
     milestone365:"A full year of discipline. Nothing left to add, this is who you are now.",
@@ -577,6 +593,8 @@ function applyStaticI18n(){
   document.getElementById("tasksTitle").textContent=t("tasksTitle");
   document.getElementById("catDevLbl").textContent=t("catDevLbl");
   document.getElementById("catBusinessLbl").textContent=t("catBusinessLbl");
+  document.getElementById("taskTabPersonalLbl").textContent=t("catDevLbl");
+  document.getElementById("taskTabBusinessLbl").textContent=t("catBusinessLbl");
   document.getElementById("businessWeekLbl").textContent=t("businessWeekLbl");
   document.getElementById("devWeekLbl").textContent=t("devWeekLbl");
   document.getElementById("editBtn").textContent=editMode?t("editBtnDone"):t("editBtn");
@@ -630,43 +648,56 @@ function renderScore(){
 }
 const PERIOD_KEYS={morning:"periodMorning",day:"periodDay",evening:"periodEvening"};
 const PERIOD_EMOJI={morning:"🌅",day:"☀️",evening:"🌙"};
-function renderTasks(){
-  const el=document.getElementById("tasks");el.innerHTML="";
+function renderTaskRow(tk){
+  const d=document.createElement("div");
+  d.className="task"+(done[tk.id]&&!editMode?" done":"");
+  d.dataset.taskId=tk.id;
+  if(editMode){
+    d.innerHTML=`<button class="del">✕</button><span class="task-label">${taskDisplayLabel(tk)}</span>`;
+    d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==tk.id);save("tracker:template",tasks);renderTasks();renderScore();};
+  }else{
+    d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label">${taskDisplayLabel(tk)}</span>`;
+    d.onclick=()=>{
+      done[tk.id]=!done[tk.id];
+      save("tracker:day:"+today(),done);
+      const wasCompleted=done[tk.id];
+      renderTasks();renderScore();renderHeatmap();renderPeriodStats();
+      if(wasCompleted){
+        const freshCheck=document.querySelector(`[data-task-id="${tk.id}"] .check`);
+        if(freshCheck)freshCheck.animate(
+          [{transform:"scale(1)"},{transform:"scale(1.3)"},{transform:"scale(1)"}],
+          {duration:320,easing:"cubic-bezier(.34,1.56,.64,1)"}
+        );
+      }
+    };
+  }
+  return d;
+}
+function renderTaskPanel(containerId,category){
+  const el=document.getElementById(containerId);el.innerHTML="";
   const groups={morning:[],day:[],evening:[]};
-  tasks.forEach(tk=>groups[tk.period||"day"].push(tk));
+  tasks.filter(tk=>tk.category===category).forEach(tk=>groups[tk.period||"day"].push(tk));
+  let any=false;
   ["morning","day","evening"].forEach(period=>{
     const list=groups[period];
     if(!list.length)return;
+    any=true;
     const h=document.createElement("div");
     h.className="period-h";
     h.textContent=`${PERIOD_EMOJI[period]} ${t(PERIOD_KEYS[period])}`;
     el.appendChild(h);
-    list.forEach(tk=>{
-      const d=document.createElement("div");
-      d.className="task"+(done[tk.id]&&!editMode?" done":"");
-      d.dataset.taskId=tk.id;
-      if(editMode){
-        d.innerHTML=`<button class="del">✕</button><span class="task-label">${taskDisplayLabel(tk)}</span>`;
-        d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==tk.id);save("tracker:template",tasks);renderTasks();renderScore();};
-      }else{
-        d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label">${taskDisplayLabel(tk)}</span>`;
-        d.onclick=()=>{
-          done[tk.id]=!done[tk.id];
-          save("tracker:day:"+today(),done);
-          const wasCompleted=done[tk.id];
-          renderTasks();renderScore();renderHeatmap();renderPeriodStats();
-          if(wasCompleted){
-            const freshCheck=document.querySelector(`[data-task-id="${tk.id}"] .check`);
-            if(freshCheck)freshCheck.animate(
-              [{transform:"scale(1)"},{transform:"scale(1.3)"},{transform:"scale(1)"}],
-              {duration:320,easing:"cubic-bezier(.34,1.56,.64,1)"}
-            );
-          }
-        };
-      }
-      el.appendChild(d);
-    });
+    list.forEach(tk=>el.appendChild(renderTaskRow(tk)));
   });
+  if(!any){
+    const p=document.createElement("div");
+    p.className="task-panel-empty";
+    p.textContent=t("noTasksInPanel");
+    el.appendChild(p);
+  }
+}
+function renderTasks(){
+  renderTaskPanel("panel-personal","dev");
+  renderTaskPanel("panel-business","business");
 }
 function heatColor(ratio){
   if(ratio<=0)return null;
@@ -1056,13 +1087,38 @@ document.querySelectorAll("#periodPicker .period-opt").forEach(btn=>{
   };
 });
 let newTaskCategory="dev";
+function setNewTaskCategory(cat){
+  newTaskCategory=cat;
+  document.getElementById("catDevBtn").classList.toggle("active",cat==="dev");
+  document.getElementById("catBusinessBtn").classList.toggle("active",cat==="business");
+}
 document.querySelectorAll("#categoryPicker .period-opt").forEach(btn=>{
-  btn.onclick=()=>{
-    newTaskCategory=btn.dataset.category;
-    document.querySelectorAll("#categoryPicker .period-opt").forEach(b=>b.classList.toggle("active",b===btn));
-  };
+  btn.onclick=()=>setNewTaskCategory(btn.dataset.category);
 });
 function addTask(){const i=document.getElementById("newTask");const v=i.value.trim();if(!v)return;tasks.push({id:"t"+Date.now(),label:v,period:newTaskPeriod,category:newTaskCategory});save("tracker:template",tasks);i.value="";renderTasks();renderScore();}
+
+const taskSlider=document.getElementById("taskSlider");
+const taskTabs=document.querySelectorAll(".task-tab");
+const taskPanelOrder=["personal","business"];
+function goToTaskPanel(panel){
+  const idx=taskPanelOrder.indexOf(panel);
+  taskSlider.scrollTo({left:idx*taskSlider.clientWidth,behavior:"smooth"});
+}
+taskTabs.forEach(btn=>{
+  btn.onclick=()=>{
+    goToTaskPanel(btn.dataset.panel);
+    setNewTaskCategory(btn.dataset.panel==="business"?"business":"dev");
+  };
+});
+let taskScrollTimer=null;
+taskSlider.addEventListener("scroll",()=>{
+  clearTimeout(taskScrollTimer);
+  taskScrollTimer=setTimeout(()=>{
+    const idx=Math.round(taskSlider.scrollLeft/Math.max(taskSlider.clientWidth,1));
+    const panel=taskPanelOrder[idx]||"personal";
+    taskTabs.forEach(b=>b.classList.toggle("active",b.dataset.panel===panel));
+  },80);
+});
 
 document.getElementById("wBtn").onclick=logW;
 document.getElementById("wInput").addEventListener("keydown",e=>{if(e.key==="Enter")logW();});
