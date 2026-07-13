@@ -74,6 +74,8 @@
   .stat-lbl{font-size:11px;color:var(--muted)}
   .sub{color:var(--muted);font-size:12px;margin-bottom:14px}
   .weight-chart{width:100%;height:90px;display:block;margin-top:4px}
+  .goal-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:13px;color:var(--muted);font-weight:600}
+  .goal-row input{flex:none;width:64px;padding:7px 8px;font-size:14px;text-align:right}
   .weight-status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;background:var(--bg);margin-bottom:14px}
   .read-box{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:12px;padding:12px 14px}
   .app-footer{text-align:center;margin-top:28px;padding-top:22px;border-top:1px solid var(--border)}
@@ -202,11 +204,17 @@
 
   <!-- Weight -->
   <div class="card">
-    <div class="card-h"><span class="dot" style="background:var(--green)"></span><span id="weightTitle">Poids · objectif +2 kg/mois</span></div>
+    <div class="card-h"><span class="dot" style="background:var(--green)"></span><span id="weightTitle">Poids</span></div>
     <div class="sub" id="weightSub">Pèse-toi 1×/semaine, le matin. Pas tous les jours.</div>
+    <div class="goal-row">
+      <span id="weightGoalLbl">🎯 Objectif</span>
+      <input id="weightGoalInput" inputmode="decimal" placeholder="kg" />
+      <span>kg</span>
+    </div>
     <div class="weight-status hidden" id="weightStatus"></div>
     <div class="stats" id="wstats"></div>
     <svg class="weight-chart hidden" id="weightChart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
+    <div class="sub hidden" id="weightPaceInfo" style="margin:10px 0 0"></div>
     <div class="row" style="margin-top:14px">
       <input id="wInput" inputmode="decimal" placeholder="Ton poids (kg)" />
       <button class="btn btn-green" id="wBtn">Enregistrer</button>
@@ -232,6 +240,7 @@
     <div class="read-box">
       <div class="stat-num"><span id="chapCount">0</span> <span id="chaptersLbl" style="font-size:13px;color:var(--muted);font-weight:600">chapitres</span></div>
       <div class="row">
+        <button class="btn btn-ghost" id="chapMinusBtn" style="padding:10px 14px;flex:0 0 auto">−</button>
         <button class="btn btn-amber" id="chapBtn" style="padding:10px 14px">+ Chapitre</button>
         <button class="btn btn-ghost" id="finishBtn">Terminé ✓</button>
       </div>
@@ -270,12 +279,15 @@ const STRINGS = {
     reminderSubNeedsInstall:"Ajoute d'abord l'app à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis reviens ici pour activer les rappels.",
     reminderSubDenied:"Notifications refusées — active-les dans Réglages iOS > Notifications > Discipline.",
     reminderBtnOn:"Activer les rappels", reminderBtnOff:"Rappels activés ✓ (touche pour désactiver)",
-    weightTitle:"Poids · objectif +2 kg/mois", weightSub:"Pèse-toi 1×/semaine, le matin. Pas tous les jours.",
-    weightCurrent:"actuel", weightGoal:"cible du moment", weightRate:"kg/semaine", weightSinceStart:"depuis le début",
+    weightTitle:"Poids", weightSub:"Pèse-toi 1×/semaine, le matin. Pas tous les jours.",
+    weightGoalLbl:"🎯 Objectif",
+    weightCurrent:"actuel", weightGoal:"objectif", weightRemaining:"reste à faire", weightRate:"kg/semaine", weightSinceStart:"depuis le début",
     weightPlaceholder:"Ton poids (kg)", weightSave:"Enregistrer",
     weightDeleteConfirm:(kg,date)=>`Supprimer l'entrée ${kg}kg du ${date} ?`,
     weightBarTitle:"touche pour supprimer",
-    weightAhead:"En avance sur l'objectif", weightOnTrack:"Sur la cible", weightBehind:"En retard sur l'objectif",
+    weightAhead:"En progression vers l'objectif", weightOnTrack:"Stable", weightBehind:"S'éloigne de l'objectif", weightGoalReached:"Objectif atteint !",
+    weightPaceInfo:(rate,date)=>`📈 ${rate} kg/semaine · objectif estimé le ${date}`,
+    weightSetGoalHint:"Entre ton objectif pour suivre ta progression.",
     readingTitle:"Lecture · 1 chapitre/jour → 1 livre/mois",
     booksThisYear:n=>`${n} livre${n>1?"s":""} terminé${n>1?"s":""} cette année`,
     bookPlaceholder:"Titre du livre…", totalChapPlaceholder:"Nb de chapitres total (optionnel)",
@@ -327,12 +339,15 @@ const STRINGS = {
     reminderSubNeedsInstall:"Add the app to your home screen first (Share → Add to Home Screen), then come back here to enable reminders.",
     reminderSubDenied:"Notifications denied — enable them in iOS Settings > Notifications > Discipline.",
     reminderBtnOn:"Enable reminders", reminderBtnOff:"Reminders on ✓ (tap to disable)",
-    weightTitle:"Weight · goal +2 kg/month", weightSub:"Weigh yourself 1×/week, in the morning. Not every day.",
-    weightCurrent:"current", weightGoal:"current target", weightRate:"kg/week", weightSinceStart:"since start",
+    weightTitle:"Weight", weightSub:"Weigh yourself 1×/week, in the morning. Not every day.",
+    weightGoalLbl:"🎯 Goal",
+    weightCurrent:"current", weightGoal:"goal", weightRemaining:"remaining", weightRate:"kg/week", weightSinceStart:"since start",
     weightPlaceholder:"Your weight (kg)", weightSave:"Save",
     weightDeleteConfirm:(kg,date)=>`Delete the ${kg}kg entry from ${date}?`,
     weightBarTitle:"tap to delete",
-    weightAhead:"Ahead of target", weightOnTrack:"On track", weightBehind:"Behind target",
+    weightAhead:"Progressing toward goal", weightOnTrack:"Stable", weightBehind:"Moving away from goal", weightGoalReached:"Goal reached!",
+    weightPaceInfo:(rate,date)=>`📈 ${rate} kg/week · goal estimated ${date}`,
+    weightSetGoalHint:"Enter your goal to track progress.",
     readingTitle:"Reading · 1 chapter/day → 1 book/month",
     booksThisYear:n=>`${n} book${n>1?"s":""} finished this year`,
     bookPlaceholder:"Book title…", totalChapPlaceholder:"Total chapters (optional)",
@@ -419,6 +434,7 @@ function applyStaticI18n(){
   document.getElementById("reminderTitle").textContent=t("reminderTitle");
   document.getElementById("weightTitle").textContent=t("weightTitle");
   document.getElementById("weightSub").textContent=t("weightSub");
+  document.getElementById("weightGoalLbl").textContent=t("weightGoalLbl");
   document.getElementById("wInput").placeholder=t("weightPlaceholder");
   document.getElementById("wBtn").textContent=t("weightSave");
   document.getElementById("readingTitle").textContent=t("readingTitle");
@@ -519,48 +535,69 @@ function renderHeatmap(){
     el.appendChild(col);
   }
 }
-function weightGoalAt(first,dateStr){
-  const months=(new Date(dateStr)-new Date(first.date))/(1000*60*60*24*30.44);
-  return first.kg+2*months;
+let weightGoal=load("tracker:weightGoal",null);
+function weightRateKgPerWeek(){
+  const first=weights[0], last=weights[weights.length-1];
+  if(!first||!last||first===last)return 0;
+  const weeks=Math.max((new Date(last.date)-new Date(first.date))/(1000*60*60*24*7),1/7);
+  return (last.kg-first.kg)/weeks;
 }
 function renderWeight(){
-  const first=weights[0], last=weights[weights.length-1];
-  let goal=null;
-  if(first){goal=weightGoalAt(first,new Date().toISOString().slice(0,10));}
+  document.getElementById("weightGoalInput").value=weightGoal??"";
+  const last=weights[weights.length-1];
+  const rate=weightRateKgPerWeek();
   const s=document.getElementById("wstats");s.innerHTML="";
   s.innerHTML=`<div><div class="stat-num">${last?last.kg.toFixed(1):"—"}<span style="font-size:15px;color:var(--muted);font-weight:600"> kg</span></div><div class="stat-lbl">${t("weightCurrent")}</div></div>`;
-  if(goal!=null)s.innerHTML+=`<div><div class="stat-num" style="color:var(--amber)">${goal.toFixed(1)}<span style="font-size:15px;color:var(--muted);font-weight:600"> kg</span></div><div class="stat-lbl">${t("weightGoal")}</div></div>`;
-  if(first&&last&&first!==last){
-    const weeks=Math.max((new Date(last.date)-new Date(first.date))/(1000*60*60*24*7),1/7);
-    const rate=(last.kg-first.kg)/weeks;
-    s.innerHTML+=`<div><div class="stat-num" style="color:${rate>=0?"var(--green)":"var(--muted)"}">${rate>=0?"+":""}${rate.toFixed(2)}</div><div class="stat-lbl">${t("weightRate")}</div></div>`;
+  if(weightGoal!=null)s.innerHTML+=`<div><div class="stat-num" style="color:var(--amber)">${weightGoal.toFixed(1)}<span style="font-size:15px;color:var(--muted);font-weight:600"> kg</span></div><div class="stat-lbl">${t("weightGoal")}</div></div>`;
+  if(weightGoal!=null&&last){
+    const remaining=weightGoal-last.kg;
+    s.innerHTML+=`<div><div class="stat-num" style="color:${Math.abs(remaining)<=0.3?"var(--green)":"var(--text)"}">${remaining>=0?"+":""}${remaining.toFixed(1)}</div><div class="stat-lbl">${t("weightRemaining")}</div></div>`;
   }
+
   const statusEl=document.getElementById("weightStatus");
-  if(first&&last&&goal!=null){
-    const diff=last.kg-goal;
+  const paceEl=document.getElementById("weightPaceInfo");
+  if(weightGoal!=null&&last){
+    const remaining=weightGoal-last.kg;
     let info;
-    if(diff>=0.3)info={emoji:"🟢",key:"weightAhead",color:"var(--green)"};
-    else if(diff<=-0.5)info={emoji:"🔴",key:"weightBehind",color:"var(--red)"};
-    else info={emoji:"🟡",key:"weightOnTrack",color:"var(--amber)"};
+    if(Math.abs(remaining)<=0.3)info={emoji:"🎉",key:"weightGoalReached",color:"var(--green)"};
+    else{
+      const needsGain=remaining>0;
+      const progressing=needsGain?rate>0.05:rate<-0.05;
+      const regressing=needsGain?rate<-0.05:rate>0.05;
+      if(progressing)info={emoji:"🟢",key:"weightAhead",color:"var(--green)"};
+      else if(regressing)info={emoji:"🔴",key:"weightBehind",color:"var(--red)"};
+      else info={emoji:"🟡",key:"weightOnTrack",color:"var(--amber)"};
+    }
     statusEl.textContent=`${info.emoji} ${t(info.key)}`;
     statusEl.style.color=info.color;
     statusEl.classList.remove("hidden");
-  }else{statusEl.classList.add("hidden");}
+    const needsGain=remaining>0;
+    const isProgressing=needsGain?rate>0.05:rate<-0.05;
+    if(Math.abs(remaining)>0.3&&isProgressing){
+      const weeksLeft=Math.abs(remaining/rate);
+      const eta=new Date();eta.setDate(eta.getDate()+Math.round(weeksLeft*7));
+      paceEl.textContent=t("weightPaceInfo",(rate>=0?"+":"")+rate.toFixed(2),eta.toLocaleDateString(t("dateLocale"),{day:"numeric",month:"long"}));
+      paceEl.classList.remove("hidden");
+    }else{paceEl.classList.add("hidden");}
+  }else{
+    statusEl.classList.add("hidden");
+    if(last&&weightGoal==null){paceEl.textContent=t("weightSetGoalHint");paceEl.classList.remove("hidden");}
+    else paceEl.classList.add("hidden");
+  }
 
   const svgEl=document.getElementById("weightChart");
   if(weights.length>1){
     const slice=weights.slice(-12);
-    const goalVals=slice.map(w=>weightGoalAt(first,w.date));
-    const allVals=[...slice.map(w=>w.kg),...goalVals];
+    const allVals=[...slice.map(w=>w.kg),...(weightGoal!=null?[weightGoal]:[])];
     const min=Math.min(...allVals)-.4, max=Math.max(...allVals)+.4;
     const W=300,H=90,PAD=8;
     const x=i=>slice.length>1?PAD+(i/(slice.length-1))*(W-2*PAD):W/2;
     const y=v=>max>min?H-PAD-((v-min)/(max-min))*(H-2*PAD):H/2;
     const actualPts=slice.map((w,i)=>`${x(i)},${y(w.kg)}`).join(" ");
-    const goalPts=slice.map((w,i)=>`${x(i)},${y(goalVals[i])}`).join(" ");
+    const goalLine=weightGoal!=null?`<line x1="${PAD}" y1="${y(weightGoal)}" x2="${W-PAD}" y2="${y(weightGoal)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3"/>`:"";
     const dots=slice.map((w,i)=>`<circle data-idx="${i}" cx="${x(i)}" cy="${y(w.kg)}" r="7" fill="transparent" style="cursor:pointer"/><circle cx="${x(i)}" cy="${y(w.kg)}" r="2.5" fill="var(--amber)" style="pointer-events:none"/>`).join("");
     svgEl.innerHTML=`
-      <polyline points="${goalPts}" fill="none" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3"/>
+      ${goalLine}
       <polyline points="${actualPts}" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
       ${dots}
     `;
@@ -782,6 +819,14 @@ document.getElementById("wBtn").onclick=logW;
 document.getElementById("wInput").addEventListener("keydown",e=>{if(e.key==="Enter")logW();});
 function logW(){const i=document.getElementById("wInput");const kg=parseFloat(i.value.replace(",","."));if(!kg||kg<30||kg>200)return;weights.push({date:today(),kg});save("tracker:weights",weights);i.value="";renderWeight();}
 
+document.getElementById("weightGoalInput").addEventListener("blur",()=>{
+  const v=parseFloat(document.getElementById("weightGoalInput").value.replace(",","."));
+  weightGoal=(v&&v>=30&&v<=200)?v:null;
+  save("tracker:weightGoal",weightGoal);
+  renderWeight();
+});
+document.getElementById("weightGoalInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
+
 document.getElementById("bookInput").addEventListener("blur",()=>{
   const v=document.getElementById("bookInput").value.trim();
   if(v&&!reading.book)reading.startDate=today();
@@ -837,6 +882,7 @@ document.getElementById("coverInput").addEventListener("change",e=>{
   reader.readAsDataURL(file);
 });
 document.getElementById("chapBtn").onclick=()=>{reading.chapters++;save("tracker:reading",reading);renderReading();};
+document.getElementById("chapMinusBtn").onclick=()=>{if(reading.chapters>0){reading.chapters--;save("tracker:reading",reading);renderReading();}};
 document.getElementById("finishBtn").onclick=()=>{reading={book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,booksThisYear:reading.booksThisYear+1};save("tracker:reading",reading);renderReading();};
 
 document.getElementById("exportBtn").onclick=()=>{
