@@ -134,6 +134,7 @@
   .reading-hero-info{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
   .book-title-input{border:none;background:transparent;font-family:'Quicksand',sans-serif;font-size:17px;font-weight:700;color:var(--text);padding:0;width:100%}
   .book-title-input::placeholder{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14px;color:var(--muted)}
+  .book-title-display{font-family:'Quicksand',sans-serif;font-size:17px;font-weight:700;color:var(--text);line-height:1.25;cursor:pointer;word-break:break-word}
   .chapter-counter-row{display:flex;align-items:center;justify-content:space-between}
   .chapter-pill{display:flex;align-items:center;gap:14px;background:var(--cardHi);border-radius:12px;padding:5px 8px}
   .chapter-pill-btn{width:34px;height:34px;border-radius:9px;border:none;background:#fff;box-shadow:var(--shadow);color:var(--green);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -370,6 +371,7 @@
         <div class="reading-hero-info">
           <div>
             <span class="stat-lbl" id="currentlyReadingLbl">En cours de lecture</span>
+            <div class="book-title-display hidden" id="bookTitleDisplay" style="margin-top:3px"></div>
             <input id="bookInput" class="book-title-input" placeholder="Titre du livre…" style="margin-top:3px" />
             <div class="sub hidden" id="bookLookupInfo" style="margin:4px 0 0"></div>
             <div class="sub hidden" id="paceInfo" style="margin:4px 0 0;color:var(--red)"></div>
@@ -494,7 +496,7 @@ const STRINGS = {
     newTaskPlaceholder:"Nouvelle tâche…",
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
     streakCardTitle:"Consistance", weeklyProgressTitle:"Détail par catégorie (cette semaine)", periodStatsTitle:"Semaine · mois", periodStatsSub:"% des tâches du jour cochées, tout confondu.", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série", daysUnit:"jours",
-    thisWeekLbl:"Cette semaine", thisMonthLbl:"Ce mois",
+    thisWeekLbl:d=>`Cette semaine (jour ${d}/7)`, thisMonthLbl:(d,total)=>`Ce mois (jour ${d}/${total})`,
     reminderTitle:"Rappel du soir",
     reminderSubDefault:"Une notification à 21h pour cocher tes tâches avant la coupure d'écran.",
     reminderSubNeedsInstall:"Ajoute d'abord l'app à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis reviens ici pour activer les rappels.",
@@ -572,7 +574,7 @@ const STRINGS = {
     newTaskPlaceholder:"New task…",
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
     streakCardTitle:"Consistency", weeklyProgressTitle:"Breakdown by category (this week)", periodStatsTitle:"Week · month", periodStatsSub:"% of today's tasks checked, all combined.", streakCurLbl:"current streak", streakBestLbl:"best streak", daysUnit:"days",
-    thisWeekLbl:"This week", thisMonthLbl:"This month",
+    thisWeekLbl:d=>`This week (day ${d}/7)`, thisMonthLbl:(d,total)=>`This month (day ${d}/${total})`,
     reminderTitle:"Evening reminder",
     reminderSubDefault:"A notification at 9pm to check off your tasks before screens go off.",
     reminderSubNeedsInstall:"Add the app to your home screen first (Share → Add to Home Screen), then come back here to enable reminders.",
@@ -688,9 +690,10 @@ save("tracker:taskMigVersion",taskMigVersion);
 save("tracker:template",tasks);
 let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
-let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null,booksThisYear:0});
+let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null});
 let booksArchive=load("tracker:booksArchive",[]);
 let archiveExpanded=false;
+let editingBookTitle=false;
 let editMode=false;
 
 function taskDisplayLabel(tk){
@@ -743,8 +746,6 @@ function applyStaticI18n(){
   document.getElementById("streakBestLbl").textContent=t("streakBestLbl");
   document.getElementById("streakCurUnit").textContent=t("daysUnit");
   document.getElementById("streakBestUnit").textContent=t("daysUnit");
-  document.getElementById("thisWeekLbl").textContent=t("thisWeekLbl");
-  document.getElementById("thisMonthLbl").textContent=t("thisMonthLbl");
   document.getElementById("reminderTitle").textContent=t("reminderTitle");
   document.getElementById("weightTitle").textContent=t("weightTitle");
   document.getElementById("weightSub").textContent=t("weightSub");
@@ -981,7 +982,9 @@ function renderWeight(){
   }
 }
 function renderReading(){
-  document.getElementById("booksSub").textContent=t("booksThisYear",reading.booksThisYear);
+  const thisYear=new Date().getFullYear();
+  const booksThisYearCount=booksArchive.filter(b=>new Date(b.finishedDate).getFullYear()===thisYear).length;
+  document.getElementById("booksSub").textContent=t("booksThisYear",booksThisYearCount);
   document.getElementById("chapCount").textContent=reading.chapters;
   const chaptersRemainingEl=document.getElementById("chaptersRemainingInfo");
   if(reading.totalChapters&&reading.totalChapters>reading.chapters){
@@ -990,7 +993,17 @@ function renderReading(){
   }else{
     chaptersRemainingEl.classList.add("hidden");
   }
-  document.getElementById("bookInput").value=reading.book||"";
+  const bookInputEl=document.getElementById("bookInput");
+  const bookDisplayEl=document.getElementById("bookTitleDisplay");
+  bookInputEl.value=reading.book||"";
+  if(reading.book&&!editingBookTitle){
+    bookDisplayEl.textContent=reading.book;
+    bookDisplayEl.classList.remove("hidden");
+    bookInputEl.classList.add("hidden");
+  }else{
+    bookDisplayEl.classList.add("hidden");
+    bookInputEl.classList.remove("hidden");
+  }
   document.getElementById("totalChapInput").value=reading.totalChapters||"";
   const img=document.getElementById("coverImg"),ph=document.getElementById("coverPlaceholder");
   if(reading.coverPhoto){img.src=reading.coverPhoto;img.classList.remove("hidden");ph.classList.add("hidden");}
@@ -1119,6 +1132,11 @@ function renderPeriodStats(){
   const weekPct=Math.round(periodAvg(startOfWeek(now),records)*100);
   const monthPct=Math.round(periodAvg(startOfMonth(now),records)*100);
   const{current,best}=computeStreaks(records);
+  const dayOfWeek=Math.floor((now-startOfWeek(now))/DAY_MS)+1;
+  const dayOfMonth=now.getDate();
+  const daysInMonth=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  document.getElementById("thisWeekLbl").textContent=t("thisWeekLbl",dayOfWeek);
+  document.getElementById("thisMonthLbl").textContent=t("thisMonthLbl",dayOfMonth,daysInMonth);
   document.getElementById("weekPct").textContent=weekPct+"%";
   document.getElementById("monthPct").textContent=monthPct+"%";
   document.getElementById("weekBarFill").style.width=weekPct+"%";
@@ -1366,13 +1384,20 @@ function logBiz(){
   i.value="";renderBiz();
 }
 
+document.getElementById("bookInput").addEventListener("focus",()=>{editingBookTitle=true;});
 document.getElementById("bookInput").addEventListener("blur",()=>{
   const v=document.getElementById("bookInput").value.trim();
   if(v&&!reading.book)reading.startDate=today();
   reading.book=v;
+  editingBookTitle=false;
   save("tracker:reading",reading);renderReading();
 });
 document.getElementById("bookInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
+document.getElementById("bookTitleDisplay").addEventListener("click",()=>{
+  editingBookTitle=true;
+  renderReading();
+  document.getElementById("bookInput").focus();
+});
 document.getElementById("totalChapInput").addEventListener("change",()=>{
   const v=parseInt(document.getElementById("totalChapInput").value);
   reading.totalChapters=v>0?v:null;
@@ -1434,7 +1459,7 @@ document.getElementById("finishBtn").onclick=()=>{
   if(!confirm(t("finishBookConfirm",reading.book,reading.chapters,reading.totalChapters)))return;
   booksArchive.push({title:reading.book,coverPhoto:reading.coverPhoto,chapters:reading.chapters,totalChapters:reading.totalChapters,pageCount:reading.pageCount,finishedDate:today()});
   save("tracker:booksArchive",booksArchive);
-  reading={book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,booksThisYear:reading.booksThisYear+1};
+  reading={book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null};
   save("tracker:reading",reading);renderReading();
 };
 
