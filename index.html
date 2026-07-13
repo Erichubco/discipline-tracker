@@ -137,9 +137,10 @@
   .book-cover-lg{width:108px;height:148px;border-radius:12px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:26px;box-shadow:var(--shadow)}
   .book-cover-lg img{width:100%;height:100%;object-fit:cover}
   .reading-hero-info{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
-  .book-title-input{border:none;background:transparent;font-family:'Quicksand',sans-serif;font-size:17px;font-weight:700;color:var(--text);padding:0;width:100%}
+  .book-title-input{border:none;background:transparent;font-family:'Quicksand',sans-serif;font-size:18px;font-weight:700;color:var(--text);padding:0;width:100%;letter-spacing:-.01em}
   .book-title-input::placeholder{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14px;color:var(--muted)}
-  .book-title-display{font-family:'Quicksand',sans-serif;font-size:17px;font-weight:700;color:var(--text);line-height:1.25;cursor:pointer;word-break:break-word}
+  .book-title-display{font-family:'Quicksand',sans-serif;font-size:18px;font-weight:700;color:var(--text);line-height:1.3;letter-spacing:-.01em;cursor:pointer;word-break:break-word}
+  .book-author-display{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--muted);margin-top:3px}
   .chapter-counter-row{display:flex;align-items:center;justify-content:space-between}
   .chapter-pill{display:flex;align-items:center;gap:14px;background:var(--cardHi);border-radius:12px;padding:5px 8px}
   .chapter-pill-btn{width:34px;height:34px;border-radius:9px;border:none;background:#fff;box-shadow:var(--shadow);color:var(--green);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -379,8 +380,9 @@
         <div class="reading-hero-info">
           <div>
             <span class="stat-lbl" id="currentlyReadingLbl">En cours de lecture</span>
-            <div class="book-title-display hidden" id="bookTitleDisplay" style="margin-top:3px"></div>
-            <input id="bookInput" class="book-title-input" placeholder="Titre du livre…" style="margin-top:3px" />
+            <div class="book-title-display hidden" id="bookTitleDisplay" style="margin-top:4px"></div>
+            <input id="bookInput" class="book-title-input" placeholder="Titre du livre…" style="margin-top:4px" />
+            <div class="book-author-display hidden" id="bookAuthorDisplay"></div>
             <div class="sub hidden" id="bookLookupInfo" style="margin:4px 0 0"></div>
             <div class="sub hidden" id="paceInfo" style="margin:4px 0 0;color:var(--red)"></div>
           </div>
@@ -535,7 +537,7 @@ const STRINGS = {
     readingTitle:"Lecture · 1 chapitre/jour → 1 livre/mois",
     booksThisYear:n=>`${n} livre${n>1?"s":""} terminé${n>1?"s":""} cette année`,
     bookPlaceholder:"Titre du livre…", totalChapPlaceholder:"Nb de chapitres total (optionnel)",
-    currentlyReadingLbl:"En cours de lecture", totalChapLbl:"Total", currentPageLbl:"Page actuelle (optionnel)",
+    currentlyReadingLbl:"En cours de lecture", byAuthor:a=>`de ${a}`, totalChapLbl:"Total", currentPageLbl:"Page actuelle (optionnel)",
     currentPagePlaceholder:"ex: 120", currentPageEstimatePlaceholder:n=>`≈ ${n} (estimé)`,
     pagesRemaining:n=>`${n} pages restantes`,
     pagesRemainingEstimated:(n,p)=>`≈ page ${p} · ${n} pages restantes`,
@@ -615,7 +617,7 @@ const STRINGS = {
     readingTitle:"Reading · 1 chapter/day → 1 book/month",
     booksThisYear:n=>`${n} book${n>1?"s":""} finished this year`,
     bookPlaceholder:"Book title…", totalChapPlaceholder:"Total chapters (optional)",
-    currentlyReadingLbl:"Currently reading", totalChapLbl:"Total", currentPageLbl:"Current page (optional)",
+    currentlyReadingLbl:"Currently reading", byAuthor:a=>`by ${a}`, totalChapLbl:"Total", currentPageLbl:"Current page (optional)",
     currentPagePlaceholder:"e.g. 120", currentPageEstimatePlaceholder:n=>`≈ ${n} (estimated)`,
     pagesRemaining:n=>`${n} pages left`,
     pagesRemainingEstimated:(n,p)=>`≈ page ${p} · ${n} pages left`,
@@ -709,7 +711,7 @@ save("tracker:taskMigVersion",taskMigVersion);
 save("tracker:template",tasks);
 let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
-let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null});
+let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null,author:null});
 let booksArchive=load("tracker:booksArchive",[]);
 let archiveExpanded=false;
 let editingBookTitle=false;
@@ -989,12 +991,17 @@ function renderWeight(){
     const W=300,H=90,PAD=8;
     const x=i=>slice.length>1?PAD+(i/(slice.length-1))*(W-2*PAD):W/2;
     const y=v=>max>min?H-PAD-((v-min)/(max-min))*(H-2*PAD):H/2;
-    const actualPts=slice.map((w,i)=>`${x(i)},${y(w.kg)}`).join(" ");
+    // Smoothed trend (EWMA) instead of raw connect-the-dots: raw weigh-ins are noisy
+    // (water, food timing), the trend line is what actually shows if you're progressing.
+    const alpha=0.35;
+    const trend=[];
+    slice.forEach((w,i)=>trend.push(i===0?w.kg:alpha*w.kg+(1-alpha)*trend[i-1]));
+    const trendPts=trend.map((v,i)=>`${x(i)},${y(v)}`).join(" ");
     const goalLine=weightGoal!=null?`<line x1="${PAD}" y1="${y(weightGoal)}" x2="${W-PAD}" y2="${y(weightGoal)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3"/><text x="${W-PAD}" y="${y(weightGoal)-4}" text-anchor="end" font-size="8" fill="var(--muted)" font-family="'Plus Jakarta Sans',sans-serif">${t("weightGoal")} (${weightGoal}kg)</text>`:"";
-    const dots=slice.map((w,i)=>`<circle data-idx="${i}" cx="${x(i)}" cy="${y(w.kg)}" r="7" fill="transparent" style="cursor:pointer"/><circle cx="${x(i)}" cy="${y(w.kg)}" r="2.5" fill="var(--amber)" style="pointer-events:none"/>`).join("");
+    const dots=slice.map((w,i)=>`<circle data-idx="${i}" cx="${x(i)}" cy="${y(w.kg)}" r="7" fill="transparent" style="cursor:pointer"/><circle cx="${x(i)}" cy="${y(w.kg)}" r="2" fill="var(--greenDim)" style="pointer-events:none"/>`).join("");
     svgEl.innerHTML=`
       ${goalLine}
-      <polyline points="${actualPts}" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <polyline points="${trendPts}" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
       ${dots}
     `;
     svgEl.querySelectorAll("circle[data-idx]").forEach(c=>{
@@ -1024,6 +1031,7 @@ function renderReading(){
   }
   const bookInputEl=document.getElementById("bookInput");
   const bookDisplayEl=document.getElementById("bookTitleDisplay");
+  const bookAuthorEl=document.getElementById("bookAuthorDisplay");
   bookInputEl.value=reading.book||"";
   if(reading.book&&!editingBookTitle){
     bookDisplayEl.textContent=reading.book;
@@ -1032,6 +1040,12 @@ function renderReading(){
   }else{
     bookDisplayEl.classList.add("hidden");
     bookInputEl.classList.remove("hidden");
+  }
+  if(reading.book&&reading.author){
+    bookAuthorEl.textContent=t("byAuthor",reading.author);
+    bookAuthorEl.classList.remove("hidden");
+  }else{
+    bookAuthorEl.classList.add("hidden");
   }
   document.getElementById("totalChapInput").value=reading.totalChapters||"";
   const img=document.getElementById("coverImg"),ph=document.getElementById("coverPlaceholder");
@@ -1044,9 +1058,12 @@ function renderReading(){
   const pageRow=document.getElementById("currentPageRow");
   const pagesRemainingEl=document.getElementById("pagesRemainingInfo");
   const currentPageInputEl=document.getElementById("currentPageInput");
-  const estimatedPage=(reading.pageCount&&reading.totalChapters)
-    ?Math.min(reading.pageCount,Math.max(0,Math.round((reading.chapters/reading.totalChapters)*reading.pageCount)))
-    :null;
+  const hasAiEstimate=reading.aiPageEstimate&&reading.aiPageEstimateForChapter===reading.chapters;
+  const estimatedPage=hasAiEstimate
+    ?reading.aiPageEstimate
+    :((reading.pageCount&&reading.totalChapters)
+      ?Math.min(reading.pageCount,Math.max(0,Math.round((reading.chapters/reading.totalChapters)*reading.pageCount)))
+      :null);
   currentPageInputEl.value=reading.currentPage||"";
   currentPageInputEl.placeholder=estimatedPage!=null?t("currentPageEstimatePlaceholder",estimatedPage):t("currentPagePlaceholder");
   if(reading.book){
@@ -1445,6 +1462,7 @@ document.getElementById("bookInput").addEventListener("focus",()=>{editingBookTi
 document.getElementById("bookInput").addEventListener("blur",()=>{
   const v=document.getElementById("bookInput").value.trim();
   if(v&&!reading.book)reading.startDate=today();
+  if(v!==reading.book)reading.author=null;
   reading.book=v;
   editingBookTitle=false;
   save("tracker:reading",reading);renderReading();
@@ -1458,7 +1476,7 @@ document.getElementById("bookTitleDisplay").addEventListener("click",()=>{
 document.getElementById("totalChapInput").addEventListener("change",()=>{
   const v=parseInt(document.getElementById("totalChapInput").value);
   reading.totalChapters=v>0?v:null;
-  save("tracker:reading",reading);renderReading();
+  save("tracker:reading",reading);renderReading();scheduleAiPageEstimate();
 });
 document.getElementById("currentPageInput").addEventListener("change",()=>{
   const v=parseInt(document.getElementById("currentPageInput").value);
@@ -1482,10 +1500,12 @@ async function lookupBook(imageDataUrl){
     if(data.title){
       if(!reading.book)reading.startDate=today();
       reading.book=data.title;
+      reading.author=data.author||null;
       reading.pageCount=data.pageCount||null;
       if(data.chapters&&!reading.totalChapters)reading.totalChapters=data.chapters;
       if(data.coverUrl)reading.coverPhoto=data.coverUrl;
       save("tracker:reading",reading);
+      scheduleAiPageEstimate();
     }else{
       infoEl.textContent=t("bookNotIdentified");
     }
@@ -1509,14 +1529,35 @@ document.getElementById("coverInput").addEventListener("change",e=>{
   };
   reader.readAsDataURL(file);
 });
-document.getElementById("chapBtn").onclick=()=>{reading.chapters++;save("tracker:reading",reading);renderReading();};
-document.getElementById("chapMinusBtn").onclick=()=>{if(reading.chapters>0){reading.chapters--;save("tracker:reading",reading);renderReading();}};
+document.getElementById("chapBtn").onclick=()=>{reading.chapters++;save("tracker:reading",reading);renderReading();scheduleAiPageEstimate();};
+document.getElementById("chapMinusBtn").onclick=()=>{if(reading.chapters>0){reading.chapters--;save("tracker:reading",reading);renderReading();scheduleAiPageEstimate();}};
+
+let aiPageEstimateTimer=null;
+function scheduleAiPageEstimate(){
+  clearTimeout(aiPageEstimateTimer);
+  if(!(reading.book&&reading.totalChapters&&reading.pageCount&&reading.chapters>0))return;
+  aiPageEstimateTimer=setTimeout(async()=>{
+    const forChapter=reading.chapters,forBook=reading.book;
+    try{
+      const res=await fetch(PUSH_API+"/chapter-page-estimate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        title:reading.book,author:reading.author,chapter:forChapter,totalChapters:reading.totalChapters,pageCount:reading.pageCount
+      })});
+      if(!res.ok)return;
+      const data=await res.json();
+      if(reading.chapters!==forChapter||reading.book!==forBook)return;
+      reading.aiPageEstimate=data.page;
+      reading.aiPageEstimateForChapter=forChapter;
+      save("tracker:reading",reading);
+      renderReading();
+    }catch(e){}
+  },900);
+}
 document.getElementById("finishBtn").onclick=()=>{
   if(!reading.book)return;
   if(!confirm(t("finishBookConfirm",reading.book,reading.chapters,reading.totalChapters)))return;
   booksArchive.push({title:reading.book,coverPhoto:reading.coverPhoto,chapters:reading.chapters,totalChapters:reading.totalChapters,pageCount:reading.pageCount,finishedDate:today()});
   save("tracker:booksArchive",booksArchive);
-  reading={book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null};
+  reading={book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null,author:null};
   save("tracker:reading",reading);renderReading();
 };
 
