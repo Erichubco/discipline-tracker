@@ -29,6 +29,7 @@
   .app{max-width:460px;margin:0 auto}
   .view{display:none;padding:calc(env(safe-area-inset-top) + 20px) 16px calc(100px + env(safe-area-inset-bottom))}
   .view.active{display:block}
+  #view-settings.active{display:flex;flex-direction:column;justify-content:center;min-height:100vh}
   .head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
   .eyebrow{color:var(--green);font-size:20px;font-weight:700;letter-spacing:-0.01em}
   .date{color:var(--muted);font-size:13px;text-transform:capitalize;margin-top:2px}
@@ -126,12 +127,14 @@
   .book-archive-cover.placeholder{display:flex;align-items:center;justify-content:center;font-size:22px}
   .book-archive-title{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .reading-card{border-left:4px solid var(--amber)}
-  .reading-hero{display:flex;gap:14px;margin-bottom:16px}
-  .book-cover-lg{width:96px;height:132px;border-radius:12px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:26px;box-shadow:var(--shadow)}
+  .reading-hero{display:flex;gap:14px;margin-bottom:14px}
+  .book-cover-lg{width:108px;height:148px;border-radius:12px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:26px;box-shadow:var(--shadow)}
   .book-cover-lg img{width:100%;height:100%;object-fit:cover}
-  .reading-hero-info{flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;min-width:0}
-  .chapter-counter-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-  .chapter-pill{display:flex;align-items:center;gap:16px;background:var(--cardHi);border-radius:12px;padding:6px 10px}
+  .reading-hero-info{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+  .book-title-input{border:none;background:transparent;font-family:'Quicksand',sans-serif;font-size:17px;font-weight:700;color:var(--text);padding:0;width:100%}
+  .book-title-input::placeholder{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14px;color:var(--muted)}
+  .chapter-counter-row{display:flex;align-items:center;justify-content:space-between}
+  .chapter-pill{display:flex;align-items:center;gap:14px;background:var(--cardHi);border-radius:12px;padding:5px 8px}
   .chapter-pill-btn{width:34px;height:34px;border-radius:9px;border:none;background:#fff;box-shadow:var(--shadow);color:var(--green);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .chapter-pill-btn-primary{background:var(--green);color:#fff;box-shadow:none}
   .chapter-pill-count{font-family:'Quicksand',sans-serif;font-weight:700;font-size:19px;min-width:26px;text-align:center}
@@ -363,21 +366,27 @@
         </button>
         <input type="file" accept="image/*" capture="environment" id="coverInput" class="hidden" />
         <div class="reading-hero-info">
-          <input id="bookInput" placeholder="Titre du livre…" />
-          <input id="totalChapInput" inputmode="numeric" placeholder="Nb de chapitres total (optionnel)" />
-          <div class="sub hidden" id="bookLookupInfo" style="margin:0"></div>
-          <div class="sub hidden" id="paceInfo" style="margin:0"></div>
+          <div>
+            <span class="stat-lbl" id="currentlyReadingLbl">En cours de lecture</span>
+            <input id="bookInput" class="book-title-input" placeholder="Titre du livre…" style="margin-top:3px" />
+            <div class="sub hidden" id="bookLookupInfo" style="margin:4px 0 0"></div>
+            <div class="sub hidden" id="paceInfo" style="margin:4px 0 0;color:var(--red)"></div>
+          </div>
+          <div class="chapter-counter-row">
+            <span class="stat-lbl" id="chaptersLbl">chapitres</span>
+            <div class="chapter-pill">
+              <button class="chapter-pill-btn" id="chapMinusBtn" type="button">−</button>
+              <span class="chapter-pill-count" id="chapCount">0</span>
+              <button class="chapter-pill-btn chapter-pill-btn-primary" id="chapBtn" type="button">+</button>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="chapter-counter-row">
-        <span class="stat-lbl" id="chaptersLbl">chapitres</span>
-        <div class="chapter-pill">
-          <button class="chapter-pill-btn" id="chapMinusBtn" type="button">−</button>
-          <span class="chapter-pill-count" id="chapCount">0</span>
-          <button class="chapter-pill-btn chapter-pill-btn-primary" id="chapBtn" type="button">+</button>
-        </div>
+      <div class="goal-row">
+        <span id="totalChapLbl">Total</span>
+        <input id="totalChapInput" inputmode="numeric" placeholder="chapitres (optionnel)" style="flex:1;text-align:left" />
       </div>
-      <div class="row">
+      <div class="row" style="margin-top:14px">
         <button class="btn btn-ghost" id="finishBtn" style="flex:1">Terminé ✓</button>
       </div>
     </div>
@@ -419,6 +428,7 @@
     <div class="card">
       <div class="settings-brand">
         <div class="display">Discipline</div>
+        <div class="score-title" style="margin-top:8px" id="settingsTagline">Suivi personnel</div>
       </div>
 
       <div class="toggle-row" id="reminderCard">
@@ -497,6 +507,7 @@ const STRINGS = {
     readingTitle:"Lecture · 1 chapitre/jour → 1 livre/mois",
     booksThisYear:n=>`${n} livre${n>1?"s":""} terminé${n>1?"s":""} cette année`,
     bookPlaceholder:"Titre du livre…", totalChapPlaceholder:"Nb de chapitres total (optionnel)",
+    currentlyReadingLbl:"En cours de lecture", totalChapLbl:"Total",
     chaptersLbl:"chapitres", addChapter:"+", finishBook:"Terminé ✓",
     paceAllDone:"Tu as fini tous les chapitres — tape Terminé ✓ !",
     bookLookupLoading:"🔍 Identification du livre…",
@@ -508,7 +519,7 @@ const STRINGS = {
     businessWeekLbl:"Business (semaine)", devWeekLbl:"Développement (semaine)",
     paceInfo:(pace,date)=>`${pace} chap./jour · fin estimée le ${date}`,
     footerLine:"Tes données restent sur ton téléphone et se sauvegardent toutes seules.",
-    storageLbl:"Stockage",
+    storageLbl:"Stockage", settingsTagline:"Suivi personnel",
     exportBtn:"Exporter mes données (JSON)", sheetClose:"Fermer",
     celebTap:"Touche pour continuer",
     scoreFull:"Journée pleine", scoreSolid:"Solide, continue", scoreMoving:"En marche", scoreStart:"On y va",
@@ -570,6 +581,7 @@ const STRINGS = {
     readingTitle:"Reading · 1 chapter/day → 1 book/month",
     booksThisYear:n=>`${n} book${n>1?"s":""} finished this year`,
     bookPlaceholder:"Book title…", totalChapPlaceholder:"Total chapters (optional)",
+    currentlyReadingLbl:"Currently reading", totalChapLbl:"Total",
     chaptersLbl:"chapters", addChapter:"+", finishBook:"Done ✓",
     paceAllDone:"You've finished all the chapters — tap Done ✓!",
     bookLookupLoading:"🔍 Identifying the book…",
@@ -581,7 +593,7 @@ const STRINGS = {
     businessWeekLbl:"Business (this week)", devWeekLbl:"Development (this week)",
     paceInfo:(pace,date)=>`${pace} ch./day · estimated finish ${date}`,
     footerLine:"Your data stays on your phone and saves itself automatically.",
-    storageLbl:"Storage",
+    storageLbl:"Storage", settingsTagline:"Personal tracking",
     exportBtn:"Export my data (JSON)", sheetClose:"Close",
     celebTap:"Tap to continue",
     scoreFull:"Full day", scoreSolid:"Solid, keep going", scoreMoving:"Moving", scoreStart:"Let's go",
@@ -730,12 +742,15 @@ function applyStaticI18n(){
   document.getElementById("readingTitle").textContent=t("readingTitle");
   document.getElementById("bookInput").placeholder=t("bookPlaceholder");
   document.getElementById("totalChapInput").placeholder=t("totalChapPlaceholder");
+  document.getElementById("currentlyReadingLbl").textContent=t("currentlyReadingLbl");
+  document.getElementById("totalChapLbl").textContent=t("totalChapLbl");
   document.getElementById("chaptersLbl").textContent=t("chaptersLbl");
   document.getElementById("chapBtn").textContent=t("addChapter");
   document.getElementById("finishBtn").textContent=t("finishBook");
   document.getElementById("footerLine").textContent=t("footerLine");
   document.getElementById("exportBtnLbl").textContent=t("exportBtn");
   document.getElementById("storageLbl").textContent=t("storageLbl");
+  document.getElementById("settingsTagline").textContent=t("settingsTagline");
   let bytes=0;
   for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);bytes+=(k.length+(localStorage.getItem(k)||"").length)*2;}
   document.getElementById("storageValue").textContent=bytes<1024*1024?`${(bytes/1024).toFixed(1)} KB`:`${(bytes/1024/1024).toFixed(1)} MB`;
@@ -1379,11 +1394,35 @@ async function loadHealthToday(){
   }catch(e){}
 }
 
+async function syncTaskSuggestions(){
+  try{
+    const res=await fetch(PUSH_API+"/task-suggestions");
+    if(!res.ok)return;
+    const suggestions=await res.json();
+    if(!Array.isArray(suggestions)||!suggestions.length)return;
+    const existingIds=new Set(tasks.map(tk=>tk.id));
+    const applied=[];
+    suggestions.forEach(s=>{
+      if(!s.id||!s.label)return;
+      applied.push(s.id);
+      if(existingIds.has(s.id))return;
+      tasks.push({id:s.id,label:s.label,period:s.period||"day",category:s.category==="business"?"business":"dev"});
+      existingIds.add(s.id);
+    });
+    if(applied.length){
+      save("tracker:template",tasks);
+      renderTasks();renderScore();
+      fetch(PUSH_API+"/task-suggestions/ack",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids:applied})}).catch(()=>{});
+    }
+  }catch(e){}
+}
+
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>{
     navigator.serviceWorker.register("sw.js").catch(()=>{});
     initReminder();
     loadHealthToday();
+    syncTaskSuggestions();
   });
 }
 </script>
