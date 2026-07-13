@@ -221,6 +221,24 @@
     </div>
   </div>
 
+  <!-- Business goal -->
+  <div class="card">
+    <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="bizTitle">💼 Objectif business du mois</span></div>
+    <div class="goal-row">
+      <span id="bizGoalLbl">🎯 Objectif CA</span>
+      <input id="bizGoalInput" inputmode="numeric" placeholder="€" style="width:80px" />
+      <span>€</span>
+    </div>
+    <div class="stats" id="bizStats"></div>
+    <div class="pbar-row">
+      <div class="pbar-bg"><div class="pbar-fill" id="bizBarFill" style="width:0%;background:var(--amber)"></div></div>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <input id="bizInput" inputmode="numeric" placeholder="CA actuel (€)" />
+      <button class="btn btn-amber" id="bizBtn">Enregistrer</button>
+    </div>
+  </div>
+
   <!-- Reminder -->
   <div class="card" id="reminderCard">
     <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="reminderTitle">Rappel du soir</span></div>
@@ -324,6 +342,7 @@ const STRINGS = {
     weightAhead:"En progression vers l'objectif", weightOnTrack:"Stable", weightBehind:"S'éloigne de l'objectif", weightGoalReached:"Objectif atteint !",
     weightPaceInfo:(rate,date)=>`📈 ${rate} kg/semaine · objectif estimé le ${date}`,
     weightSetGoalHint:"Entre ton objectif pour suivre ta progression.",
+    bizTitle:"💼 Objectif business du mois", bizGoalLbl:"🎯 Objectif CA", bizPlaceholder:"CA actuel (€)",
     readingTitle:"Lecture · 1 chapitre/jour → 1 livre/mois",
     booksThisYear:n=>`${n} livre${n>1?"s":""} terminé${n>1?"s":""} cette année`,
     bookPlaceholder:"Titre du livre…", totalChapPlaceholder:"Nb de chapitres total (optionnel)",
@@ -387,6 +406,7 @@ const STRINGS = {
     weightAhead:"Progressing toward goal", weightOnTrack:"Stable", weightBehind:"Moving away from goal", weightGoalReached:"Goal reached!",
     weightPaceInfo:(rate,date)=>`📈 ${rate} kg/week · goal estimated ${date}`,
     weightSetGoalHint:"Enter your goal to track progress.",
+    bizTitle:"💼 Monthly business goal", bizGoalLbl:"🎯 Revenue goal", bizPlaceholder:"Current revenue (€)",
     readingTitle:"Reading · 1 chapter/day → 1 book/month",
     booksThisYear:n=>`${n} book${n>1?"s":""} finished this year`,
     bookPlaceholder:"Book title…", totalChapPlaceholder:"Total chapters (optional)",
@@ -487,6 +507,9 @@ function applyStaticI18n(){
   document.getElementById("weightTitle").textContent=t("weightTitle");
   document.getElementById("weightSub").textContent=t("weightSub");
   document.getElementById("weightGoalLbl").textContent=t("weightGoalLbl");
+  document.getElementById("bizTitle").textContent=t("bizTitle");
+  document.getElementById("bizGoalLbl").textContent=t("bizGoalLbl");
+  document.getElementById("bizInput").placeholder=t("bizPlaceholder");
   document.getElementById("wInput").placeholder=t("weightPlaceholder");
   document.getElementById("wBtn").textContent=t("weightSave");
   document.getElementById("readingTitle").textContent=t("readingTitle");
@@ -590,6 +613,21 @@ function renderHeatmap(){
   }
 }
 let weightGoal=load("tracker:weightGoal",null);
+let bizGoal=load("tracker:bizGoal",null);
+let bizRevenue=load("tracker:bizRevenue",[]);
+function renderBiz(){
+  document.getElementById("bizGoalInput").value=bizGoal??"";
+  const last=bizRevenue[bizRevenue.length-1];
+  const s=document.getElementById("bizStats");s.innerHTML="";
+  s.innerHTML=`<div><div class="stat-num">${last?last.amount.toLocaleString(t("dateLocale")):"—"}<span style="font-size:15px;color:var(--muted);font-weight:600"> €</span></div><div class="stat-lbl">${t("weightCurrent")}</div></div>`;
+  if(bizGoal!=null)s.innerHTML+=`<div><div class="stat-num" style="color:var(--amber)">${bizGoal.toLocaleString(t("dateLocale"))}<span style="font-size:15px;color:var(--muted);font-weight:600"> €</span></div><div class="stat-lbl">${t("weightGoal")}</div></div>`;
+  if(bizGoal!=null&&last){
+    const remaining=bizGoal-last.amount;
+    s.innerHTML+=`<div><div class="stat-num" style="color:${remaining<=0?"var(--green)":"var(--text)"}">${remaining>0?remaining.toLocaleString(t("dateLocale")):"0"}</div><div class="stat-lbl">${t("weightRemaining")}</div></div>`;
+  }
+  const pct=(bizGoal&&last)?Math.min(100,Math.round((last.amount/bizGoal)*100)):0;
+  document.getElementById("bizBarFill").style.width=pct+"%";
+}
 function weightRateKgPerWeek(){
   const first=weights[0], last=weights[weights.length-1];
   if(!first||!last||first===last)return 0;
@@ -792,6 +830,15 @@ function renderPeriodStats(){
 
   checkCelebrations(current,weekPct,monthPct);
   fetch(PUSH_API+"/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({weekPct,monthPct,streakCurrent:current,streakBest:best})}).catch(()=>{});
+  syncFullBackup();
+}
+function syncFullBackup(){
+  const out={};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&k.startsWith("tracker:"))out[k]=load(k,null);
+  }
+  fetch(PUSH_API+"/backup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(out)}).catch(()=>{});
 }
 
 const MILESTONES=[3,7,14,21,30,45,60,90,120,180,365];
@@ -890,7 +937,7 @@ function setLang(l){
   lang=l;
   save("tracker:lang",lang);
   applyStaticI18n();
-  renderScore();renderTasks();renderHeatmap();renderWeight();renderReading();renderPeriodStats();
+  renderScore();renderTasks();renderHeatmap();renderWeight();renderReading();renderPeriodStats();renderBiz();
   if(document.getElementById("reminderCard")&&!document.getElementById("reminderCard").classList.contains("hidden")){
     setReminderBtnState(pushSubscribed);
     if(!(window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true)){
@@ -932,6 +979,24 @@ document.getElementById("weightGoalInput").addEventListener("blur",()=>{
   renderWeight();
 });
 document.getElementById("weightGoalInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
+
+document.getElementById("bizGoalInput").addEventListener("blur",()=>{
+  const v=parseFloat(document.getElementById("bizGoalInput").value.replace(",","."));
+  bizGoal=(v&&v>0)?v:null;
+  save("tracker:bizGoal",bizGoal);
+  renderBiz();
+});
+document.getElementById("bizGoalInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
+document.getElementById("bizBtn").onclick=logBiz;
+document.getElementById("bizInput").addEventListener("keydown",e=>{if(e.key==="Enter")logBiz();});
+function logBiz(){
+  const i=document.getElementById("bizInput");
+  const amount=parseFloat(i.value.replace(",","."));
+  if(!amount||amount<0)return;
+  bizRevenue.push({date:today(),amount});
+  save("tracker:bizRevenue",bizRevenue);
+  i.value="";renderBiz();
+}
 
 document.getElementById("bookInput").addEventListener("blur",()=>{
   const v=document.getElementById("bookInput").value.trim();
@@ -1019,7 +1084,7 @@ document.getElementById("sheetBackdrop").addEventListener("click",e=>{
 });
 
 applyStaticI18n();
-renderScore();renderTasks();renderHeatmap();renderWeight();renderReading();renderPeriodStats();
+renderScore();renderTasks();renderHeatmap();renderWeight();renderReading();renderPeriodStats();renderBiz();
 
 async function loadHealthToday(){
   try{
