@@ -24,8 +24,12 @@
     -webkit-font-smoothing:antialiased}
   body{padding:calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 48px);min-height:100vh}
   .wrap{max-width:460px;margin:0 auto}
+  .head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
   .eyebrow{color:var(--amber);font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:800}
   .date{color:var(--muted);font-size:14px;text-transform:capitalize;margin-top:2px}
+  .lang-toggle{display:flex;gap:3px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:3px;flex-shrink:0}
+  .lang-opt{background:none;border:none;color:var(--muted);font-size:11px;font-weight:700;padding:5px 9px;border-radius:6px;cursor:pointer;font-family:inherit}
+  .lang-opt.active{background:var(--amber);color:var(--bg)}
   .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;margin-top:16px}
   .card-h{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;font-weight:700}
   .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -73,7 +77,7 @@
   .wbar{flex:1;background:var(--greenDim);border-radius:4px}
   .read-box{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:12px;padding:12px 14px}
   .foot{text-align:center;color:var(--muted);font-size:11px;margin-top:20px;line-height:1.5}
-  .foot-export{background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;padding:6px;font-family:inherit;margin-top:10px;opacity:.6}
+  .foot-export{display:block;margin:10px auto 0;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;padding:6px;font-family:inherit;opacity:.6}
   .hidden{display:none}
   .book-row{display:flex;gap:12px;margin-bottom:12px}
   .book-cover{width:56px;height:76px;border-radius:8px;background:var(--bg);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:20px}
@@ -98,9 +102,15 @@
 </head>
 <body>
 <div class="wrap">
-  <div>
-    <div class="eyebrow">Discipline · Eric</div>
-    <div class="date" id="date"></div>
+  <div class="head-row">
+    <div>
+      <div class="eyebrow">Discipline · Eric</div>
+      <div class="date" id="date"></div>
+    </div>
+    <div class="lang-toggle" id="langToggle">
+      <button type="button" class="lang-opt" data-lang="fr">FR</button>
+      <button type="button" class="lang-opt" data-lang="en">EN</button>
+    </div>
   </div>
 
   <!-- Score -->
@@ -114,7 +124,7 @@
       </svg>
       <div class="ring-center">
         <div class="ring-num"><span id="doneCount">0</span><span class="ring-den">/<span id="totalCount">0</span></span></div>
-        <div class="ring-lbl">tâches</div>
+        <div class="ring-lbl" id="ringLbl">tâches</div>
       </div>
     </div>
     <div>
@@ -126,21 +136,21 @@
 
   <!-- History -->
   <div class="card">
-    <div class="card-h"><span class="dot" style="background:var(--amber)"></span>16 dernières semaines</div>
+    <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="heatmapTitle">16 dernières semaines</span></div>
     <div class="heatmap" id="heatmap"></div>
-    <div class="heatmap-legend">Moins
+    <div class="heatmap-legend"><span id="legendLess">Moins</span>
       <div class="heatmap-cell" style="background:var(--bg)"></div>
       <div class="heatmap-cell" style="background:#5c4520"></div>
       <div class="heatmap-cell" style="background:var(--amber)"></div>
       <div class="heatmap-cell" style="background:var(--green)"></div>
-      Plus
+      <span id="legendMore">Plus</span>
     </div>
   </div>
 
   <!-- Tasks -->
   <div class="card">
     <div class="card-h" style="justify-content:space-between">
-      <span style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:var(--amber)"></span>Tâches du jour</span>
+      <span style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:var(--amber)"></span><span id="tasksTitle">Tâches du jour</span></span>
       <button class="btn-link" id="editBtn">Modifier</button>
     </div>
     <div id="tasks"></div>
@@ -159,38 +169,38 @@
 
   <!-- Period stats -->
   <div class="card">
-    <div class="card-h"><span class="dot" style="background:var(--green)"></span>Semaine · mois</div>
+    <div class="card-h"><span class="dot" style="background:var(--green)"></span><span id="periodStatsTitle">Semaine · mois</span></div>
     <div class="stats">
       <div>
         <div class="stat-num" id="streakCur">0</div>
-        <div class="stat-lbl">série actuelle 🔥</div>
+        <div class="stat-lbl" id="streakCurLbl">série actuelle 🔥</div>
       </div>
       <div>
         <div class="stat-num" id="streakBest">0</div>
-        <div class="stat-lbl">meilleure série</div>
+        <div class="stat-lbl" id="streakBestLbl">meilleure série</div>
       </div>
     </div>
     <div class="pbar-row">
-      <div class="pbar-lbl">Cette semaine <b id="weekPct">0%</b></div>
+      <div class="pbar-lbl"><span id="thisWeekLbl">Cette semaine</span> <b id="weekPct">0%</b></div>
       <div class="pbar-bg"><div class="pbar-fill" id="weekBarFill" style="width:0%;background:var(--amber)"></div></div>
     </div>
     <div class="pbar-row">
-      <div class="pbar-lbl">Ce mois <b id="monthPct">0%</b></div>
+      <div class="pbar-lbl"><span id="thisMonthLbl">Ce mois</span> <b id="monthPct">0%</b></div>
       <div class="pbar-bg"><div class="pbar-fill" id="monthBarFill" style="width:0%;background:var(--green)"></div></div>
     </div>
   </div>
 
   <!-- Reminder -->
   <div class="card" id="reminderCard">
-    <div class="card-h"><span class="dot" style="background:var(--amber)"></span>Rappel du soir</div>
+    <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="reminderTitle">Rappel du soir</span></div>
     <div class="sub" id="reminderSub">Une notification à 21h pour cocher tes tâches avant la coupure d'écran.</div>
     <button class="btn btn-amber btn-block" id="reminderBtn">Activer les rappels</button>
   </div>
 
   <!-- Weight -->
   <div class="card">
-    <div class="card-h"><span class="dot" style="background:var(--green)"></span>Poids · objectif +2 kg/mois</div>
-    <div class="sub">Pèse-toi 1×/semaine, le matin. Pas tous les jours.</div>
+    <div class="card-h"><span class="dot" style="background:var(--green)"></span><span id="weightTitle">Poids · objectif +2 kg/mois</span></div>
+    <div class="sub" id="weightSub">Pèse-toi 1×/semaine, le matin. Pas tous les jours.</div>
     <div class="stats" id="wstats"></div>
     <div class="row">
       <input id="wInput" inputmode="decimal" placeholder="Ton poids (kg)" />
@@ -201,7 +211,7 @@
 
   <!-- Reading -->
   <div class="card">
-    <div class="card-h"><span class="dot" style="background:var(--amber)"></span>Lecture · 1 chapitre/jour → 1 livre/mois</div>
+    <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="readingTitle">Lecture · 1 chapitre/jour → 1 livre/mois</span></div>
     <div class="sub" id="booksSub"></div>
     <div class="book-row">
       <button class="book-cover" id="coverBtn" type="button">
@@ -215,7 +225,7 @@
       </div>
     </div>
     <div class="read-box">
-      <div class="stat-num"><span id="chapCount">0</span> <span style="font-size:13px;color:var(--muted);font-weight:600">chapitres</span></div>
+      <div class="stat-num"><span id="chapCount">0</span> <span id="chaptersLbl" style="font-size:13px;color:var(--muted);font-weight:600">chapitres</span></div>
       <div class="row">
         <button class="btn btn-amber" id="chapBtn" style="padding:10px 14px">+ Chapitre</button>
         <button class="btn btn-ghost" id="finishBtn">Terminé ✓</button>
@@ -224,7 +234,7 @@
     <div class="sub hidden" id="paceInfo" style="margin-top:10px;margin-bottom:0"></div>
   </div>
 
-  <div class="foot">Tes données restent sur ton téléphone et se sauvegardent toutes seules.<br/>Coche chaque jour — c'est la régularité qui gagne.</div>
+  <div class="foot" id="footerLine">Tes données restent sur ton téléphone et se sauvegardent toutes seules.<br/>Coche chaque jour — c'est la régularité qui gagne.</div>
   <button class="foot-export" id="exportBtn">Exporter mes données (JSON)</button>
 </div>
 
@@ -233,87 +243,223 @@
     <div class="celebration-emoji" id="celebEmoji">🔥</div>
     <div class="celebration-title" id="celebTitle"></div>
     <div class="celebration-sub" id="celebSub"></div>
-    <div class="celebration-tap">Touche pour continuer</div>
+    <div class="celebration-tap" id="celebTap">Touche pour continuer</div>
   </div>
 </div>
 
 <script>
+const STRINGS = {
+  fr: {
+    dateLocale:"fr-FR",
+    heatmapTitle:"16 dernières semaines", legendLess:"Moins", legendMore:"Plus",
+    tasksTitle:"Tâches du jour", editBtn:"Modifier", editBtnDone:"Terminé",
+    newTaskPlaceholder:"Nouvelle tâche…",
+    periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
+    periodStatsTitle:"Semaine · mois", streakCurLbl:"série actuelle 🔥", streakBestLbl:"meilleure série",
+    thisWeekLbl:"Cette semaine", thisMonthLbl:"Ce mois",
+    reminderTitle:"Rappel du soir",
+    reminderSubDefault:"Une notification à 21h pour cocher tes tâches avant la coupure d'écran.",
+    reminderSubNeedsInstall:"Ajoute d'abord l'app à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis reviens ici pour activer les rappels.",
+    reminderSubDenied:"Notifications refusées — active-les dans Réglages iOS > Notifications > Discipline.",
+    reminderBtnOn:"Activer les rappels", reminderBtnOff:"Rappels activés ✓ (touche pour désactiver)",
+    weightTitle:"Poids · objectif +2 kg/mois", weightSub:"Pèse-toi 1×/semaine, le matin. Pas tous les jours.",
+    weightCurrent:"actuel", weightGoal:"cible du moment", weightRate:"kg/semaine", weightSinceStart:"depuis le début",
+    weightPlaceholder:"Ton poids (kg)", weightSave:"Enregistrer",
+    weightDeleteConfirm:(kg,date)=>`Supprimer l'entrée ${kg}kg du ${date} ?`,
+    weightBarTitle:"touche pour supprimer",
+    readingTitle:"Lecture · 1 chapitre/jour → 1 livre/mois",
+    booksThisYear:n=>`${n} livre${n>1?"s":""} terminé${n>1?"s":""} cette année`,
+    bookPlaceholder:"Titre du livre…", totalChapPlaceholder:"Nb de chapitres total (optionnel)",
+    chaptersLbl:"chapitres", addChapter:"+ Chapitre", finishBook:"Terminé ✓",
+    paceAllDone:"Tu as fini tous les chapitres — tape Terminé ✓ !",
+    paceInfo:(pace,date)=>`📈 ${pace} chap./jour · fin estimée le ${date}`,
+    footerLine:"Tes données restent sur ton téléphone et se sauvegardent toutes seules.<br/>Coche chaque jour — c'est la régularité qui gagne.",
+    exportBtn:"Exporter mes données (JSON)",
+    celebTap:"Touche pour continuer",
+    scoreFull:"Journée pleine 🔥", scoreSolid:"Solide, continue", scoreMoving:"En marche", scoreStart:"On y va",
+    scoreFullSub:"Toutes tes tâches cochées. C'est ça qui construit le résultat.",
+    scoreRemainingSub:n=>`${n} restante${n>1?"s":""} pour boucler la journée.`,
+    ringLbl:"tâches",
+    healthSteps:n=>`🏃 ${n} pas`, healthActive:n=>`💪 ${n} min actif`,
+    perfectWeekTitle:"Semaine parfaite !", perfectWeekSub:"100% cette semaine. Toutes les cases cochées, tous les jours.",
+    perfectMonthTitle:"Mois parfait !", perfectMonthSub:"100% ce mois-ci. C'est du très, très haut niveau.",
+    milestone365:"Une année de discipline. Rien à ajouter, c'est qui tu es maintenant.",
+    milestone90:"3 mois de régularité. C'est plus une habitude, c'est un mode de vie.",
+    milestone30:"Un mois complet sans craquer. Le résultat commence à suivre.",
+    milestone14:"Deux semaines pleines. Ça devient un réflexe, pas un effort.",
+    milestone7title:"Une semaine complète !", milestone7sub:"7 jours d'affilée, journée pleine à chaque fois.",
+    milestoneDefault:"Ça prend forme. Continue comme ça.",
+    milestoneSuffix:n=>`${n} jours d'affilée`,
+    ecomFocus:["Bilan semaine + plan + veille","Planning semaine + revue chiffres + angles","Production créatifs (UGC, montages)","Optimisation boutique / page produit","Gestion des tests + recherche produit","Analyse + décisions scaling","Gros chantier de la semaine"],
+    defaultTasks:[
+      {id:"wake",label:"🌞 Réveil sans téléphone + marche",period:"morning"},
+      {id:"gym",label:"💪 Muscu",period:"day"},
+      {id:"ecom",label:"💻 Tâche e-com du jour",period:"day"},
+      {id:"shake",label:"🥤 Shake + créatine",period:"day"},
+      {id:"supps",label:"💊 Compléments (matin + soir)",period:"day"},
+      {id:"meals",label:"🍽️ 3 repas complets",period:"day"},
+      {id:"read",label:"📖 Lire 1 chapitre",period:"evening"},
+      {id:"screens",label:"🌙 Écrans coupés à 21h30",period:"evening"},
+    ],
+  },
+  en: {
+    dateLocale:"en-US",
+    heatmapTitle:"Last 16 weeks", legendLess:"Less", legendMore:"More",
+    tasksTitle:"Today's tasks", editBtn:"Edit", editBtnDone:"Done",
+    newTaskPlaceholder:"New task…",
+    periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
+    periodStatsTitle:"Week · month", streakCurLbl:"current streak 🔥", streakBestLbl:"best streak",
+    thisWeekLbl:"This week", thisMonthLbl:"This month",
+    reminderTitle:"Evening reminder",
+    reminderSubDefault:"A notification at 9pm to check off your tasks before screens go off.",
+    reminderSubNeedsInstall:"Add the app to your home screen first (Share → Add to Home Screen), then come back here to enable reminders.",
+    reminderSubDenied:"Notifications denied — enable them in iOS Settings > Notifications > Discipline.",
+    reminderBtnOn:"Enable reminders", reminderBtnOff:"Reminders on ✓ (tap to disable)",
+    weightTitle:"Weight · goal +2 kg/month", weightSub:"Weigh yourself 1×/week, in the morning. Not every day.",
+    weightCurrent:"current", weightGoal:"current target", weightRate:"kg/week", weightSinceStart:"since start",
+    weightPlaceholder:"Your weight (kg)", weightSave:"Save",
+    weightDeleteConfirm:(kg,date)=>`Delete the ${kg}kg entry from ${date}?`,
+    weightBarTitle:"tap to delete",
+    readingTitle:"Reading · 1 chapter/day → 1 book/month",
+    booksThisYear:n=>`${n} book${n>1?"s":""} finished this year`,
+    bookPlaceholder:"Book title…", totalChapPlaceholder:"Total chapters (optional)",
+    chaptersLbl:"chapters", addChapter:"+ Chapter", finishBook:"Done ✓",
+    paceAllDone:"You've finished all the chapters — tap Done ✓!",
+    paceInfo:(pace,date)=>`📈 ${pace} ch./day · estimated finish ${date}`,
+    footerLine:"Your data stays on your phone and saves itself automatically.<br/>Check every day — consistency wins.",
+    exportBtn:"Export my data (JSON)",
+    celebTap:"Tap to continue",
+    scoreFull:"Full day 🔥", scoreSolid:"Solid, keep going", scoreMoving:"Moving", scoreStart:"Let's go",
+    scoreFullSub:"All your tasks checked. That's what builds the result.",
+    scoreRemainingSub:n=>`${n} left to close out the day.`,
+    ringLbl:"tasks",
+    healthSteps:n=>`🏃 ${n} steps`, healthActive:n=>`💪 ${n} min active`,
+    perfectWeekTitle:"Perfect week!", perfectWeekSub:"100% this week. Every box checked, every day.",
+    perfectMonthTitle:"Perfect month!", perfectMonthSub:"100% this month. That's a very high level.",
+    milestone365:"A full year of discipline. Nothing left to add, this is who you are now.",
+    milestone90:"3 months of consistency. It's not a habit anymore, it's a lifestyle.",
+    milestone30:"A full month without breaking. The results are starting to show.",
+    milestone14:"Two full weeks. It's becoming a reflex, not an effort.",
+    milestone7title:"A full week!", milestone7sub:"7 days in a row, full day every time.",
+    milestoneDefault:"It's taking shape. Keep going.",
+    milestoneSuffix:n=>`${n}-day streak`,
+    ecomFocus:["Weekly review + plan + watch trends","Weekly planning + numbers review + angles","Creative production (UGC, edits)","Store / product page optimization","Test management + product research","Analysis + scaling decisions","Big weekly project"],
+    defaultTasks:[
+      {id:"wake",label:"🌞 Wake up phone-free + walk",period:"morning"},
+      {id:"gym",label:"💪 Workout",period:"day"},
+      {id:"ecom",label:"💻 Today's e-com task",period:"day"},
+      {id:"shake",label:"🥤 Shake + creatine",period:"day"},
+      {id:"supps",label:"💊 Supplements (morning + evening)",period:"day"},
+      {id:"meals",label:"🍽️ 3 full meals",period:"day"},
+      {id:"read",label:"📖 Read 1 chapter",period:"evening"},
+      {id:"screens",label:"🌙 Screens off at 9:30pm",period:"evening"},
+    ],
+  },
+};
+let lang=load2("tracker:lang","fr");
+function t(key,...args){
+  const dict=STRINGS[lang]||STRINGS.fr;
+  const v=dict[key]!==undefined?dict[key]:STRINGS.fr[key];
+  return typeof v==="function"?v(...args):v;
+}
+function load2(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch(e){return f;}}
+
 const CHECK_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#141110" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-const DEFAULT_TASKS = [
-  {id:"wake",label:"🌞 Réveil sans téléphone + marche",period:"morning"},
-  {id:"gym",label:"💪 Muscu",period:"day"},
-  {id:"ecom",label:"💻 Tâche e-com du jour",period:"day"},
-  {id:"shake",label:"🥤 Shake + créatine",period:"day"},
-  {id:"supps",label:"💊 Compléments (matin + soir)",period:"day"},
-  {id:"meals",label:"🍽️ 3 repas complets",period:"day"},
-  {id:"read",label:"📖 Lire 1 chapitre",period:"evening"},
-  {id:"screens",label:"🌙 Écrans coupés à 21h30",period:"evening"},
-];
 const DEFAULT_PERIODS={wake:"morning",read:"evening",gym:"day",ecom:"day",shake:"day",supps:"day",meals:"day",screens:"evening"};
-const PERIOD_META={morning:{emoji:"🌅",label:"Matin"},day:{emoji:"☀️",label:"Journée"},evening:{emoji:"🌙",label:"Soir"}};
 const pad=n=>String(n).padStart(2,"0");
 const keyFor=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const today=()=>keyFor(new Date());
 const load=(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch(e){return f;}};
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
 
-let tasks=load("tracker:template",DEFAULT_TASKS); if(!tasks.length)tasks=DEFAULT_TASKS;
-tasks=tasks.map(t=>t.period?t:{...t,period:DEFAULT_PERIODS[t.id]||"day"});
+let tasks=load("tracker:template",STRINGS.fr.defaultTasks); if(!tasks.length)tasks=STRINGS.fr.defaultTasks;
+tasks=tasks.map(tk=>tk.period?tk:{...tk,period:DEFAULT_PERIODS[tk.id]||"day"});
 save("tracker:template",tasks);
 let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
 let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,booksThisYear:0});
 let editMode=false;
-const ECOM_DAILY_FOCUS=["Bilan semaine + plan + veille","Planning semaine + revue chiffres + angles","Production créatifs (UGC, montages)","Optimisation boutique / page produit","Gestion des tests + recherche produit","Analyse + décisions scaling","Gros chantier de la semaine"];
-function taskDisplayLabel(t){
-  if(t.id==="ecom")return `💻 ${ECOM_DAILY_FOCUS[new Date().getDay()]}`;
-  return t.label;
+
+function taskDisplayLabel(tk){
+  if(tk.id==="ecom")return `💻 ${t("ecomFocus")[new Date().getDay()]}`;
+  return tk.label;
 }
 
-document.getElementById("date").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+function applyStaticI18n(){
+  document.documentElement.lang=lang;
+  document.getElementById("date").textContent=new Date().toLocaleDateString(t("dateLocale"),{weekday:"long",day:"numeric",month:"long"});
+  document.getElementById("ringLbl").textContent=t("ringLbl");
+  document.getElementById("heatmapTitle").textContent=t("heatmapTitle");
+  document.getElementById("legendLess").textContent=t("legendLess");
+  document.getElementById("legendMore").textContent=t("legendMore");
+  document.getElementById("tasksTitle").textContent=t("tasksTitle");
+  document.getElementById("editBtn").textContent=editMode?t("editBtnDone"):t("editBtn");
+  document.getElementById("newTask").placeholder=t("newTaskPlaceholder");
+  document.getElementById("periodStatsTitle").textContent=t("periodStatsTitle");
+  document.getElementById("streakCurLbl").textContent=t("streakCurLbl");
+  document.getElementById("streakBestLbl").textContent=t("streakBestLbl");
+  document.getElementById("thisWeekLbl").textContent=t("thisWeekLbl");
+  document.getElementById("thisMonthLbl").textContent=t("thisMonthLbl");
+  document.getElementById("reminderTitle").textContent=t("reminderTitle");
+  document.getElementById("weightTitle").textContent=t("weightTitle");
+  document.getElementById("weightSub").textContent=t("weightSub");
+  document.getElementById("wInput").placeholder=t("weightPlaceholder");
+  document.getElementById("wBtn").textContent=t("weightSave");
+  document.getElementById("readingTitle").textContent=t("readingTitle");
+  document.getElementById("bookInput").placeholder=t("bookPlaceholder");
+  document.getElementById("totalChapInput").placeholder=t("totalChapPlaceholder");
+  document.getElementById("chaptersLbl").textContent=t("chaptersLbl");
+  document.getElementById("chapBtn").textContent=t("addChapter");
+  document.getElementById("finishBtn").textContent=t("finishBook");
+  document.getElementById("footerLine").innerHTML=t("footerLine");
+  document.getElementById("exportBtn").textContent=t("exportBtn");
+  document.getElementById("celebTap").textContent=t("celebTap");
+  document.querySelectorAll(".lang-opt").forEach(b=>b.classList.toggle("active",b.dataset.lang===lang));
+}
 
 function renderScore(){
-  const total=tasks.length, comp=tasks.filter(t=>done[t.id]).length, pct=total?comp/total:0;
+  const total=tasks.length, comp=tasks.filter(tk=>done[tk.id]).length, pct=total?comp/total:0;
   document.getElementById("doneCount").textContent=comp;
   document.getElementById("totalCount").textContent=total;
   const C=2*Math.PI*52;
   const ring=document.getElementById("ring");
   ring.style.strokeDashoffset=C*(1-pct);
   ring.style.stroke=pct===1?"var(--green)":"var(--amber)";
-  const t=document.getElementById("scoreTitle"), s=document.getElementById("scoreSub");
-  if(pct===1){t.textContent="Journée pleine 🔥";t.style.color="var(--green)";s.textContent="Toutes tes tâches cochées. C'est ça qui construit le résultat.";}
-  else{t.style.color="var(--text)";
-    t.textContent=pct>=0.7?"Solide, continue":pct>0?"En marche":"On y va";
-    const left=total-comp;s.textContent=`${left} restante${left>1?"s":""} pour boucler la journée.`;}
+  const ti=document.getElementById("scoreTitle"), s=document.getElementById("scoreSub");
+  if(pct===1){ti.textContent=t("scoreFull");ti.style.color="var(--green)";s.textContent=t("scoreFullSub");}
+  else{ti.style.color="var(--text)";
+    ti.textContent=pct>=0.7?t("scoreSolid"):pct>0?t("scoreMoving"):t("scoreStart");
+    const left=total-comp;s.textContent=t("scoreRemainingSub",left);}
 }
+const PERIOD_KEYS={morning:"periodMorning",day:"periodDay",evening:"periodEvening"};
+const PERIOD_EMOJI={morning:"🌅",day:"☀️",evening:"🌙"};
 function renderTasks(){
   const el=document.getElementById("tasks");el.innerHTML="";
   const groups={morning:[],day:[],evening:[]};
-  tasks.forEach(t=>groups[t.period||"day"].push(t));
+  tasks.forEach(tk=>groups[tk.period||"day"].push(tk));
   ["morning","day","evening"].forEach(period=>{
     const list=groups[period];
     if(!list.length)return;
-    const meta=PERIOD_META[period];
     const h=document.createElement("div");
     h.className="period-h";
-    h.textContent=`${meta.emoji} ${meta.label}`;
+    h.textContent=`${PERIOD_EMOJI[period]} ${t(PERIOD_KEYS[period])}`;
     el.appendChild(h);
-    list.forEach(t=>{
+    list.forEach(tk=>{
       const d=document.createElement("div");
-      d.className="task"+(done[t.id]&&!editMode?" done":"");
-      d.dataset.taskId=t.id;
+      d.className="task"+(done[tk.id]&&!editMode?" done":"");
+      d.dataset.taskId=tk.id;
       if(editMode){
-        d.innerHTML=`<button class="del">✕</button><span class="task-label">${taskDisplayLabel(t)}</span>`;
-        d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==t.id);save("tracker:template",tasks);renderTasks();renderScore();};
+        d.innerHTML=`<button class="del">✕</button><span class="task-label">${taskDisplayLabel(tk)}</span>`;
+        d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==tk.id);save("tracker:template",tasks);renderTasks();renderScore();};
       }else{
-        d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label">${taskDisplayLabel(t)}</span>`;
+        d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label">${taskDisplayLabel(tk)}</span>`;
         d.onclick=()=>{
-          done[t.id]=!done[t.id];
+          done[tk.id]=!done[tk.id];
           save("tracker:day:"+today(),done);
-          const wasCompleted=done[t.id];
+          const wasCompleted=done[tk.id];
           renderTasks();renderScore();renderHeatmap();renderPeriodStats();
           if(wasCompleted){
-            const freshCheck=document.querySelector(`[data-task-id="${t.id}"] .check`);
+            const freshCheck=document.querySelector(`[data-task-id="${tk.id}"] .check`);
             if(freshCheck)freshCheck.animate(
               [{transform:"scale(1)"},{transform:"scale(1.3)"},{transform:"scale(1)"}],
               {duration:320,easing:"cubic-bezier(.34,1.56,.64,1)"}
@@ -350,7 +496,7 @@ function renderHeatmap(){
         const ratio=total?dc/total:0;
         const color=heatColor(ratio);
         if(color)cell.style.background=color;
-        cell.title=`${dt.toLocaleDateString("fr-FR")} · ${Math.round(ratio*100)}%`;
+        cell.title=`${dt.toLocaleDateString(t("dateLocale"))} · ${Math.round(ratio*100)}%`;
       }
       col.appendChild(cell);
     }
@@ -362,12 +508,12 @@ function renderWeight(){
   let goal=null;
   if(first){const months=(new Date()-new Date(first.date))/(1000*60*60*24*30.44);goal=first.kg+2*months;}
   const s=document.getElementById("wstats");s.innerHTML="";
-  s.innerHTML=`<div><div class="stat-num">${last?last.kg.toFixed(1):"—"}<span style="font-size:15px;color:var(--muted);font-weight:600"> kg</span></div><div class="stat-lbl">actuel</div></div>`;
-  if(goal!=null)s.innerHTML+=`<div><div class="stat-num" style="color:var(--amber)">${goal.toFixed(1)}<span style="font-size:15px;color:var(--muted);font-weight:600"> kg</span></div><div class="stat-lbl">cible du moment</div></div>`;
+  s.innerHTML=`<div><div class="stat-num">${last?last.kg.toFixed(1):"—"}<span style="font-size:15px;color:var(--muted);font-weight:600"> kg</span></div><div class="stat-lbl">${t("weightCurrent")}</div></div>`;
+  if(goal!=null)s.innerHTML+=`<div><div class="stat-num" style="color:var(--amber)">${goal.toFixed(1)}<span style="font-size:15px;color:var(--muted);font-weight:600"> kg</span></div><div class="stat-lbl">${t("weightGoal")}</div></div>`;
   if(first&&last&&first!==last){
     const weeks=Math.max((new Date(last.date)-new Date(first.date))/(1000*60*60*24*7),1/7);
     const rate=(last.kg-first.kg)/weeks;
-    s.innerHTML+=`<div><div class="stat-num" style="color:${rate>=0?"var(--green)":"var(--muted)"}">${rate>=0?"+":""}${rate.toFixed(2)}</div><div class="stat-lbl">kg/semaine</div></div>`;
+    s.innerHTML+=`<div><div class="stat-num" style="color:${rate>=0?"var(--green)":"var(--muted)"}">${rate>=0?"+":""}${rate.toFixed(2)}</div><div class="stat-lbl">${t("weightRate")}</div></div>`;
   }
   const wb=document.getElementById("wbars");wb.innerHTML="";
   if(weights.length>1){
@@ -375,9 +521,9 @@ function renderWeight(){
     slice.forEach(w=>{
       const h=max>min?((w.kg-min)/(max-min))*100:50;
       const b=document.createElement("div");b.className="wbar";b.style.height=Math.max(h,6)+"%";
-      b.title=`${w.kg}kg — touche pour supprimer`;
+      b.title=`${w.kg}kg — ${t("weightBarTitle")}`;
       b.onclick=()=>{
-        if(confirm(`Supprimer l'entrée ${w.kg}kg du ${new Date(w.date).toLocaleDateString("fr-FR")} ?`)){
+        if(confirm(t("weightDeleteConfirm",w.kg,new Date(w.date).toLocaleDateString(t("dateLocale"))))){
           weights=weights.filter(x=>x!==w);save("tracker:weights",weights);renderWeight();
         }
       };
@@ -386,7 +532,7 @@ function renderWeight(){
   }
 }
 function renderReading(){
-  document.getElementById("booksSub").textContent=`${reading.booksThisYear} livre${reading.booksThisYear>1?"s":""} terminé${reading.booksThisYear>1?"s":""} cette année`;
+  document.getElementById("booksSub").textContent=t("booksThisYear",reading.booksThisYear);
   document.getElementById("chapCount").textContent=reading.chapters;
   document.getElementById("bookInput").value=reading.book||"";
   document.getElementById("totalChapInput").value=reading.totalChapters||"";
@@ -399,12 +545,12 @@ function renderReading(){
     const pace=reading.chapters/days;
     const remaining=reading.totalChapters-reading.chapters;
     if(remaining<=0){
-      paceEl.textContent="Tu as fini tous les chapitres — tape Terminé ✓ !";
+      paceEl.textContent=t("paceAllDone");
       paceEl.classList.remove("hidden");
     }else if(pace>0){
       const daysLeft=Math.ceil(remaining/pace);
       const finishDate=new Date();finishDate.setDate(finishDate.getDate()+daysLeft);
-      paceEl.textContent=`📈 ${pace.toFixed(1)} chap./jour · fin estimée le ${finishDate.toLocaleDateString("fr-FR",{day:"numeric",month:"long"})}`;
+      paceEl.textContent=t("paceInfo",pace.toFixed(1),finishDate.toLocaleDateString(t("dateLocale"),{day:"numeric",month:"long"}));
       paceEl.classList.remove("hidden");
     }else{paceEl.classList.add("hidden");}
   }else{paceEl.classList.add("hidden");}
@@ -423,8 +569,8 @@ function getAllDoneRecords(){
   out[today()]=done;
   return out;
 }
-function dayRatio(doneObj){if(!tasks.length)return 0;return tasks.filter(t=>doneObj[t.id]).length/tasks.length;}
-function isPerfectDay(doneObj){return tasks.length>0&&tasks.every(t=>doneObj[t.id]);}
+function dayRatio(doneObj){if(!tasks.length)return 0;return tasks.filter(tk=>doneObj[tk.id]).length/tasks.length;}
+function isPerfectDay(doneObj){return tasks.length>0&&tasks.every(tk=>doneObj[tk.id]);}
 function periodAvg(startDate,records){
   const now=new Date();now.setHours(0,0,0,0);
   let sum=0,count=0;
@@ -465,12 +611,12 @@ function renderPeriodStats(){
 
 const MILESTONES=[3,7,14,21,30,45,60,90,120,180,365];
 function milestoneInfo(n){
-  if(n>=365)return{emoji:"👑",title:`${n} jours d'affilée`,sub:"Une année de discipline. Rien à ajouter, c'est qui tu es maintenant."};
-  if(n>=90)return{emoji:"💎",title:`${n} jours d'affilée`,sub:"3 mois de régularité. C'est plus une habitude, c'est un mode de vie."};
-  if(n>=30)return{emoji:"🏆",title:`${n} jours d'affilée`,sub:"Un mois complet sans craquer. Le résultat commence à suivre."};
-  if(n>=14)return{emoji:"⚡",title:`${n} jours d'affilée`,sub:"Deux semaines pleines. Ça devient un réflexe, pas un effort."};
-  if(n>=7)return{emoji:"🔥",title:"Une semaine complète !",sub:"7 jours d'affilée, journée pleine à chaque fois."};
-  return{emoji:"🔥",title:`${n} jours d'affilée`,sub:"Ça prend forme. Continue comme ça."};
+  if(n>=365)return{emoji:"👑",title:t("milestoneSuffix",n),sub:t("milestone365")};
+  if(n>=90)return{emoji:"💎",title:t("milestoneSuffix",n),sub:t("milestone90")};
+  if(n>=30)return{emoji:"🏆",title:t("milestoneSuffix",n),sub:t("milestone30")};
+  if(n>=14)return{emoji:"⚡",title:t("milestoneSuffix",n),sub:t("milestone14")};
+  if(n>=7)return{emoji:"🔥",title:t("milestone7title"),sub:t("milestone7sub")};
+  return{emoji:"🔥",title:t("milestoneSuffix",n),sub:t("milestoneDefault")};
 }
 function showCelebration(emoji,title,sub){
   document.getElementById("celebEmoji").textContent=emoji;
@@ -486,12 +632,12 @@ function checkCelebrations(streakCurrent,weekPct,monthPct){
   const mId=`${now.getFullYear()}-${pad(now.getMonth()+1)}`;
   if(weekPct===100&&load("tracker:lastPerfectWeek","")!==wId){
     save("tracker:lastPerfectWeek",wId);
-    showCelebration("🎉","Semaine parfaite !","100% cette semaine. Toutes les cases cochées, tous les jours.");
+    showCelebration("🎉",t("perfectWeekTitle"),t("perfectWeekSub"));
     return;
   }
   if(monthPct===100&&load("tracker:lastPerfectMonth","")!==mId){
     save("tracker:lastPerfectMonth",mId);
-    showCelebration("👑","Mois parfait !","100% ce mois-ci. C'est du très, très haut niveau.");
+    showCelebration("👑",t("perfectMonthTitle"),t("perfectMonthSub"));
     return;
   }
   const lastMilestone=load("tracker:lastMilestone",0);
@@ -513,9 +659,10 @@ function urlBase64ToUint8Array(base64String){
 }
 function setReminderBtnState(on){
   const btn=document.getElementById("reminderBtn");
-  btn.textContent=on?"Rappels activés ✓ (touche pour désactiver)":"Activer les rappels";
+  btn.textContent=on?t("reminderBtnOff"):t("reminderBtnOn");
   btn.style.background=on?"var(--green)":"var(--amber)";
 }
+let pushSubscribed=false;
 async function initReminder(){
   const card=document.getElementById("reminderCard");
   const sub=document.getElementById("reminderSub");
@@ -523,34 +670,54 @@ async function initReminder(){
   if(!("serviceWorker"in navigator)||!("PushManager"in window)){card.classList.add("hidden");return;}
   const isStandalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
   if(!isStandalone){
-    sub.textContent="Ajoute d'abord l'app à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis reviens ici pour activer les rappels.";
+    sub.textContent=t("reminderSubNeedsInstall");
     btn.classList.add("hidden");
     return;
   }
+  sub.textContent=t("reminderSubDefault");
   const reg=await navigator.serviceWorker.ready;
   const existing=await reg.pushManager.getSubscription();
   if(existing){
     fetch(PUSH_API+"/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(existing)}).catch(()=>{});
   }
-  setReminderBtnState(!!existing);
+  pushSubscribed=!!existing;
+  setReminderBtnState(pushSubscribed);
   btn.onclick=async()=>{
     const reg=await navigator.serviceWorker.ready;
     const current=await reg.pushManager.getSubscription();
     if(current){
       await current.unsubscribe();
       fetch(PUSH_API+"/unsubscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({endpoint:current.endpoint})}).catch(()=>{});
+      pushSubscribed=false;
       setReminderBtnState(false);
       return;
     }
     const perm=await Notification.requestPermission();
-    if(perm!=="granted"){sub.textContent="Notifications refusées — active-les dans Réglages iOS > Notifications > Discipline.";return;}
+    if(perm!=="granted"){sub.textContent=t("reminderSubDenied");return;}
     const newSub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
     await fetch(PUSH_API+"/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(newSub)});
+    pushSubscribed=true;
     setReminderBtnState(true);
   };
 }
 
-document.getElementById("editBtn").onclick=()=>{editMode=!editMode;document.getElementById("editBtn").textContent=editMode?"Terminé":"Modifier";document.getElementById("addRow").classList.toggle("hidden",!editMode);renderTasks();};
+function setLang(l){
+  lang=l;
+  save("tracker:lang",lang);
+  applyStaticI18n();
+  renderScore();renderTasks();renderHeatmap();renderWeight();renderReading();renderPeriodStats();
+  if(document.getElementById("reminderCard")&&!document.getElementById("reminderCard").classList.contains("hidden")){
+    setReminderBtnState(pushSubscribed);
+    if(!(window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true)){
+      document.getElementById("reminderSub").textContent=t("reminderSubNeedsInstall");
+    }
+  }
+}
+document.querySelectorAll(".lang-opt").forEach(btn=>{
+  btn.onclick=()=>setLang(btn.dataset.lang);
+});
+
+document.getElementById("editBtn").onclick=()=>{editMode=!editMode;document.getElementById("editBtn").textContent=editMode?t("editBtnDone"):t("editBtn");document.getElementById("addRow").classList.toggle("hidden",!editMode);renderTasks();};
 document.getElementById("addBtn").onclick=addTask;
 document.getElementById("newTask").addEventListener("keydown",e=>{if(e.key==="Enter")addTask();});
 let newTaskPeriod="day";
@@ -614,6 +781,7 @@ document.getElementById("exportBtn").onclick=()=>{
   URL.revokeObjectURL(url);
 };
 
+applyStaticI18n();
 renderScore();renderTasks();renderHeatmap();renderWeight();renderReading();renderPeriodStats();
 
 async function loadHealthToday(){
@@ -623,8 +791,8 @@ async function loadHealthToday(){
     const data=await res.json();
     if(!data)return;
     const parts=[];
-    if(data.steps!=null)parts.push(`🏃 ${data.steps.toLocaleString("fr-FR")} pas`);
-    if(data.workoutMinutes!=null)parts.push(`💪 ${data.workoutMinutes} min actif`);
+    if(data.steps!=null)parts.push(t("healthSteps",data.steps.toLocaleString(t("dateLocale"))));
+    if(data.workoutMinutes!=null)parts.push(t("healthActive",data.workoutMinutes));
     if(!parts.length)return;
     const el=document.getElementById("healthLine");
     el.textContent=parts.join(" · ");
