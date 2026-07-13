@@ -118,7 +118,8 @@
   .book-cover{width:56px;height:76px;border-radius:8px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:20px}
   .book-cover img{width:100%;height:100%;object-fit:cover}
   .book-info{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
-  .archive-title{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+  .archive-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .archive-title{font-size:17px;font-weight:700;color:var(--text);font-family:'Quicksand',sans-serif}
   .book-archive{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px}
   .book-archive-item{flex-shrink:0;width:72px;text-align:center}
   .book-archive-cover{width:72px;height:100px;border-radius:10px;object-fit:cover;background:var(--cardHi);border:1px solid var(--border);display:block;box-shadow:var(--shadow)}
@@ -293,24 +294,29 @@
       <div class="streak-best"><span id="streakBest">0</span><span class="streak-unit" id="streakBestUnit">jours</span></div>
     </div>
 
+    <!-- Weekly progress (business/dev) -->
+    <div class="card hidden" id="weeklyProgressCard">
+      <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="weeklyProgressTitle">Progression hebdo</span></div>
+      <div class="pbar-row" id="businessRow" style="margin-top:0">
+        <div class="pbar-lbl"><span id="businessWeekLbl">Business (semaine)</span> <b id="businessPct">0%</b></div>
+        <div class="pbar-bg"><div class="pbar-fill" id="businessBarFill" style="width:0%;background:var(--amber)"></div></div>
+      </div>
+      <div class="pbar-row" id="devRow">
+        <div class="pbar-lbl"><span id="devWeekLbl">Développement (semaine)</span> <b id="devPct">0%</b></div>
+        <div class="pbar-bg"><div class="pbar-fill" id="devBarFill" style="width:0%;background:var(--green)"></div></div>
+      </div>
+    </div>
+
     <!-- Period stats -->
     <div class="card">
       <div class="card-h"><span class="dot" style="background:var(--green)"></span><span id="periodStatsTitle">Semaine · mois</span></div>
-      <div class="pbar-row">
+      <div class="pbar-row" style="margin-top:0">
         <div class="pbar-lbl"><span id="thisWeekLbl">Cette semaine</span> <b id="weekPct">0%</b></div>
         <div class="pbar-bg"><div class="pbar-fill" id="weekBarFill" style="width:0%;background:var(--amber)"></div></div>
       </div>
       <div class="pbar-row">
         <div class="pbar-lbl"><span id="thisMonthLbl">Ce mois</span> <b id="monthPct">0%</b></div>
         <div class="pbar-bg"><div class="pbar-fill" id="monthBarFill" style="width:0%;background:var(--green)"></div></div>
-      </div>
-      <div class="pbar-row hidden" id="businessRow" style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
-        <div class="pbar-lbl"><span id="businessWeekLbl">Business (semaine)</span> <b id="businessPct">0%</b></div>
-        <div class="pbar-bg"><div class="pbar-fill" id="businessBarFill" style="width:0%;background:var(--amber)"></div></div>
-      </div>
-      <div class="pbar-row hidden" id="devRow">
-        <div class="pbar-lbl"><span id="devWeekLbl">Développement (semaine)</span> <b id="devPct">0%</b></div>
-        <div class="pbar-bg"><div class="pbar-fill" id="devBarFill" style="width:0%;background:var(--green)"></div></div>
       </div>
     </div>
 
@@ -339,6 +345,8 @@
     <div class="head-row">
       <div class="eyebrow display">Discipline</div>
     </div>
+    <div class="greeting-title display" id="goalsTitle">Objectifs du mois</div>
+    <div class="greeting-sub" id="goalsSub">Une progression consciente, un pas à la fois.</div>
 
     <!-- Business goal -->
     <div class="card">
@@ -396,10 +404,14 @@
       <div class="row">
         <button class="btn btn-ghost" id="finishBtn" style="flex:1">Terminé ✓</button>
       </div>
-      <div class="hidden" id="archiveWrap" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-        <div class="archive-title" id="archiveTitle">Livres lus</div>
-        <div class="book-archive" id="bookArchive"></div>
+    </div>
+
+    <!-- Books read -->
+    <div class="hidden" id="archiveWrap">
+      <div class="archive-head">
+        <div class="archive-title" id="archiveTitle">📚 Livres lus</div>
       </div>
+      <div class="book-archive" id="bookArchive"></div>
     </div>
   </div>
 
@@ -469,7 +481,7 @@ const STRINGS = {
     tasksTitle:"Tâches du jour", editBtn:"Modifier", editBtnDone:"Terminé",
     newTaskPlaceholder:"Nouvelle tâche…",
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
-    streakCardTitle:"Consistance", periodStatsTitle:"Semaine · mois", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série", daysUnit:"jours",
+    streakCardTitle:"Consistance", weeklyProgressTitle:"Progression hebdo", periodStatsTitle:"Semaine · mois", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série", daysUnit:"jours",
     thisWeekLbl:"Cette semaine", thisMonthLbl:"Ce mois",
     reminderTitle:"Rappel du soir",
     reminderSubDefault:"Une notification à 21h pour cocher tes tâches avant la coupure d'écran.",
@@ -485,6 +497,7 @@ const STRINGS = {
     weightAhead:"En progression vers l'objectif", weightOnTrack:"Stable", weightBehind:"S'éloigne de l'objectif", weightGoalReached:"Objectif atteint !",
     weightPaceInfo:(rate,date)=>`${rate} kg/semaine · objectif estimé le ${date}`,
     weightSetGoalHint:"Entre ton objectif pour suivre ta progression.",
+    goalsTitle:"Objectifs du mois", goalsSub:"Une progression consciente, un pas à la fois.",
     bizTitle:"Chiffre d'affaires mensuel", bizEyebrow:"Objectif business", bizGoalLbl:"Objectif CA", bizPlaceholder:"CA actuel (€)",
     bizPctCompleted:pct=>`${pct}% complété`, bizRemainingAmt:amt=>`${amt} restant`,
     readingTitle:"Lecture · 1 chapitre/jour → 1 livre/mois",
@@ -495,7 +508,7 @@ const STRINGS = {
     bookLookupLoading:"🔍 Identification du livre…",
     bookNotIdentified:"Livre non identifié — tape le titre toi-même.",
     pageCountBadge:n=>`📄 ${n} pages (info Google Books)`,
-    archiveTitle:"Livres lus",
+    archiveTitle:"📚 Livres lus",
     catDevLbl:"Perso", catBusinessLbl:"Business",
     noTasksInPanel:"Aucune tâche ici pour l'instant. Ajoute-en une avec Modifier.",
     businessWeekLbl:"Business (semaine)", devWeekLbl:"Développement (semaine)",
@@ -540,7 +553,7 @@ const STRINGS = {
     tasksTitle:"Today's tasks", editBtn:"Edit", editBtnDone:"Done",
     newTaskPlaceholder:"New task…",
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
-    streakCardTitle:"Consistency", periodStatsTitle:"Week · month", streakCurLbl:"current streak", streakBestLbl:"best streak", daysUnit:"days",
+    streakCardTitle:"Consistency", weeklyProgressTitle:"Weekly progress", periodStatsTitle:"Week · month", streakCurLbl:"current streak", streakBestLbl:"best streak", daysUnit:"days",
     thisWeekLbl:"This week", thisMonthLbl:"This month",
     reminderTitle:"Evening reminder",
     reminderSubDefault:"A notification at 9pm to check off your tasks before screens go off.",
@@ -556,6 +569,7 @@ const STRINGS = {
     weightAhead:"Progressing toward goal", weightOnTrack:"Stable", weightBehind:"Moving away from goal", weightGoalReached:"Goal reached!",
     weightPaceInfo:(rate,date)=>`${rate} kg/week · goal estimated ${date}`,
     weightSetGoalHint:"Enter your goal to track progress.",
+    goalsTitle:"Monthly goals", goalsSub:"Mindful progress, one step at a time.",
     bizTitle:"Monthly revenue", bizEyebrow:"Business goal", bizGoalLbl:"Revenue goal", bizPlaceholder:"Current revenue (€)",
     bizPctCompleted:pct=>`${pct}% completed`, bizRemainingAmt:amt=>`${amt} remaining`,
     readingTitle:"Reading · 1 chapter/day → 1 book/month",
@@ -566,7 +580,7 @@ const STRINGS = {
     bookLookupLoading:"🔍 Identifying the book…",
     bookNotIdentified:"Book not identified — type the title yourself.",
     pageCountBadge:n=>`📄 ${n} pages (Google Books info)`,
-    archiveTitle:"Books read",
+    archiveTitle:"📚 Books read",
     catDevLbl:"Personal", catBusinessLbl:"Business",
     noTasksInPanel:"No tasks here yet. Add one with Edit.",
     businessWeekLbl:"Business (this week)", devWeekLbl:"Development (this week)",
@@ -680,6 +694,7 @@ function applyStaticI18n(){
   document.getElementById("newTask").placeholder=t("newTaskPlaceholder");
   document.getElementById("periodStatsTitle").textContent=t("periodStatsTitle");
   document.getElementById("streakCardTitle").textContent=t("streakCardTitle");
+  document.getElementById("weeklyProgressTitle").textContent=t("weeklyProgressTitle");
   document.getElementById("streakCurLbl").textContent=t("streakCurLbl");
   document.getElementById("streakBestLbl").textContent=t("streakBestLbl");
   document.getElementById("streakCurUnit").textContent=t("daysUnit");
@@ -690,6 +705,8 @@ function applyStaticI18n(){
   document.getElementById("weightTitle").textContent=t("weightTitle");
   document.getElementById("weightSub").textContent=t("weightSub");
   document.getElementById("weightGoalLbl").textContent=t("weightGoalLbl");
+  document.getElementById("goalsTitle").textContent=t("goalsTitle");
+  document.getElementById("goalsSub").textContent=t("goalsSub");
   document.getElementById("bizTitle").textContent=t("bizTitle");
   document.getElementById("bizEyebrow").textContent=t("bizEyebrow");
   document.getElementById("bizGoalLbl").textContent=t("bizGoalLbl");
@@ -1038,6 +1055,7 @@ function renderPeriodStats(){
     document.getElementById("devBarFill").style.width=pct+"%";
     devRow.classList.remove("hidden");
   }else{devRow.classList.add("hidden");}
+  document.getElementById("weeklyProgressCard").classList.toggle("hidden",businessAvg==null&&devAvg==null);
 
   checkCelebrations(current,weekPct,monthPct);
   fetch(PUSH_API+"/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({weekPct,monthPct,streakCurrent:current,streakBest:best})}).catch(()=>{});
