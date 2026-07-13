@@ -73,11 +73,14 @@
   .stat-num{font-size:28px;font-weight:800}
   .stat-lbl{font-size:11px;color:var(--muted)}
   .sub{color:var(--muted);font-size:12px;margin-bottom:14px}
-  .wbars{margin-top:12px;display:flex;gap:4px;align-items:flex-end;height:40px}
-  .wbar{flex:1;background:var(--greenDim);border-radius:4px}
+  .weight-chart{width:100%;height:90px;display:block;margin-top:4px}
+  .weight-status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;background:var(--bg);margin-bottom:14px}
   .read-box{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:12px;padding:12px 14px}
-  .foot{text-align:center;color:var(--muted);font-size:11px;margin-top:20px;line-height:1.5}
-  .foot-export{display:block;margin:10px auto 0;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;padding:6px;font-family:inherit;opacity:.6}
+  .app-footer{text-align:center;margin-top:28px;padding-top:22px;border-top:1px solid var(--border)}
+  .app-footer-brand{color:var(--amber);font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;opacity:.55;margin-bottom:10px}
+  .foot{color:var(--muted);font-size:11px;line-height:1.6}
+  .foot-export{display:inline-flex;align-items:center;gap:4px;margin:14px auto 0;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;padding:6px 10px;font-family:inherit;opacity:.65;border:1px solid var(--border);border-radius:20px}
+  .foot-export:active{opacity:1}
   .hidden{display:none}
   .book-row{display:flex;gap:12px;margin-bottom:12px}
   .book-cover{width:56px;height:76px;border-radius:8px;background:var(--bg);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:20px}
@@ -201,12 +204,13 @@
   <div class="card">
     <div class="card-h"><span class="dot" style="background:var(--green)"></span><span id="weightTitle">Poids · objectif +2 kg/mois</span></div>
     <div class="sub" id="weightSub">Pèse-toi 1×/semaine, le matin. Pas tous les jours.</div>
+    <div class="weight-status hidden" id="weightStatus"></div>
     <div class="stats" id="wstats"></div>
-    <div class="row">
+    <svg class="weight-chart hidden" id="weightChart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
+    <div class="row" style="margin-top:14px">
       <input id="wInput" inputmode="decimal" placeholder="Ton poids (kg)" />
       <button class="btn btn-green" id="wBtn">Enregistrer</button>
     </div>
-    <div class="wbars" id="wbars"></div>
   </div>
 
   <!-- Reading -->
@@ -222,6 +226,7 @@
       <div class="book-info">
         <input id="bookInput" placeholder="Titre du livre…" />
         <input id="totalChapInput" inputmode="numeric" placeholder="Nb de chapitres total (optionnel)" />
+        <div class="sub hidden" id="bookLookupInfo" style="margin:0"></div>
       </div>
     </div>
     <div class="read-box">
@@ -234,8 +239,11 @@
     <div class="sub hidden" id="paceInfo" style="margin-top:10px;margin-bottom:0"></div>
   </div>
 
-  <div class="foot" id="footerLine">Tes données restent sur ton téléphone et se sauvegardent toutes seules.<br/>Coche chaque jour — c'est la régularité qui gagne.</div>
-  <button class="foot-export" id="exportBtn">Exporter mes données (JSON)</button>
+  <div class="app-footer">
+    <div class="app-footer-brand">✦ Discipline</div>
+    <div class="foot" id="footerLine">Tes données restent sur ton téléphone et se sauvegardent toutes seules.<br/>Coche chaque jour — c'est la régularité qui gagne.</div>
+    <button class="foot-export" id="exportBtn">Exporter mes données (JSON)</button>
+  </div>
 </div>
 
 <div class="celebration hidden" id="celebration">
@@ -267,11 +275,15 @@ const STRINGS = {
     weightPlaceholder:"Ton poids (kg)", weightSave:"Enregistrer",
     weightDeleteConfirm:(kg,date)=>`Supprimer l'entrée ${kg}kg du ${date} ?`,
     weightBarTitle:"touche pour supprimer",
+    weightAhead:"En avance sur l'objectif", weightOnTrack:"Sur la cible", weightBehind:"En retard sur l'objectif",
     readingTitle:"Lecture · 1 chapitre/jour → 1 livre/mois",
     booksThisYear:n=>`${n} livre${n>1?"s":""} terminé${n>1?"s":""} cette année`,
     bookPlaceholder:"Titre du livre…", totalChapPlaceholder:"Nb de chapitres total (optionnel)",
     chaptersLbl:"chapitres", addChapter:"+ Chapitre", finishBook:"Terminé ✓",
     paceAllDone:"Tu as fini tous les chapitres — tape Terminé ✓ !",
+    bookLookupLoading:"🔍 Identification du livre…",
+    bookNotIdentified:"Livre non identifié — tape le titre toi-même.",
+    pageCountBadge:n=>`📄 ${n} pages (info Google Books)`,
     paceInfo:(pace,date)=>`📈 ${pace} chap./jour · fin estimée le ${date}`,
     footerLine:"Tes données restent sur ton téléphone et se sauvegardent toutes seules.<br/>Coche chaque jour — c'est la régularité qui gagne.",
     exportBtn:"Exporter mes données (JSON)",
@@ -320,11 +332,15 @@ const STRINGS = {
     weightPlaceholder:"Your weight (kg)", weightSave:"Save",
     weightDeleteConfirm:(kg,date)=>`Delete the ${kg}kg entry from ${date}?`,
     weightBarTitle:"tap to delete",
+    weightAhead:"Ahead of target", weightOnTrack:"On track", weightBehind:"Behind target",
     readingTitle:"Reading · 1 chapter/day → 1 book/month",
     booksThisYear:n=>`${n} book${n>1?"s":""} finished this year`,
     bookPlaceholder:"Book title…", totalChapPlaceholder:"Total chapters (optional)",
     chaptersLbl:"chapters", addChapter:"+ Chapter", finishBook:"Done ✓",
     paceAllDone:"You've finished all the chapters — tap Done ✓!",
+    bookLookupLoading:"🔍 Identifying the book…",
+    bookNotIdentified:"Book not identified — type the title yourself.",
+    pageCountBadge:n=>`📄 ${n} pages (Google Books info)`,
     paceInfo:(pace,date)=>`📈 ${pace} ch./day · estimated finish ${date}`,
     footerLine:"Your data stays on your phone and saves itself automatically.<br/>Check every day — consistency wins.",
     exportBtn:"Export my data (JSON)",
@@ -377,7 +393,7 @@ tasks=tasks.map(tk=>tk.period?tk:{...tk,period:DEFAULT_PERIODS[tk.id]||"day"});
 save("tracker:template",tasks);
 let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
-let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,booksThisYear:0});
+let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,booksThisYear:0});
 let editMode=false;
 
 function taskDisplayLabel(tk){
@@ -503,10 +519,14 @@ function renderHeatmap(){
     el.appendChild(col);
   }
 }
+function weightGoalAt(first,dateStr){
+  const months=(new Date(dateStr)-new Date(first.date))/(1000*60*60*24*30.44);
+  return first.kg+2*months;
+}
 function renderWeight(){
   const first=weights[0], last=weights[weights.length-1];
   let goal=null;
-  if(first){const months=(new Date()-new Date(first.date))/(1000*60*60*24*30.44);goal=first.kg+2*months;}
+  if(first){goal=weightGoalAt(first,new Date().toISOString().slice(0,10));}
   const s=document.getElementById("wstats");s.innerHTML="";
   s.innerHTML=`<div><div class="stat-num">${last?last.kg.toFixed(1):"—"}<span style="font-size:15px;color:var(--muted);font-weight:600"> kg</span></div><div class="stat-lbl">${t("weightCurrent")}</div></div>`;
   if(goal!=null)s.innerHTML+=`<div><div class="stat-num" style="color:var(--amber)">${goal.toFixed(1)}<span style="font-size:15px;color:var(--muted);font-weight:600"> kg</span></div><div class="stat-lbl">${t("weightGoal")}</div></div>`;
@@ -515,20 +535,46 @@ function renderWeight(){
     const rate=(last.kg-first.kg)/weeks;
     s.innerHTML+=`<div><div class="stat-num" style="color:${rate>=0?"var(--green)":"var(--muted)"}">${rate>=0?"+":""}${rate.toFixed(2)}</div><div class="stat-lbl">${t("weightRate")}</div></div>`;
   }
-  const wb=document.getElementById("wbars");wb.innerHTML="";
+  const statusEl=document.getElementById("weightStatus");
+  if(first&&last&&goal!=null){
+    const diff=last.kg-goal;
+    let info;
+    if(diff>=0.3)info={emoji:"🟢",key:"weightAhead",color:"var(--green)"};
+    else if(diff<=-0.5)info={emoji:"🔴",key:"weightBehind",color:"var(--red)"};
+    else info={emoji:"🟡",key:"weightOnTrack",color:"var(--amber)"};
+    statusEl.textContent=`${info.emoji} ${t(info.key)}`;
+    statusEl.style.color=info.color;
+    statusEl.classList.remove("hidden");
+  }else{statusEl.classList.add("hidden");}
+
+  const svgEl=document.getElementById("weightChart");
   if(weights.length>1){
-    const slice=weights.slice(-12);const vals=slice.map(x=>x.kg);const min=Math.min(...vals)-.5,max=Math.max(...vals)+.5;
-    slice.forEach(w=>{
-      const h=max>min?((w.kg-min)/(max-min))*100:50;
-      const b=document.createElement("div");b.className="wbar";b.style.height=Math.max(h,6)+"%";
-      b.title=`${w.kg}kg — ${t("weightBarTitle")}`;
-      b.onclick=()=>{
+    const slice=weights.slice(-12);
+    const goalVals=slice.map(w=>weightGoalAt(first,w.date));
+    const allVals=[...slice.map(w=>w.kg),...goalVals];
+    const min=Math.min(...allVals)-.4, max=Math.max(...allVals)+.4;
+    const W=300,H=90,PAD=8;
+    const x=i=>slice.length>1?PAD+(i/(slice.length-1))*(W-2*PAD):W/2;
+    const y=v=>max>min?H-PAD-((v-min)/(max-min))*(H-2*PAD):H/2;
+    const actualPts=slice.map((w,i)=>`${x(i)},${y(w.kg)}`).join(" ");
+    const goalPts=slice.map((w,i)=>`${x(i)},${y(goalVals[i])}`).join(" ");
+    const dots=slice.map((w,i)=>`<circle data-idx="${i}" cx="${x(i)}" cy="${y(w.kg)}" r="7" fill="transparent" style="cursor:pointer"/><circle cx="${x(i)}" cy="${y(w.kg)}" r="2.5" fill="var(--amber)" style="pointer-events:none"/>`).join("");
+    svgEl.innerHTML=`
+      <polyline points="${goalPts}" fill="none" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3"/>
+      <polyline points="${actualPts}" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}
+    `;
+    svgEl.querySelectorAll("circle[data-idx]").forEach(c=>{
+      c.onclick=()=>{
+        const w=slice[+c.dataset.idx];
         if(confirm(t("weightDeleteConfirm",w.kg,new Date(w.date).toLocaleDateString(t("dateLocale"))))){
           weights=weights.filter(x=>x!==w);save("tracker:weights",weights);renderWeight();
         }
       };
-      wb.appendChild(b);
     });
+    svgEl.classList.remove("hidden");
+  }else{
+    svgEl.innerHTML="";svgEl.classList.add("hidden");
   }
 }
 function renderReading(){
@@ -539,6 +585,9 @@ function renderReading(){
   const img=document.getElementById("coverImg"),ph=document.getElementById("coverPlaceholder");
   if(reading.coverPhoto){img.src=reading.coverPhoto;img.classList.remove("hidden");ph.classList.add("hidden");}
   else{img.classList.add("hidden");ph.classList.remove("hidden");}
+  const lookupEl=document.getElementById("bookLookupInfo");
+  if(reading.pageCount){lookupEl.textContent=t("pageCountBadge",reading.pageCount);lookupEl.classList.remove("hidden");}
+  else{lookupEl.classList.add("hidden");}
   const paceEl=document.getElementById("paceInfo");
   if(reading.totalChapters&&reading.startDate&&reading.chapters>0){
     const days=Math.max(1,Math.round((new Date()-new Date(reading.startDate))/DAY_MS));
@@ -745,6 +794,33 @@ document.getElementById("totalChapInput").addEventListener("change",()=>{
   reading.totalChapters=v>0?v:null;
   save("tracker:reading",reading);renderReading();
 });
+function resizeToDataUrl(img,maxW,quality){
+  const scale=Math.min(1,maxW/img.width);
+  const canvas=document.createElement("canvas");
+  canvas.width=img.width*scale;canvas.height=img.height*scale;
+  canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+  return canvas.toDataURL("image/jpeg",quality);
+}
+async function lookupBook(imageDataUrl){
+  const infoEl=document.getElementById("bookLookupInfo");
+  infoEl.textContent=t("bookLookupLoading");
+  infoEl.classList.remove("hidden");
+  try{
+    const res=await fetch(PUSH_API+"/book-lookup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:imageDataUrl})});
+    const data=await res.json();
+    if(data.title){
+      if(!reading.book)reading.startDate=today();
+      reading.book=data.title;
+      reading.pageCount=data.pageCount||null;
+      save("tracker:reading",reading);
+    }else{
+      infoEl.textContent=t("bookNotIdentified");
+    }
+  }catch(e){
+    infoEl.textContent=t("bookNotIdentified");
+  }
+  renderReading();
+}
 document.getElementById("coverBtn").onclick=()=>document.getElementById("coverInput").click();
 document.getElementById("coverInput").addEventListener("change",e=>{
   const file=e.target.files[0];if(!file)return;
@@ -752,20 +828,16 @@ document.getElementById("coverInput").addEventListener("change",e=>{
   reader.onload=ev=>{
     const img=new Image();
     img.onload=()=>{
-      const maxW=240;
-      const scale=Math.min(1,maxW/img.width);
-      const canvas=document.createElement("canvas");
-      canvas.width=img.width*scale;canvas.height=img.height*scale;
-      canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
-      reading.coverPhoto=canvas.toDataURL("image/jpeg",0.75);
+      reading.coverPhoto=resizeToDataUrl(img,240,0.75);
       save("tracker:reading",reading);renderReading();
+      lookupBook(resizeToDataUrl(img,800,0.85));
     };
     img.src=ev.target.result;
   };
   reader.readAsDataURL(file);
 });
 document.getElementById("chapBtn").onclick=()=>{reading.chapters++;save("tracker:reading",reading);renderReading();};
-document.getElementById("finishBtn").onclick=()=>{reading={book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,booksThisYear:reading.booksThisYear+1};save("tracker:reading",reading);renderReading();};
+document.getElementById("finishBtn").onclick=()=>{reading={book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,booksThisYear:reading.booksThisYear+1};save("tracker:reading",reading);renderReading();};
 
 document.getElementById("exportBtn").onclick=()=>{
   const out={};
