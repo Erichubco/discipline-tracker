@@ -111,6 +111,7 @@
     <div>
       <div class="score-title" id="scoreTitle">On y va</div>
       <div class="score-sub" id="scoreSub"></div>
+      <div class="sub hidden" id="healthLine" style="margin-top:8px;margin-bottom:0"></div>
     </div>
   </div>
 
@@ -465,10 +466,27 @@ document.getElementById("exportBtn").onclick=()=>{
 
 renderScore();renderTasks();renderHist();renderWeight();renderReading();renderPeriodStats();
 
+async function loadHealthToday(){
+  try{
+    const res=await fetch(PUSH_API+"/health-log/"+today());
+    if(!res.ok)return;
+    const data=await res.json();
+    if(!data)return;
+    const parts=[];
+    if(data.steps!=null)parts.push(`🏃 ${data.steps.toLocaleString("fr-FR")} pas`);
+    if(data.workoutMinutes!=null)parts.push(`💪 ${data.workoutMinutes} min actif`);
+    if(!parts.length)return;
+    const el=document.getElementById("healthLine");
+    el.textContent=parts.join(" · ");
+    el.classList.remove("hidden");
+  }catch(e){}
+}
+
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>{
     navigator.serviceWorker.register("sw.js").catch(()=>{});
     initReminder();
+    loadHealthToday();
   });
 }
 </script>
