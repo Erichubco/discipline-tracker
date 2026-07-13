@@ -345,6 +345,7 @@ function renderPeriodStats(){
   document.getElementById("streakCur").textContent=current;
   document.getElementById("streakBest").textContent=best;
   checkCelebrations(current,weekPct,monthPct);
+  fetch(PUSH_API+"/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({weekPct,monthPct,streakCurrent:current,streakBest:best})}).catch(()=>{});
 }
 
 const MILESTONES=[3,7,14,21,30,45,60,90,120,180,365];
