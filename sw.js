@@ -1,4 +1,4 @@
-const CACHE = "discipline-v10";
+const CACHE = "discipline-v11";
 const ASSETS = ["./", "./index.html", "./manifest.json",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/avatar.png"];
 
@@ -17,13 +17,10 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      const fetchPromise = fetch(e.request).then(res => {
-        caches.open(CACHE).then(c => c.put(e.request, res.clone()));
-        return res;
-      }).catch(() => cached);
-      return cached || fetchPromise;
-    })
+    fetch(e.request).then(res => {
+      caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+      return res;
+    }).catch(() => caches.match(e.request))
   );
 });
 

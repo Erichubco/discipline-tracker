@@ -302,22 +302,10 @@
       <div class="streak-best"><span id="streakBest">0</span><span class="streak-unit" id="streakBestUnit">jours</span></div>
     </div>
 
-    <!-- Weekly progress (business/dev) -->
-    <div class="card hidden" id="weeklyProgressCard">
-      <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="weeklyProgressTitle">Progression hebdo</span></div>
-      <div class="pbar-row" id="businessRow" style="margin-top:0">
-        <div class="pbar-lbl"><span id="businessWeekLbl">Business (semaine)</span> <b id="businessPct">0%</b></div>
-        <div class="pbar-bg"><div class="pbar-fill" id="businessBarFill" style="width:0%;background:var(--amber)"></div></div>
-      </div>
-      <div class="pbar-row" id="devRow">
-        <div class="pbar-lbl"><span id="devWeekLbl">Développement (semaine)</span> <b id="devPct">0%</b></div>
-        <div class="pbar-bg"><div class="pbar-fill" id="devBarFill" style="width:0%;background:var(--green)"></div></div>
-      </div>
-    </div>
-
     <!-- Period stats -->
     <div class="card">
       <div class="card-h"><span class="dot" style="background:var(--green)"></span><span id="periodStatsTitle">Semaine · mois</span></div>
+      <div class="sub" style="margin-bottom:10px" id="periodStatsSub">% des tâches du jour cochées, tout confondu.</div>
       <div class="pbar-row" style="margin-top:0">
         <div class="pbar-lbl"><span id="thisWeekLbl">Cette semaine</span> <b id="weekPct">0%</b></div>
         <div class="pbar-bg"><div class="pbar-fill" id="weekBarFill" style="width:0%;background:var(--amber)"></div></div>
@@ -325,6 +313,19 @@
       <div class="pbar-row">
         <div class="pbar-lbl"><span id="thisMonthLbl">Ce mois</span> <b id="monthPct">0%</b></div>
         <div class="pbar-bg"><div class="pbar-fill" id="monthBarFill" style="width:0%;background:var(--green)"></div></div>
+      </div>
+
+      <div class="hidden" id="weeklyProgressBreakdown">
+        <div class="streak-sep" style="margin:16px 0 12px"></div>
+        <div class="stat-lbl" id="weeklyProgressTitle" style="display:block;margin-bottom:10px">Détail par catégorie (cette semaine)</div>
+        <div class="pbar-row" id="businessRow" style="margin-top:0">
+          <div class="pbar-lbl"><span id="businessWeekLbl">Business</span> <b id="businessPct">0%</b></div>
+          <div class="pbar-bg"><div class="pbar-fill" id="businessBarFill" style="width:0%;background:var(--amber)"></div></div>
+        </div>
+        <div class="pbar-row" id="devRow">
+          <div class="pbar-lbl"><span id="devWeekLbl">Perso</span> <b id="devPct">0%</b></div>
+          <div class="pbar-bg"><div class="pbar-fill" id="devBarFill" style="width:0%;background:var(--green)"></div></div>
+        </div>
       </div>
     </div>
 
@@ -374,7 +375,10 @@
             <div class="sub hidden" id="paceInfo" style="margin:4px 0 0;color:var(--red)"></div>
           </div>
           <div class="chapter-counter-row">
-            <span class="stat-lbl" id="chaptersLbl">chapitres</span>
+            <div>
+              <span class="stat-lbl" id="chaptersLbl">chapitres lus</span>
+              <div class="sub hidden" id="chaptersRemainingInfo" style="margin:2px 0 0"></div>
+            </div>
             <div class="chapter-pill">
               <button class="chapter-pill-btn" id="chapMinusBtn" type="button">−</button>
               <span class="chapter-pill-count" id="chapCount">0</span>
@@ -489,7 +493,7 @@ const STRINGS = {
     tasksTitle:"Tâches du jour", editBtn:"Modifier", editBtnDone:"Terminé",
     newTaskPlaceholder:"Nouvelle tâche…",
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
-    streakCardTitle:"Consistance", weeklyProgressTitle:"Progression hebdo", periodStatsTitle:"Semaine · mois", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série", daysUnit:"jours",
+    streakCardTitle:"Consistance", weeklyProgressTitle:"Détail par catégorie (cette semaine)", periodStatsTitle:"Semaine · mois", periodStatsSub:"% des tâches du jour cochées, tout confondu.", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série", daysUnit:"jours",
     thisWeekLbl:"Cette semaine", thisMonthLbl:"Ce mois",
     reminderTitle:"Rappel du soir",
     reminderSubDefault:"Une notification à 21h pour cocher tes tâches avant la coupure d'écran.",
@@ -516,8 +520,7 @@ const STRINGS = {
     bookPlaceholder:"Titre du livre…", totalChapPlaceholder:"Nb de chapitres total (optionnel)",
     currentlyReadingLbl:"En cours de lecture", totalChapLbl:"Total", currentPageLbl:"Page actuelle",
     pagesRemaining:n=>`${n} pages restantes`,
-    pagesRemainingWithChapter:(n,ch,total)=>`${n} pages restantes · ≈ chapitre ${ch}${total?`/${total}`:""}`,
-    chaptersLbl:"chapitres", addChapter:"+", finishBook:"Terminé ✓",
+    chaptersLbl:"chapitres lus", chaptersRemaining:n=>`${n} restants`, addChapter:"+", finishBook:"Terminé ✓",
     paceAllDone:"Tu as fini tous les chapitres — tape Terminé ✓ !",
     bookLookupLoading:"🔍 Identification du livre…",
     bookNotIdentified:"Livre non identifié — tape le titre toi-même.",
@@ -525,7 +528,7 @@ const STRINGS = {
     archiveToggleLbl:n=>`📚 ${n} livre${n>1?"s":""} lu${n>1?"s":""}`,
     catDevLbl:"Perso", catBusinessLbl:"Business",
     noTasksInPanel:"Aucune tâche ici pour l'instant. Ajoute-en une avec Modifier.",
-    businessWeekLbl:"Business (semaine)", devWeekLbl:"Développement (semaine)",
+    businessWeekLbl:"Business", devWeekLbl:"Perso",
     paceInfo:(pace,date)=>`${pace} chap./jour · fin estimée le ${date}`,
     footerLine:"Tes données restent sur ton téléphone et se sauvegardent toutes seules.",
     storageLbl:"Stockage", settingsTagline:"Suivi personnel",
@@ -568,7 +571,7 @@ const STRINGS = {
     tasksTitle:"Today's tasks", editBtn:"Edit", editBtnDone:"Done",
     newTaskPlaceholder:"New task…",
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
-    streakCardTitle:"Consistency", weeklyProgressTitle:"Weekly progress", periodStatsTitle:"Week · month", streakCurLbl:"current streak", streakBestLbl:"best streak", daysUnit:"days",
+    streakCardTitle:"Consistency", weeklyProgressTitle:"Breakdown by category (this week)", periodStatsTitle:"Week · month", periodStatsSub:"% of today's tasks checked, all combined.", streakCurLbl:"current streak", streakBestLbl:"best streak", daysUnit:"days",
     thisWeekLbl:"This week", thisMonthLbl:"This month",
     reminderTitle:"Evening reminder",
     reminderSubDefault:"A notification at 9pm to check off your tasks before screens go off.",
@@ -595,8 +598,7 @@ const STRINGS = {
     bookPlaceholder:"Book title…", totalChapPlaceholder:"Total chapters (optional)",
     currentlyReadingLbl:"Currently reading", totalChapLbl:"Total", currentPageLbl:"Current page",
     pagesRemaining:n=>`${n} pages left`,
-    pagesRemainingWithChapter:(n,ch,total)=>`${n} pages left · ≈ chapter ${ch}${total?`/${total}`:""}`,
-    chaptersLbl:"chapters", addChapter:"+", finishBook:"Done ✓",
+    chaptersLbl:"chapters read", chaptersRemaining:n=>`${n} left`, addChapter:"+", finishBook:"Done ✓",
     paceAllDone:"You've finished all the chapters — tap Done ✓!",
     bookLookupLoading:"🔍 Identifying the book…",
     bookNotIdentified:"Book not identified — type the title yourself.",
@@ -604,7 +606,7 @@ const STRINGS = {
     archiveToggleLbl:n=>`📚 ${n} book${n>1?"s":""} read`,
     catDevLbl:"Personal", catBusinessLbl:"Business",
     noTasksInPanel:"No tasks here yet. Add one with Edit.",
-    businessWeekLbl:"Business (this week)", devWeekLbl:"Development (this week)",
+    businessWeekLbl:"Business", devWeekLbl:"Personal",
     paceInfo:(pace,date)=>`${pace} ch./day · estimated finish ${date}`,
     footerLine:"Your data stays on your phone and saves itself automatically.",
     storageLbl:"Storage", settingsTagline:"Personal tracking",
@@ -734,6 +736,7 @@ function applyStaticI18n(){
   document.getElementById("editBtn").textContent=editMode?t("editBtnDone"):t("editBtn");
   document.getElementById("newTask").placeholder=t("newTaskPlaceholder");
   document.getElementById("periodStatsTitle").textContent=t("periodStatsTitle");
+  document.getElementById("periodStatsSub").textContent=t("periodStatsSub");
   document.getElementById("streakCardTitle").textContent=t("streakCardTitle");
   document.getElementById("weeklyProgressTitle").textContent=t("weeklyProgressTitle");
   document.getElementById("streakCurLbl").textContent=t("streakCurLbl");
@@ -980,6 +983,13 @@ function renderWeight(){
 function renderReading(){
   document.getElementById("booksSub").textContent=t("booksThisYear",reading.booksThisYear);
   document.getElementById("chapCount").textContent=reading.chapters;
+  const chaptersRemainingEl=document.getElementById("chaptersRemainingInfo");
+  if(reading.totalChapters&&reading.totalChapters>reading.chapters){
+    chaptersRemainingEl.textContent=t("chaptersRemaining",reading.totalChapters-reading.chapters);
+    chaptersRemainingEl.classList.remove("hidden");
+  }else{
+    chaptersRemainingEl.classList.add("hidden");
+  }
   document.getElementById("bookInput").value=reading.book||"";
   document.getElementById("totalChapInput").value=reading.totalChapters||"";
   const img=document.getElementById("coverImg"),ph=document.getElementById("coverPlaceholder");
@@ -996,11 +1006,7 @@ function renderReading(){
     pageRow.classList.remove("hidden");
     if(reading.pageCount&&reading.currentPage){
       const remaining=Math.max(0,reading.pageCount-reading.currentPage);
-      const pagesPerChapter=reading.totalChapters?reading.pageCount/reading.totalChapters:null;
-      const estChapter=pagesPerChapter?Math.min(reading.totalChapters,Math.max(1,Math.round(reading.currentPage/pagesPerChapter))):null;
-      pagesRemainingEl.textContent=estChapter
-        ?t("pagesRemainingWithChapter",remaining,estChapter,reading.totalChapters)
-        :t("pagesRemaining",remaining);
+      pagesRemainingEl.textContent=t("pagesRemaining",remaining);
       pagesRemainingEl.classList.remove("hidden");
     }else{
       pagesRemainingEl.classList.add("hidden");
@@ -1137,7 +1143,7 @@ function renderPeriodStats(){
     document.getElementById("devBarFill").style.width=pct+"%";
     devRow.classList.remove("hidden");
   }else{devRow.classList.add("hidden");}
-  document.getElementById("weeklyProgressCard").classList.toggle("hidden",businessAvg==null&&devAvg==null);
+  document.getElementById("weeklyProgressBreakdown").classList.toggle("hidden",businessAvg==null&&devAvg==null);
 
   checkCelebrations(current,weekPct,monthPct);
   fetch(PUSH_API+"/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({weekPct,monthPct,streakCurrent:current,streakBest:best})}).catch(()=>{});
@@ -1274,8 +1280,19 @@ function toggleEditMode(){
   document.getElementById("addRow").classList.toggle("hidden",!editMode);
   renderTasks();
 }
+function openAddTask(){
+  if(!editMode){
+    editMode=true;
+    document.getElementById("editBtn").textContent=t("editBtnDone");
+    document.getElementById("addRow").classList.remove("hidden");
+    renderTasks();
+  }
+  const addRow=document.getElementById("addRow");
+  addRow.scrollIntoView({behavior:"smooth",block:"center"});
+  document.getElementById("newTask").focus();
+}
 document.getElementById("editBtn").onclick=toggleEditMode;
-document.getElementById("fabAdd").onclick=toggleEditMode;
+document.getElementById("fabAdd").onclick=openAddTask;
 document.getElementById("addBtn").onclick=addTask;
 document.getElementById("newTask").addEventListener("keydown",e=>{if(e.key==="Enter")addTask();});
 let newTaskPeriod="day";
