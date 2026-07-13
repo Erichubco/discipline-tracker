@@ -194,7 +194,7 @@
   <div class="view active" id="view-home">
     <div class="head-row">
       <div class="head-row" style="margin-bottom:0;gap:10px">
-        <div class="icon-btn" style="border-radius:50%;background:var(--cardHi)">👤</div>
+        <div class="icon-btn" style="border-radius:50%;background:var(--cardHi);padding:0;overflow:hidden"><img src="icons/avatar.png" alt="" style="width:100%;height:100%;object-fit:cover" /></div>
         <div>
           <div class="eyebrow display">Discipline</div>
           <div class="date" id="date"></div>
@@ -534,6 +534,7 @@ const STRINGS = {
       {id:"wake",label:"🌞 Réveil sans téléphone + marche",period:"morning",category:"dev"},
       {id:"gym",label:"💪 Muscu",period:"day",category:"dev"},
       {id:"ecom",label:"💻 Tâche e-com du jour",period:"day",category:"business"},
+      {id:"ecomAfternoon",label:"🛒 E-com — bloc après-midi",period:"day",category:"business"},
       {id:"shake",label:"🥤 Shake + créatine",period:"day",category:"dev"},
       {id:"supps",label:"💊 Compléments (matin + soir)",period:"day",category:"dev"},
       {id:"meals",label:"🍽️ 3 repas complets",period:"day",category:"dev"},
@@ -606,6 +607,7 @@ const STRINGS = {
       {id:"wake",label:"🌞 Wake up phone-free + walk",period:"morning",category:"dev"},
       {id:"gym",label:"💪 Workout",period:"day",category:"dev"},
       {id:"ecom",label:"💻 Today's e-com task",period:"day",category:"business"},
+      {id:"ecomAfternoon",label:"🛒 E-com — afternoon block",period:"day",category:"business"},
       {id:"shake",label:"🥤 Shake + creatine",period:"day",category:"dev"},
       {id:"supps",label:"💊 Supplements (morning + evening)",period:"day",category:"dev"},
       {id:"meals",label:"🍽️ 3 full meals",period:"day",category:"dev"},
@@ -637,9 +639,24 @@ tasks=tasks.map(tk=>({
   period:tk.period||DEFAULT_PERIODS[tk.id]||"day",
   category:tk.category||DEFAULT_CATEGORIES[tk.id]||"dev",
 }));
-if(!tasks.some(tk=>tk.category==="business")){
-  tasks=tasks.concat(STRINGS.fr.defaultTasks.filter(tk=>tk.category==="business"));
-}
+const TASK_MIGRATIONS=[
+  {version:1,ids:["ecom"]},
+  {version:2,ids:["ecomAfternoon"]},
+];
+let taskMigVersion=load("tracker:taskMigVersion",0);
+TASK_MIGRATIONS.forEach(m=>{
+  if(taskMigVersion<m.version){
+    const existingIds=new Set(tasks.map(tk=>tk.id));
+    m.ids.forEach(id=>{
+      if(!existingIds.has(id)){
+        const def=STRINGS.fr.defaultTasks.find(tk=>tk.id===id);
+        if(def)tasks.push(def);
+      }
+    });
+  }
+});
+taskMigVersion=Math.max(taskMigVersion,...TASK_MIGRATIONS.map(m=>m.version));
+save("tracker:taskMigVersion",taskMigVersion);
 save("tracker:template",tasks);
 let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
