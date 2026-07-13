@@ -120,6 +120,7 @@
   .book-cover img{width:100%;height:100%;object-fit:cover}
   .book-info{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
   .archive-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .archive-toggle{background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;padding:10px 0 0;margin-top:2px;cursor:pointer;font-family:inherit;width:100%;text-align:center}
   .archive-title{font-size:17px;font-weight:700;color:var(--text);font-family:'Quicksand',sans-serif}
   .book-archive{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px}
   .book-archive-item{flex-shrink:0;width:72px;text-align:center;cursor:pointer}
@@ -394,13 +395,11 @@
       <div class="row" style="margin-top:14px">
         <button class="btn btn-ghost" id="finishBtn" style="flex:1">Terminé ✓</button>
       </div>
+      <button class="archive-toggle hidden" id="archiveToggle" type="button"></button>
     </div>
 
-    <!-- Books read -->
+    <!-- Books read (collapsed by default, revealed via archiveToggle) -->
     <div class="hidden" id="archiveWrap" style="margin-bottom:16px">
-      <div class="archive-head">
-        <div class="archive-title" id="archiveTitle">📚 Livres lus</div>
-      </div>
       <div class="book-archive" id="bookArchive"></div>
     </div>
 
@@ -523,7 +522,7 @@ const STRINGS = {
     bookLookupLoading:"🔍 Identification du livre…",
     bookNotIdentified:"Livre non identifié — tape le titre toi-même.",
     pageCountBadge:n=>`📄 ${n} pages (info Google Books)`,
-    archiveTitle:"📚 Livres lus",
+    archiveToggleLbl:n=>`📚 ${n} livre${n>1?"s":""} lu${n>1?"s":""}`,
     catDevLbl:"Perso", catBusinessLbl:"Business",
     noTasksInPanel:"Aucune tâche ici pour l'instant. Ajoute-en une avec Modifier.",
     businessWeekLbl:"Business (semaine)", devWeekLbl:"Développement (semaine)",
@@ -602,7 +601,7 @@ const STRINGS = {
     bookLookupLoading:"🔍 Identifying the book…",
     bookNotIdentified:"Book not identified — type the title yourself.",
     pageCountBadge:n=>`📄 ${n} pages (Google Books info)`,
-    archiveTitle:"📚 Books read",
+    archiveToggleLbl:n=>`📚 ${n} book${n>1?"s":""} read`,
     catDevLbl:"Personal", catBusinessLbl:"Business",
     noTasksInPanel:"No tasks here yet. Add one with Edit.",
     businessWeekLbl:"Business (this week)", devWeekLbl:"Development (this week)",
@@ -689,6 +688,7 @@ let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
 let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null,booksThisYear:0});
 let booksArchive=load("tracker:booksArchive",[]);
+let archiveExpanded=false;
 let editMode=false;
 
 function taskDisplayLabel(tk){
@@ -770,7 +770,6 @@ function applyStaticI18n(){
   let bytes=0;
   for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);bytes+=(k.length+(localStorage.getItem(k)||"").length)*2;}
   document.getElementById("storageValue").textContent=bytes<1024*1024?`${(bytes/1024).toFixed(1)} KB`:`${(bytes/1024/1024).toFixed(1)} MB`;
-  document.getElementById("archiveTitle").textContent=t("archiveTitle");
   document.getElementById("celebTap").textContent=t("celebTap");
   document.getElementById("tabHomeLbl").textContent=t("tabHome");
   document.getElementById("tabProgressionLbl").textContent=t("tabProgression");
@@ -1027,8 +1026,12 @@ function renderReading(){
   }else{paceEl.classList.add("hidden");}
 
   const archiveWrap=document.getElementById("archiveWrap"),archiveEl=document.getElementById("bookArchive");
+  const archiveToggle=document.getElementById("archiveToggle");
   if(booksArchive.length){
-    archiveWrap.classList.remove("hidden");
+    archiveToggle.classList.remove("hidden");
+    archiveToggle.textContent=t("archiveToggleLbl",booksArchive.length)+(archiveExpanded?" ▲":" ▼");
+    archiveToggle.onclick=()=>{archiveExpanded=!archiveExpanded;renderReading();};
+    archiveWrap.classList.toggle("hidden",!archiveExpanded);
     archiveEl.innerHTML=booksArchive.slice().reverse().map((b,i)=>{
       const origIdx=booksArchive.length-1-i;
       return `
@@ -1051,6 +1054,7 @@ function renderReading(){
       };
     });
   }else{
+    archiveToggle.classList.add("hidden");
     archiveWrap.classList.add("hidden");
   }
 }
@@ -1339,7 +1343,7 @@ document.getElementById("bizInput").addEventListener("keydown",e=>{if(e.key==="E
 function logBiz(){
   const i=document.getElementById("bizInput");
   const amount=parseFloat(i.value.replace(",","."));
-  if(!amount||amount<0)return;
+  if(isNaN(amount)||amount<0)return;
   bizRevenue.push({date:today(),amount});
   save("tracker:bizRevenue",bizRevenue);
   i.value="";renderBiz();
