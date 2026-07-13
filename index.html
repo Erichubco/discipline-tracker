@@ -122,7 +122,7 @@
   .archive-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
   .archive-title{font-size:17px;font-weight:700;color:var(--text);font-family:'Quicksand',sans-serif}
   .book-archive{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px}
-  .book-archive-item{flex-shrink:0;width:72px;text-align:center}
+  .book-archive-item{flex-shrink:0;width:72px;text-align:center;cursor:pointer}
   .book-archive-cover{width:72px;height:100px;border-radius:10px;object-fit:cover;background:var(--cardHi);border:1px solid var(--border);display:block;box-shadow:var(--shadow)}
   .book-archive-cover.placeholder{display:flex;align-items:center;justify-content:center;font-size:22px}
   .book-archive-title{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
@@ -386,6 +386,11 @@
         <span id="totalChapLbl">Total</span>
         <input id="totalChapInput" inputmode="numeric" placeholder="chapitres (optionnel)" style="flex:1;text-align:left" />
       </div>
+      <div class="goal-row hidden" id="currentPageRow">
+        <span id="currentPageLbl">Page actuelle</span>
+        <input id="currentPageInput" inputmode="numeric" placeholder="ex: 120" style="flex:1;text-align:left" />
+      </div>
+      <div class="sub hidden" id="pagesRemainingInfo" style="margin-top:0;color:var(--red);font-weight:700"></div>
       <div class="row" style="margin-top:14px">
         <button class="btn btn-ghost" id="finishBtn" style="flex:1">Terminé ✓</button>
       </div>
@@ -497,6 +502,9 @@ const STRINGS = {
     weightCurrent:"actuel", weightGoal:"objectif", weightRemaining:"reste à faire", weightRate:"kg/semaine", weightSinceStart:"depuis le début",
     weightPlaceholder:"Ton poids (kg)", weightSave:"Enregistrer",
     weightDeleteConfirm:(kg,date)=>`Supprimer l'entrée ${kg}kg du ${date} ?`,
+    finishBookConfirm:(title,chapters,total)=>`Marquer "${title}" comme terminé ?\n\nTu es à ${chapters}${total?`/${total}`:""} chapitres. Cette action l'archive dans "Livres lus" et réinitialise le compteur pour un nouveau livre — impossible à annuler ensuite.`,
+    archiveDeleteConfirm:title=>`Retirer "${title}" de tes livres lus ? (à faire si ajouté par erreur)`,
+    archiveItemRemoveHint:"touche pour retirer",
     weightBarTitle:"touche pour supprimer",
     weightAhead:"En progression vers l'objectif", weightOnTrack:"Stable", weightBehind:"S'éloigne de l'objectif", weightGoalReached:"Objectif atteint !",
     weightPaceInfo:(rate,date)=>`${rate} kg/semaine · objectif estimé le ${date}`,
@@ -507,7 +515,9 @@ const STRINGS = {
     readingTitle:"Lecture · 1 chapitre/jour → 1 livre/mois",
     booksThisYear:n=>`${n} livre${n>1?"s":""} terminé${n>1?"s":""} cette année`,
     bookPlaceholder:"Titre du livre…", totalChapPlaceholder:"Nb de chapitres total (optionnel)",
-    currentlyReadingLbl:"En cours de lecture", totalChapLbl:"Total",
+    currentlyReadingLbl:"En cours de lecture", totalChapLbl:"Total", currentPageLbl:"Page actuelle",
+    pagesRemaining:n=>`${n} pages restantes`,
+    pagesRemainingWithChapter:(n,ch,total)=>`${n} pages restantes · ≈ chapitre ${ch}${total?`/${total}`:""}`,
     chaptersLbl:"chapitres", addChapter:"+", finishBook:"Terminé ✓",
     paceAllDone:"Tu as fini tous les chapitres — tape Terminé ✓ !",
     bookLookupLoading:"🔍 Identification du livre…",
@@ -571,6 +581,9 @@ const STRINGS = {
     weightCurrent:"current", weightGoal:"goal", weightRemaining:"remaining", weightRate:"kg/week", weightSinceStart:"since start",
     weightPlaceholder:"Your weight (kg)", weightSave:"Save",
     weightDeleteConfirm:(kg,date)=>`Delete the ${kg}kg entry from ${date}?`,
+    finishBookConfirm:(title,chapters,total)=>`Mark "${title}" as finished?\n\nYou're at ${chapters}${total?`/${total}`:""} chapters. This archives it in "Books read" and resets the counter for a new book — can't be undone after that.`,
+    archiveDeleteConfirm:title=>`Remove "${title}" from your books read? (use this if it was added by mistake)`,
+    archiveItemRemoveHint:"tap to remove",
     weightBarTitle:"tap to delete",
     weightAhead:"Progressing toward goal", weightOnTrack:"Stable", weightBehind:"Moving away from goal", weightGoalReached:"Goal reached!",
     weightPaceInfo:(rate,date)=>`${rate} kg/week · goal estimated ${date}`,
@@ -581,7 +594,9 @@ const STRINGS = {
     readingTitle:"Reading · 1 chapter/day → 1 book/month",
     booksThisYear:n=>`${n} book${n>1?"s":""} finished this year`,
     bookPlaceholder:"Book title…", totalChapPlaceholder:"Total chapters (optional)",
-    currentlyReadingLbl:"Currently reading", totalChapLbl:"Total",
+    currentlyReadingLbl:"Currently reading", totalChapLbl:"Total", currentPageLbl:"Current page",
+    pagesRemaining:n=>`${n} pages left`,
+    pagesRemainingWithChapter:(n,ch,total)=>`${n} pages left · ≈ chapter ${ch}${total?`/${total}`:""}`,
     chaptersLbl:"chapters", addChapter:"+", finishBook:"Done ✓",
     paceAllDone:"You've finished all the chapters — tap Done ✓!",
     bookLookupLoading:"🔍 Identifying the book…",
@@ -672,7 +687,7 @@ save("tracker:taskMigVersion",taskMigVersion);
 save("tracker:template",tasks);
 let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
-let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,booksThisYear:0});
+let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null,booksThisYear:0});
 let booksArchive=load("tracker:booksArchive",[]);
 let editMode=false;
 
@@ -744,6 +759,7 @@ function applyStaticI18n(){
   document.getElementById("totalChapInput").placeholder=t("totalChapPlaceholder");
   document.getElementById("currentlyReadingLbl").textContent=t("currentlyReadingLbl");
   document.getElementById("totalChapLbl").textContent=t("totalChapLbl");
+  document.getElementById("currentPageLbl").textContent=t("currentPageLbl");
   document.getElementById("chaptersLbl").textContent=t("chaptersLbl");
   document.getElementById("chapBtn").textContent=t("addChapter");
   document.getElementById("finishBtn").textContent=t("finishBook");
@@ -973,6 +989,27 @@ function renderReading(){
   const lookupEl=document.getElementById("bookLookupInfo");
   if(reading.pageCount){lookupEl.textContent=t("pageCountBadge",reading.pageCount);lookupEl.classList.remove("hidden");}
   else{lookupEl.classList.add("hidden");}
+
+  const pageRow=document.getElementById("currentPageRow");
+  const pagesRemainingEl=document.getElementById("pagesRemainingInfo");
+  document.getElementById("currentPageInput").value=reading.currentPage||"";
+  if(reading.book){
+    pageRow.classList.remove("hidden");
+    if(reading.pageCount&&reading.currentPage){
+      const remaining=Math.max(0,reading.pageCount-reading.currentPage);
+      const pagesPerChapter=reading.totalChapters?reading.pageCount/reading.totalChapters:null;
+      const estChapter=pagesPerChapter?Math.min(reading.totalChapters,Math.max(1,Math.round(reading.currentPage/pagesPerChapter))):null;
+      pagesRemainingEl.textContent=estChapter
+        ?t("pagesRemainingWithChapter",remaining,estChapter,reading.totalChapters)
+        :t("pagesRemaining",remaining);
+      pagesRemainingEl.classList.remove("hidden");
+    }else{
+      pagesRemainingEl.classList.add("hidden");
+    }
+  }else{
+    pageRow.classList.add("hidden");
+    pagesRemainingEl.classList.add("hidden");
+  }
   const paceEl=document.getElementById("paceInfo");
   if(reading.totalChapters&&reading.startDate&&reading.chapters>0){
     const days=Math.max(1,Math.round((new Date()-new Date(reading.startDate))/DAY_MS));
@@ -992,14 +1029,27 @@ function renderReading(){
   const archiveWrap=document.getElementById("archiveWrap"),archiveEl=document.getElementById("bookArchive");
   if(booksArchive.length){
     archiveWrap.classList.remove("hidden");
-    archiveEl.innerHTML=booksArchive.slice().reverse().map(b=>`
-      <div class="book-archive-item" title="${b.title.replace(/"/g,"&quot;")}">
+    archiveEl.innerHTML=booksArchive.slice().reverse().map((b,i)=>{
+      const origIdx=booksArchive.length-1-i;
+      return `
+      <div class="book-archive-item" data-idx="${origIdx}" title="${b.title.replace(/"/g,"&quot;")} — ${t("archiveItemRemoveHint")}">
         ${b.coverPhoto
           ? `<img class="book-archive-cover" src="${b.coverPhoto}" />`
           : `<div class="book-archive-cover placeholder">📖</div>`}
         <div class="book-archive-title">${b.title}</div>
       </div>
-    `).join("");
+    `;}).join("");
+    archiveEl.querySelectorAll(".book-archive-item").forEach(el=>{
+      el.onclick=()=>{
+        const idx=+el.dataset.idx;
+        const b=booksArchive[idx];
+        if(confirm(t("archiveDeleteConfirm",b.title))){
+          booksArchive=booksArchive.filter((_,i)=>i!==idx);
+          save("tracker:booksArchive",booksArchive);
+          renderReading();
+        }
+      };
+    });
   }else{
     archiveWrap.classList.add("hidden");
   }
@@ -1307,6 +1357,11 @@ document.getElementById("totalChapInput").addEventListener("change",()=>{
   reading.totalChapters=v>0?v:null;
   save("tracker:reading",reading);renderReading();
 });
+document.getElementById("currentPageInput").addEventListener("change",()=>{
+  const v=parseInt(document.getElementById("currentPageInput").value);
+  reading.currentPage=v>0?v:null;
+  save("tracker:reading",reading);renderReading();
+});
 function resizeToDataUrl(img,maxW,quality){
   const scale=Math.min(1,maxW/img.width);
   const canvas=document.createElement("canvas");
@@ -1326,6 +1381,7 @@ async function lookupBook(imageDataUrl){
       reading.book=data.title;
       reading.pageCount=data.pageCount||null;
       if(data.chapters&&!reading.totalChapters)reading.totalChapters=data.chapters;
+      if(data.coverUrl)reading.coverPhoto=data.coverUrl;
       save("tracker:reading",reading);
     }else{
       infoEl.textContent=t("bookNotIdentified");
@@ -1353,10 +1409,10 @@ document.getElementById("coverInput").addEventListener("change",e=>{
 document.getElementById("chapBtn").onclick=()=>{reading.chapters++;save("tracker:reading",reading);renderReading();};
 document.getElementById("chapMinusBtn").onclick=()=>{if(reading.chapters>0){reading.chapters--;save("tracker:reading",reading);renderReading();}};
 document.getElementById("finishBtn").onclick=()=>{
-  if(reading.book){
-    booksArchive.push({title:reading.book,coverPhoto:reading.coverPhoto,chapters:reading.chapters,totalChapters:reading.totalChapters,pageCount:reading.pageCount,finishedDate:today()});
-    save("tracker:booksArchive",booksArchive);
-  }
+  if(!reading.book)return;
+  if(!confirm(t("finishBookConfirm",reading.book,reading.chapters,reading.totalChapters)))return;
+  booksArchive.push({title:reading.book,coverPhoto:reading.coverPhoto,chapters:reading.chapters,totalChapters:reading.totalChapters,pageCount:reading.pageCount,finishedDate:today()});
+  save("tracker:booksArchive",booksArchive);
   reading={book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,booksThisYear:reading.booksThisYear+1};
   save("tracker:reading",reading);renderReading();
 };
