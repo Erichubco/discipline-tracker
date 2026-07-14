@@ -44,11 +44,14 @@
   .greeting-title{font-size:24px;font-weight:700;margin-bottom:4px}
   .greeting-sub{color:var(--muted);font-size:14px;margin-bottom:18px}
   .day-strip{display:flex;justify-content:space-between;margin-bottom:18px}
-  .day-chip{display:flex;flex-direction:column;align-items:center;gap:5px;width:32px}
-  .day-num{font-size:13px;font-weight:600;color:var(--text);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+  .day-chip{display:flex;flex-direction:column;align-items:center;gap:5px;width:32px;cursor:pointer}
+  .day-chip.future{cursor:default;opacity:.4}
+  .day-num{font-size:13px;font-weight:600;color:var(--text);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
   .day-chip.active .day-num{background:var(--green);color:#fff}
   .day-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600}
   .day-chip.active .day-lbl{color:var(--green)}
+  .past-day-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--cardHi);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin:-8px 0 16px;font-size:12px;font-weight:700;color:var(--green)}
+  .past-day-banner button{background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit}
   .ring-wrap{position:relative;width:200px;height:200px;margin:0 auto}
   .ring-wrap svg{transform:rotate(-90deg);position:relative;z-index:1}
   .ring-glow{position:absolute;inset:12%;background:var(--amber);opacity:.18;filter:blur(28px);border-radius:50%}
@@ -81,6 +84,7 @@
   .task-panel-empty{color:var(--muted);font-size:13px;text-align:center;padding:24px 0}
   .task{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff;border-radius:14px;cursor:pointer;border:1px solid var(--border);transition:all .15s;margin-bottom:8px;box-shadow:var(--shadow)}
   .task.done{background:#ede9ff;border-color:var(--greenDim)}
+  .task.readonly{cursor:default}
   .check{width:24px;height:24px;border-radius:8px;flex-shrink:0;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;transition:all .15s}
   .task.done .check{background:var(--green);border-color:var(--green)}
   .check svg{opacity:0;transition:opacity .15s}
@@ -220,6 +224,10 @@
 
     <div class="greeting-title display" id="greetingTitle"></div>
     <div class="greeting-sub" id="greetingSub"></div>
+    <div class="past-day-banner hidden" id="pastDayBanner">
+      <span id="pastDayBannerText"></span>
+      <button type="button" id="backToTodayBtn"></button>
+    </div>
 
     <div class="day-strip" id="dayStrip"></div>
 
@@ -573,6 +581,9 @@ const STRINGS = {
     ecomFocus:["Bilan semaine + plan + veille","Planning semaine + revue chiffres + angles","Production créatifs (UGC, montages)","Optimisation boutique / page produit","Gestion des tests + recherche produit","Analyse + décisions scaling","Gros chantier de la semaine"],
     greetMorning:"Bonjour", greetAfternoon:"Bon après-midi", greetEvening:"Bonsoir",
     greetingSub:"Prêt à avancer sur tes objectifs aujourd'hui ?",
+    pastDayTitle:d=>`${d}`,
+    pastDayBannerText:"Lecture seule — les jours passés ne peuvent plus être modifiés.",
+    backToTodayBtn:"Aujourd'hui",
     tabHome:"Accueil", tabProgression:"Progression", tabSettings:"Réglages",
     dayShort:["L","M","M","J","V","S","D"], todayLbl:"Auj.",
     defaultTasks:[
@@ -653,6 +664,9 @@ const STRINGS = {
     ecomFocus:["Weekly review + plan + watch trends","Weekly planning + numbers review + angles","Creative production (UGC, edits)","Store / product page optimization","Test management + product research","Analysis + scaling decisions","Big weekly project"],
     greetMorning:"Good morning", greetAfternoon:"Good afternoon", greetEvening:"Good evening",
     greetingSub:"Ready to focus on your goals today?",
+    pastDayTitle:d=>`${d}`,
+    pastDayBannerText:"Read-only — past days can no longer be edited.",
+    backToTodayBtn:"Today",
     tabHome:"Home", tabProgression:"Progress", tabSettings:"Settings",
     dayShort:["M","T","W","T","F","S","S"], todayLbl:"Today",
     defaultTasks:[
@@ -717,6 +731,9 @@ let booksArchive=load("tracker:booksArchive",[]);
 let archiveExpanded=false;
 let editingBookTitle=false;
 let editMode=false;
+let viewedDate=today();
+function isViewingToday(){return viewedDate===today();}
+function getViewedDone(){return isViewingToday()?done:load("tracker:day:"+viewedDate,{});}
 
 function taskDisplayLabel(tk){
   if(tk.id==="ecom")return `💻 ${t("ecomFocus")[new Date().getDay()]}`;
@@ -729,19 +746,41 @@ function renderDayStrip(){
   const now=new Date();
   for(let i=-3;i<=3;i++){
     const d=new Date(now);d.setDate(d.getDate()+i);
+    const key=keyFor(d);
     const isToday=i===0;
+    const isFuture=i>0;
+    const isActive=key===viewedDate;
     const dow=(d.getDay()+6)%7;
     const chip=document.createElement("div");
-    chip.className="day-chip"+(isToday?" active":"");
+    chip.className="day-chip"+(isActive?" active":"")+(isFuture?" future":"");
     chip.innerHTML=`<div class="day-num">${d.getDate()}</div><div class="day-lbl">${isToday?t("todayLbl"):labels[dow]}</div>`;
+    if(!isFuture)chip.onclick=()=>switchViewedDate(key);
     el.appendChild(chip);
   }
 }
+function switchViewedDate(key){
+  viewedDate=key;
+  if(!isViewingToday()&&editMode)toggleEditMode();
+  renderDayStrip();renderGreeting();renderScore();renderTasks();
+  document.getElementById("fabAdd").classList.toggle("hidden",!isViewingToday());
+  document.getElementById("editBtn").classList.toggle("hidden",!isViewingToday());
+}
 function renderGreeting(){
-  const h=new Date().getHours();
-  const key=h<12?"greetMorning":h<18?"greetAfternoon":"greetEvening";
-  document.getElementById("greetingTitle").textContent=`${t(key)}, Eric !`;
-  document.getElementById("greetingSub").textContent=t("greetingSub");
+  const banner=document.getElementById("pastDayBanner");
+  if(isViewingToday()){
+    const h=new Date().getHours();
+    const key=h<12?"greetMorning":h<18?"greetAfternoon":"greetEvening";
+    document.getElementById("greetingTitle").textContent=`${t(key)}, Eric !`;
+    document.getElementById("greetingSub").textContent=t("greetingSub");
+    banner.classList.add("hidden");
+  }else{
+    const d=dateFromKey(viewedDate);
+    document.getElementById("greetingTitle").textContent=t("pastDayTitle",d.toLocaleDateString(t("dateLocale"),{weekday:"long",day:"numeric",month:"long"}));
+    document.getElementById("greetingSub").textContent="";
+    document.getElementById("pastDayBannerText").textContent=t("pastDayBannerText");
+    document.getElementById("backToTodayBtn").textContent=t("backToTodayBtn");
+    banner.classList.remove("hidden");
+  }
 }
 
 function applyStaticI18n(){
@@ -807,7 +846,8 @@ function applyStaticI18n(){
 }
 
 function renderScore(){
-  const total=tasks.length, comp=tasks.filter(tk=>done[tk.id]).length, pct=total?comp/total:0;
+  const viewedDone=getViewedDone();
+  const total=tasks.length, comp=tasks.filter(tk=>viewedDone[tk.id]).length, pct=total?comp/total:0;
   document.getElementById("doneCount").textContent=comp;
   document.getElementById("totalCount").textContent=total;
   const C=2*Math.PI*86;
@@ -824,9 +864,13 @@ const PERIOD_KEYS={morning:"periodMorning",day:"periodDay",evening:"periodEvenin
 const PERIOD_EMOJI={morning:"🌅",day:"☀️",evening:"🌙"};
 function renderTaskRow(tk){
   const d=document.createElement("div");
-  d.className="task"+(done[tk.id]&&!editMode?" done":"");
+  const viewedDone=getViewedDone();
+  const readOnly=!isViewingToday();
+  d.className="task"+(viewedDone[tk.id]&&!editMode?" done":"")+(readOnly?" readonly":"");
   d.dataset.taskId=tk.id;
-  if(editMode){
+  if(readOnly){
+    d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label">${taskDisplayLabel(tk)}</span>`;
+  }else if(editMode){
     d.innerHTML=`<button class="del">✕</button><span class="task-label">${taskDisplayLabel(tk)}</span>`;
     d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==tk.id);save("tracker:template",tasks);renderTasks();renderScore();};
   }else{
@@ -1328,7 +1372,7 @@ async function initReminder(){
 function switchView(view){
   document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${view}`));
   document.querySelectorAll(".tab").forEach(tb=>tb.classList.toggle("active",tb.dataset.view===view));
-  document.getElementById("fabAdd").classList.toggle("hidden",view!=="home");
+  document.getElementById("fabAdd").classList.toggle("hidden",view!=="home"||!isViewingToday());
 }
 document.querySelectorAll(".tab").forEach(btn=>{
   btn.onclick=()=>switchView(btn.dataset.view);
@@ -1368,6 +1412,7 @@ function openAddTask(){
 }
 document.getElementById("editBtn").onclick=toggleEditMode;
 document.getElementById("fabAdd").onclick=openAddTask;
+document.getElementById("backToTodayBtn").onclick=()=>switchViewedDate(today());
 document.getElementById("addBtn").onclick=addTask;
 document.getElementById("newTask").addEventListener("keydown",e=>{if(e.key==="Enter")addTask();});
 let newTaskPeriod="day";
