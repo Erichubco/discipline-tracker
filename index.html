@@ -145,7 +145,9 @@
   .book-title-input{border:none;background:transparent;font-family:'Quicksand',sans-serif;font-size:18px;font-weight:700;color:var(--text);padding:0;width:100%;letter-spacing:-.01em}
   .book-title-input::placeholder{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14px;color:var(--muted)}
   .book-title-display{font-family:'Quicksand',sans-serif;font-size:18px;font-weight:700;color:var(--text);line-height:1.3;letter-spacing:-.01em;cursor:pointer;word-break:break-word}
-  .book-author-display{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--muted);margin-top:3px}
+  .book-meta-line{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--muted);margin-top:3px}
+  .reading-progress-summary{margin-top:14px}
+  .reading-progress-summary .sub{margin-bottom:0}
   .chapter-counter-row{display:flex;align-items:center;justify-content:space-between}
   .chapter-pill{display:flex;align-items:center;gap:14px;background:var(--cardHi);border-radius:12px;padding:5px 8px}
   .chapter-pill-btn{width:34px;height:34px;border-radius:9px;border:none;background:#fff;box-shadow:var(--shadow);color:var(--green);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -319,6 +321,7 @@
       <div class="streak-sep"></div>
       <div class="stat-lbl" id="streakBestLbl">meilleure série</div>
       <div class="streak-best"><span id="streakBest">0</span><span class="streak-unit" id="streakBestUnit">jours</span></div>
+      <div class="sub hidden" id="streakHint" style="margin-top:12px"></div>
     </div>
 
     <!-- Period stats -->
@@ -391,15 +394,10 @@
             <span class="stat-lbl" id="currentlyReadingLbl">En cours de lecture</span>
             <div class="book-title-display hidden" id="bookTitleDisplay" style="margin-top:4px"></div>
             <input id="bookInput" class="book-title-input" placeholder="Titre du livre…" style="margin-top:4px" />
-            <div class="book-author-display hidden" id="bookAuthorDisplay"></div>
-            <div class="sub hidden" id="bookLookupInfo" style="margin:4px 0 0"></div>
-            <div class="sub hidden" id="paceInfo" style="margin:4px 0 0;color:var(--red)"></div>
+            <div class="book-meta-line hidden" id="bookMetaLine"></div>
           </div>
           <div class="chapter-counter-row">
-            <div>
-              <span class="stat-lbl" id="chaptersLbl">chapitres lus</span>
-              <div class="sub hidden" id="chaptersRemainingInfo" style="margin:2px 0 0"></div>
-            </div>
+            <span class="stat-lbl" id="chaptersLbl">chapitres lus</span>
             <div class="chapter-pill">
               <button class="chapter-pill-btn" id="chapMinusBtn" type="button">−</button>
               <span class="chapter-pill-count" id="chapCount">0</span>
@@ -408,7 +406,12 @@
           </div>
         </div>
       </div>
-      <div class="goal-row">
+      <div class="sub hidden" id="bookLookupInfo" style="margin:10px 0 0"></div>
+      <div class="reading-progress-summary hidden" id="readingProgressSummary">
+        <div class="pbar-bg"><div class="pbar-fill" id="readingProgressFill" style="width:0%;background:var(--amber)"></div></div>
+        <div class="sub" id="readingProgressText" style="margin-top:8px"></div>
+      </div>
+      <div class="goal-row" style="margin-top:14px">
         <span id="totalChapLbl">Total</span>
         <input id="totalChapInput" inputmode="numeric" placeholder="chapitres (optionnel)" style="flex:1;text-align:left" />
       </div>
@@ -416,7 +419,6 @@
         <span id="currentPageLbl">Page actuelle</span>
         <input id="currentPageInput" inputmode="numeric" placeholder="ex: 120" style="flex:1;text-align:left" />
       </div>
-      <div class="sub hidden" id="pagesRemainingInfo" style="margin-top:0;color:var(--red);font-weight:700"></div>
       <div class="row" style="margin-top:14px">
         <button class="btn btn-ghost" id="finishBtn" style="flex:1">Terminé ✓</button>
       </div>
@@ -522,6 +524,7 @@ const STRINGS = {
     newTaskPlaceholder:"Nouvelle tâche…",
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
     streakCardTitle:"Consistance", weeklyProgressTitle:"Détail par catégorie (cette semaine)", periodStatsTitle:"Semaine · mois", periodStatsSub:"% des tâches du jour cochées, tout confondu.", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série", daysUnit:"jours",
+    streakHint:"Une série se construit avec des journées à 100% (toutes les tâches cochées). Coche tout en une journée pour la démarrer.",
     thisWeekLbl:d=>`Cette semaine (jour ${d}/7)`, thisMonthLbl:(d,total)=>`Ce mois (jour ${d}/${total})`,
     reminderTitle:"Rappel du soir",
     reminderSubDefault:"Une notification à 21h pour cocher tes tâches avant la coupure d'écran.",
@@ -548,8 +551,7 @@ const STRINGS = {
     bookPlaceholder:"Titre du livre…", totalChapPlaceholder:"Nb de chapitres total (optionnel)",
     currentlyReadingLbl:"En cours de lecture", byAuthor:a=>`de ${a}`, totalChapLbl:"Total", currentPageLbl:"Page actuelle (optionnel)",
     currentPagePlaceholder:"ex: 120", currentPageEstimatePlaceholder:n=>`≈ ${n} (estimé)`,
-    pagesRemaining:n=>`${n} pages restantes`,
-    pagesRemainingEstimated:(n,p)=>`≈ page ${p} · ${n} pages restantes`,
+    pagesRemaining:n=>`≈ ${n} pages restantes`,
     chaptersLbl:"chapitres lus", chaptersRemaining:n=>`${n} restants`, addChapter:"+", finishBook:"Livre terminé ✓",
     paceAllDone:"Tu as fini tous les chapitres — tape Terminé ✓ !",
     bookLookupLoading:"🔍 Identification du livre…",
@@ -605,6 +607,7 @@ const STRINGS = {
     newTaskPlaceholder:"New task…",
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
     streakCardTitle:"Consistency", weeklyProgressTitle:"Breakdown by category (this week)", periodStatsTitle:"Week · month", periodStatsSub:"% of today's tasks checked, all combined.", streakCurLbl:"current streak", streakBestLbl:"best streak", daysUnit:"days",
+    streakHint:"A streak is built from 100% days (every task checked). Complete a full day to start one.",
     thisWeekLbl:d=>`This week (day ${d}/7)`, thisMonthLbl:(d,total)=>`This month (day ${d}/${total})`,
     reminderTitle:"Evening reminder",
     reminderSubDefault:"A notification at 9pm to check off your tasks before screens go off.",
@@ -631,8 +634,7 @@ const STRINGS = {
     bookPlaceholder:"Book title…", totalChapPlaceholder:"Total chapters (optional)",
     currentlyReadingLbl:"Currently reading", byAuthor:a=>`by ${a}`, totalChapLbl:"Total", currentPageLbl:"Current page (optional)",
     currentPagePlaceholder:"e.g. 120", currentPageEstimatePlaceholder:n=>`≈ ${n} (estimated)`,
-    pagesRemaining:n=>`${n} pages left`,
-    pagesRemainingEstimated:(n,p)=>`≈ page ${p} · ${n} pages left`,
+    pagesRemaining:n=>`≈ ${n} pages left`,
     chaptersLbl:"chapters read", chaptersRemaining:n=>`${n} left`, addChapter:"+", finishBook:"Book finished ✓",
     paceAllDone:"You've finished all the chapters — tap Done ✓!",
     bookLookupLoading:"🔍 Identifying the book…",
@@ -1067,16 +1069,8 @@ function renderReading(){
   const booksThisYearCount=booksArchive.filter(b=>new Date(b.finishedDate).getFullYear()===thisYear).length;
   document.getElementById("booksSub").textContent=t("booksThisYear",booksThisYearCount);
   document.getElementById("chapCount").textContent=reading.chapters;
-  const chaptersRemainingEl=document.getElementById("chaptersRemainingInfo");
-  if(reading.totalChapters&&reading.totalChapters>reading.chapters){
-    chaptersRemainingEl.textContent=t("chaptersRemaining",reading.totalChapters-reading.chapters);
-    chaptersRemainingEl.classList.remove("hidden");
-  }else{
-    chaptersRemainingEl.classList.add("hidden");
-  }
   const bookInputEl=document.getElementById("bookInput");
   const bookDisplayEl=document.getElementById("bookTitleDisplay");
-  const bookAuthorEl=document.getElementById("bookAuthorDisplay");
   bookInputEl.value=reading.book||"";
   if(reading.book&&!editingBookTitle){
     bookDisplayEl.textContent=reading.book;
@@ -1086,22 +1080,22 @@ function renderReading(){
     bookDisplayEl.classList.add("hidden");
     bookInputEl.classList.remove("hidden");
   }
-  if(reading.book&&reading.author){
-    bookAuthorEl.textContent=t("byAuthor",reading.author);
-    bookAuthorEl.classList.remove("hidden");
+  const metaEl=document.getElementById("bookMetaLine");
+  const metaParts=[];
+  if(reading.author)metaParts.push(t("byAuthor",reading.author));
+  if(reading.pageCount)metaParts.push(t("pageCountBadge",reading.pageCount));
+  if(reading.book&&metaParts.length){
+    metaEl.textContent=metaParts.join(" · ");
+    metaEl.classList.remove("hidden");
   }else{
-    bookAuthorEl.classList.add("hidden");
+    metaEl.classList.add("hidden");
   }
   document.getElementById("totalChapInput").value=reading.totalChapters||"";
   const img=document.getElementById("coverImg"),ph=document.getElementById("coverPlaceholder");
   if(reading.coverPhoto){img.src=reading.coverPhoto;img.classList.remove("hidden");ph.classList.add("hidden");}
   else{img.classList.add("hidden");ph.classList.remove("hidden");}
-  const lookupEl=document.getElementById("bookLookupInfo");
-  if(reading.pageCount){lookupEl.textContent=t("pageCountBadge",reading.pageCount);lookupEl.classList.remove("hidden");}
-  else{lookupEl.classList.add("hidden");}
 
   const pageRow=document.getElementById("currentPageRow");
-  const pagesRemainingEl=document.getElementById("pagesRemainingInfo");
   const currentPageInputEl=document.getElementById("currentPageInput");
   const hasAiEstimate=reading.aiPageEstimate&&reading.aiPageEstimateForChapter===reading.chapters;
   const estimatedPage=hasAiEstimate
@@ -1111,39 +1105,41 @@ function renderReading(){
       :null);
   currentPageInputEl.value=reading.currentPage||"";
   currentPageInputEl.placeholder=estimatedPage!=null?t("currentPageEstimatePlaceholder",estimatedPage):t("currentPagePlaceholder");
-  if(reading.book){
-    pageRow.classList.remove("hidden");
-    const effectivePage=reading.currentPage||estimatedPage;
-    if(reading.pageCount&&effectivePage){
-      const remaining=Math.max(0,reading.pageCount-effectivePage);
-      pagesRemainingEl.textContent=reading.currentPage
-        ?t("pagesRemaining",remaining)
-        :t("pagesRemainingEstimated",remaining,estimatedPage);
-      pagesRemainingEl.classList.remove("hidden");
-    }else{
-      pagesRemainingEl.classList.add("hidden");
-    }
-  }else{
-    pageRow.classList.add("hidden");
-    pagesRemainingEl.classList.add("hidden");
-  }
-  const paceEl=document.getElementById("paceInfo");
-  if(reading.totalChapters&&reading.startDate&&reading.chapters>0){
-    const days=Math.max(1,Math.round((new Date()-new Date(reading.startDate))/DAY_MS));
+  pageRow.classList.toggle("hidden",!reading.book);
+
+  const summaryEl=document.getElementById("readingProgressSummary");
+  const fillEl=document.getElementById("readingProgressFill");
+  const textEl=document.getElementById("readingProgressText");
+  if(reading.book&&reading.totalChapters){
+    summaryEl.classList.remove("hidden");
+    const chapPct=Math.min(100,Math.round((reading.chapters/reading.totalChapters)*100));
+    fillEl.style.width=chapPct+"%";
     const remaining=reading.totalChapters-reading.chapters;
+    const parts=[];
     if(remaining<=0){
-      paceEl.textContent=t("paceAllDone");
-      paceEl.classList.remove("hidden");
-    }else if(days>=3){
-      const pace=reading.chapters/days;
-      if(pace>0){
-        const daysLeft=Math.ceil(remaining/pace);
-        const finishDate=new Date();finishDate.setDate(finishDate.getDate()+daysLeft);
-        paceEl.textContent=t("paceInfo",pace.toFixed(1),finishDate.toLocaleDateString(t("dateLocale"),{day:"numeric",month:"long"}));
-        paceEl.classList.remove("hidden");
-      }else{paceEl.classList.add("hidden");}
-    }else{paceEl.classList.add("hidden");}
-  }else{paceEl.classList.add("hidden");}
+      parts.push(t("paceAllDone"));
+    }else{
+      parts.push(t("chaptersRemaining",remaining));
+      const effectivePage=reading.currentPage||estimatedPage;
+      if(reading.pageCount&&effectivePage){
+        parts.push(t("pagesRemaining",Math.max(0,reading.pageCount-effectivePage)));
+      }
+      if(reading.startDate&&reading.chapters>0){
+        const days=Math.max(1,Math.round((new Date()-new Date(reading.startDate))/DAY_MS));
+        if(days>=3){
+          const pace=reading.chapters/days;
+          if(pace>0){
+            const daysLeft=Math.ceil(remaining/pace);
+            const finishDate=new Date();finishDate.setDate(finishDate.getDate()+daysLeft);
+            parts.push(t("paceInfo",pace.toFixed(1),finishDate.toLocaleDateString(t("dateLocale"),{day:"numeric",month:"long"})));
+          }
+        }
+      }
+    }
+    textEl.textContent=parts.join(" · ");
+  }else{
+    summaryEl.classList.add("hidden");
+  }
 
   const archiveWrap=document.getElementById("archiveWrap"),archiveEl=document.getElementById("bookArchive");
   const archiveToggle=document.getElementById("archiveToggle");
@@ -1244,6 +1240,13 @@ function renderPeriodStats(){
   document.getElementById("monthBarFill").style.width=monthPct+"%";
   document.getElementById("streakCur").textContent=current;
   document.getElementById("streakBest").textContent=best;
+  const streakHintEl=document.getElementById("streakHint");
+  if(current===0&&best===0){
+    streakHintEl.textContent=t("streakHint");
+    streakHintEl.classList.remove("hidden");
+  }else{
+    streakHintEl.classList.add("hidden");
+  }
 
   const businessAvg=periodAvgForCategory(startOfWeek(now),records,"business");
   const businessRow=document.getElementById("businessRow");
@@ -1449,20 +1452,31 @@ taskTabs.forEach(btn=>{
     setNewTaskCategory(btn.dataset.panel==="business"?"business":"dev");
   };
 });
-let touchStartX=null,touchDeltaX=0;
+let touchStartX=null,touchStartY=null,touchDeltaX=0,swipeAxis=null;
+const SWIPE_AXIS_THRESHOLD=10;
 taskSliderViewport.addEventListener("touchstart",e=>{
   touchStartX=e.touches[0].clientX;
+  touchStartY=e.touches[0].clientY;
   touchDeltaX=0;
-  taskSlider.style.transition="none";
+  swipeAxis=null;
 },{passive:true});
 taskSliderViewport.addEventListener("touchmove",e=>{
   if(touchStartX==null)return;
-  touchDeltaX=e.touches[0].clientX-touchStartX;
+  const dx=e.touches[0].clientX-touchStartX;
+  const dy=e.touches[0].clientY-touchStartY;
+  if(swipeAxis===null){
+    if(Math.abs(dx)<SWIPE_AXIS_THRESHOLD&&Math.abs(dy)<SWIPE_AXIS_THRESHOLD)return;
+    swipeAxis=Math.abs(dx)>Math.abs(dy)?"x":"y";
+    if(swipeAxis==="x")taskSlider.style.transition="none";
+  }
+  if(swipeAxis!=="x")return;
+  touchDeltaX=dx;
   const basePercent=-currentTaskPanelIdx*100;
   const dragPercent=(touchDeltaX/taskSliderViewport.clientWidth)*100;
   taskSlider.style.transform=`translateX(${basePercent+dragPercent}%)`;
 },{passive:true});
 taskSliderViewport.addEventListener("touchend",()=>{
+  if(swipeAxis!=="x"){touchStartX=null;swipeAxis=null;return;}
   taskSlider.style.transition="";
   const threshold=taskSliderViewport.clientWidth*0.22;
   let targetIdx=currentTaskPanelIdx;
@@ -1471,7 +1485,7 @@ taskSliderViewport.addEventListener("touchend",()=>{
   const targetPanel=taskPanelOrder[targetIdx];
   goToTaskPanel(targetPanel);
   setNewTaskCategory(targetPanel==="business"?"business":"dev");
-  touchStartX=null;
+  touchStartX=null;swipeAxis=null;
 });
 
 document.getElementById("wBtn").onclick=logW;
@@ -1552,6 +1566,7 @@ async function lookupBook(imageDataUrl){
       if(data.coverUrl)reading.coverPhoto=data.coverUrl;
       save("tracker:reading",reading);
       scheduleAiPageEstimate();
+      infoEl.classList.add("hidden");
     }else{
       infoEl.textContent=t("bookNotIdentified");
     }
@@ -1663,9 +1678,34 @@ async function syncTaskSuggestions(){
   }catch(e){}
 }
 
+async function restoreFromBackupIfEmpty(){
+  let hasAnyDayData=false;
+  for(let i=0;i<localStorage.length;i++){
+    if(localStorage.key(i).startsWith("tracker:day:")){hasAnyDayData=true;break;}
+  }
+  if(hasAnyDayData)return false;
+  try{
+    const res=await fetch(PUSH_API+"/backup");
+    if(!res.ok)return false;
+    const backup=await res.json();
+    const data=backup.data;
+    if(!data||typeof data!=="object")return false;
+    let restoredAny=false;
+    Object.keys(data).forEach(k=>{
+      if(k.startsWith("tracker:")&&data[k]!=null){
+        localStorage.setItem(k,JSON.stringify(data[k]));
+        restoredAny=true;
+      }
+    });
+    return restoredAny;
+  }catch(e){return false;}
+}
+
 if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>{
+  window.addEventListener("load",async()=>{
     navigator.serviceWorker.register("sw.js").catch(()=>{});
+    const restored=await restoreFromBackupIfEmpty();
+    if(restored){location.reload();return;}
     initReminder();
     loadHealthToday();
     syncTaskSuggestions();
