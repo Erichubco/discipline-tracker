@@ -849,7 +849,8 @@ function applyStaticI18n(){
 
 function renderScore(){
   const viewedDone=getViewedDone();
-  const total=tasks.length, comp=tasks.filter(tk=>viewedDone[tk.id]).length, pct=total?comp/total:0;
+  const dayTasks=tasksForDow(dowOf(dateFromKey(viewedDate)));
+  const total=dayTasks.length, comp=dayTasks.filter(tk=>viewedDone[tk.id]).length, pct=total?comp/total:0;
   document.getElementById("doneCount").textContent=comp;
   document.getElementById("totalCount").textContent=total;
   const C=2*Math.PI*86;
@@ -898,7 +899,8 @@ function renderTaskRow(tk){
 function renderTaskPanel(containerId,category){
   const el=document.getElementById(containerId);el.innerHTML="";
   const groups={morning:[],day:[],evening:[]};
-  tasks.filter(tk=>tk.category===category).forEach(tk=>groups[tk.period||"day"].push(tk));
+  const dow=dowOf(dateFromKey(viewedDate));
+  tasksForDow(dow).filter(tk=>tk.category===category).forEach(tk=>groups[tk.period||"day"].push(tk));
   let any=false;
   ["morning","day","evening"].forEach(period=>{
     const list=groups[period];
@@ -929,7 +931,6 @@ function heatColor(ratio){
 }
 function renderHeatmap(){
   const el=document.getElementById("heatmap");el.innerHTML="";
-  const total=tasks.length;
   const weeksCount=16;
   const now=new Date();now.setHours(0,0,0,0);
   const thisWeekStart=startOfWeek(now);
@@ -942,8 +943,9 @@ function renderHeatmap(){
       if(dt<=now){
         const k=keyFor(dt);
         const dd=k===today()?done:load("tracker:day:"+k,{});
-        const dc=Object.values(dd).filter(Boolean).length;
-        const ratio=total?dc/total:0;
+        const dayTasks=tasksForDow(dowOf(dt));
+        const dc=dayTasks.filter(tk=>dd[tk.id]).length;
+        const ratio=dayTasks.length?dc/dayTasks.length:0;
         const color=heatColor(ratio);
         if(color)cell.style.background=color;
         cell.title=`${dt.toLocaleDateString(t("dateLocale"))} · ${Math.round(ratio*100)}%`;
@@ -1188,33 +1190,35 @@ function getAllDoneRecords(){
   out[today()]=done;
   return out;
 }
-function dayRatio(doneObj){if(!tasks.length)return 0;return tasks.filter(tk=>doneObj[tk.id]).length/tasks.length;}
-function isPerfectDay(doneObj){return tasks.length>0&&tasks.every(tk=>doneObj[tk.id]);}
+function dowOf(d){return (d.getDay()+6)%7;}
+function tasksForDow(dow){return tasks.filter(tk=>!tk.days||tk.days.includes(dow));}
+function dayRatio(doneObj,dow){const dayTasks=tasksForDow(dow);if(!dayTasks.length)return 0;return dayTasks.filter(tk=>doneObj[tk.id]).length/dayTasks.length;}
+function isPerfectDay(doneObj,dow){const dayTasks=tasksForDow(dow);return dayTasks.length>0&&dayTasks.every(tk=>doneObj[tk.id]);}
 function periodAvg(startDate,records){
   const now=new Date();now.setHours(0,0,0,0);
   let sum=0,count=0;
   for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1)){
-    sum+=dayRatio(records[keyFor(d)]||{});count++;
+    sum+=dayRatio(records[keyFor(d)]||{},dowOf(d));count++;
   }
   return count?sum/count:0;
 }
 function periodAvgForCategory(startDate,records,category){
-  const catTasks=tasks.filter(tk=>tk.category===category);
-  if(!catTasks.length)return null;
+  if(!tasks.some(tk=>tk.category===category))return null;
   const now=new Date();now.setHours(0,0,0,0);
   let sum=0,count=0;
   for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1)){
     const doneObj=records[keyFor(d)]||{};
-    sum+=catTasks.filter(tk=>doneObj[tk.id]).length/catTasks.length;count++;
+    const catDayTasks=tasksForDow(dowOf(d)).filter(tk=>tk.category===category);
+    if(catDayTasks.length){sum+=catDayTasks.filter(tk=>doneObj[tk.id]).length/catDayTasks.length;count++;}
   }
   return count?sum/count:0;
 }
 function computeStreaks(records){
   let cur=0;
   let d=new Date();d.setHours(0,0,0,0);
-  if(!isPerfectDay(records[keyFor(d)]||{}))d.setDate(d.getDate()-1);
-  while(isPerfectDay(records[keyFor(d)]||{})){cur++;d.setDate(d.getDate()-1);}
-  const perfectDates=Object.keys(records).filter(k=>isPerfectDay(records[k])).sort();
+  if(!isPerfectDay(records[keyFor(d)]||{},dowOf(d)))d.setDate(d.getDate()-1);
+  while(isPerfectDay(records[keyFor(d)]||{},dowOf(d))){cur++;d.setDate(d.getDate()-1);}
+  const perfectDates=Object.keys(records).filter(k=>isPerfectDay(records[k],dowOf(dateFromKey(k)))).sort();
   let best=0,run=0,prev=null;
   for(const k of perfectDates){
     const dt=dateFromKey(k);
@@ -1667,7 +1671,7 @@ async function syncTaskSuggestions(){
       if(!s.id||!s.label)return;
       applied.push(s.id);
       if(existingIds.has(s.id))return;
-      tasks.push({id:s.id,label:s.label,period:s.period||"day",category:s.category==="business"?"business":"dev"});
+      tasks.push({id:s.id,label:s.label,period:s.period||"day",category:s.category==="business"?"business":"dev",days:Array.isArray(s.days)?s.days:null});
       existingIds.add(s.id);
     });
     if(applied.length){
