@@ -1281,7 +1281,7 @@ function syncFullBackup(){
     const k=localStorage.key(i);
     if(k&&k.startsWith("tracker:"))out[k]=load(k,null);
   }
-  fetch(PUSH_API+"/backup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(out)}).catch(()=>{});
+  return fetch(PUSH_API+"/backup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(out)}).catch(()=>{});
 }
 
 const MILESTONES=[3,7,14,21,30,45,60,90,120,180,365];
@@ -1677,6 +1677,7 @@ async function syncTaskSuggestions(){
     if(applied.length){
       save("tracker:template",tasks);
       renderTasks();renderScore();
+      await syncFullBackup();
       fetch(PUSH_API+"/task-suggestions/ack",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids:applied})}).catch(()=>{});
     }
   }catch(e){}
