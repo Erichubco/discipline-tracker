@@ -174,6 +174,10 @@
   .celebration-title{font-size:21px;font-weight:700;margin-bottom:8px;font-family:'Quicksand',sans-serif}
   .celebration-sub{color:var(--muted);font-size:14px;line-height:1.4}
   .celebration-tap{color:var(--muted);font-size:11px;margin-top:18px;text-transform:uppercase;letter-spacing:1px}
+  .task-detail-card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px 22px;text-align:left;max-width:340px;width:100%;animation:popIn .3s ease;box-shadow:var(--shadow-lg)}
+  .task-detail-label{font-size:19px;font-weight:700;font-family:'Quicksand',sans-serif;line-height:1.3;margin-bottom:12px}
+  .task-detail-text{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:20px}
+  .task-detail-actions{display:flex;gap:10px}
   @keyframes fadeIn{from{opacity:0}to{opacity:1}}
   @keyframes popIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
   .settings-brand{text-align:center;margin-bottom:18px}
@@ -517,6 +521,17 @@
   </div>
 </div>
 
+<div class="celebration hidden" id="taskDetailSheet">
+  <div class="task-detail-card">
+    <div class="task-detail-label" id="taskDetailLabel"></div>
+    <div class="task-detail-text hidden" id="taskDetailText"></div>
+    <div class="task-detail-actions">
+      <button class="btn btn-ghost" id="taskDetailDeleteBtn" style="flex:1"></button>
+      <button class="btn btn-green" id="taskDetailCloseBtn" style="flex:1"></button>
+    </div>
+  </div>
+</div>
+
 <script>
 const STRINGS = {
   fr: {
@@ -540,6 +555,7 @@ const STRINGS = {
     weightDeleteConfirm:(kg,date)=>`Supprimer l'entrée ${kg}kg du ${date} ?`,
     finishBookConfirm:(title,chapters,total)=>`Marquer "${title}" comme terminé ?\n\nTu es à ${chapters}${total?`/${total}`:""} chapitres. Cette action l'archive dans "Livres lus" et réinitialise le compteur pour un nouveau livre — impossible à annuler ensuite.`,
     archiveDeleteConfirm:title=>`Retirer "${title}" de tes livres lus ? (à faire si ajouté par erreur)`,
+    taskDetailDelete:"Supprimer cette tâche", taskDetailDeleteConfirm:label=>`Supprimer "${label}" de ta liste de tâches ?`, taskDetailClose:"Fermer",
     archiveItemRemoveHint:"touche pour retirer",
     weightBarTitle:"touche pour supprimer",
     weightAhead:"En progression vers l'objectif", weightOnTrack:"Stable", weightBehind:"S'éloigne de l'objectif", weightGoalReached:"Objectif atteint !",
@@ -584,6 +600,15 @@ const STRINGS = {
     milestoneDefault:"Ça prend forme. Continue comme ça.",
     milestoneSuffix:n=>`${n} jours d'affilée`,
     ecomFocus:["Bilan semaine + plan + veille","Planning semaine + revue chiffres + angles","Production créatifs (UGC, montages)","Optimisation boutique / page produit","Gestion des tests + recherche produit","Analyse + décisions scaling","Gros chantier de la semaine"],
+    ecomDetail:[
+      "Fais le bilan de la semaine passée (ce qui a marché, ce qui n'a pas marché), planifie les priorités de la semaine à venir, et passe 15-20 min à regarder ce que font tes concurrents et les tendances du marché.",
+      "Revois tes chiffres (CA, ROAS, taux de conversion), planifie ta semaine de contenu, et note 2-3 nouveaux angles créatifs à tester.",
+      "Bloc de production : tourne ou monte tes créas UGC pour les prochaines pubs. Vise au moins 1 script écrit + 1 montage terminé.",
+      "Regarde ta page produit gagnante : titre, photos, avis, description, upsells. Fais au moins 1 amélioration concrète aujourd'hui.",
+      "Vérifie l'état de tes tests en cours (ads, produits), et passe du temps à chercher de nouveaux produits ou angles potentiels.",
+      "Analyse les performances de la semaine par campagne et par produit. Décide quoi scaler, quoi couper, quoi garder stable.",
+      "Consacre ce bloc au gros chantier en cours (lancement, refonte, nouvelle offre) — avance dessus sans interruption.",
+    ],
     greetMorning:"Bonjour", greetAfternoon:"Bon après-midi", greetEvening:"Bonsoir",
     greetingSub:"Prêt à avancer sur tes objectifs aujourd'hui ?",
     pastDayTitle:d=>`${d}`,
@@ -624,6 +649,7 @@ const STRINGS = {
     weightDeleteConfirm:(kg,date)=>`Delete the ${kg}kg entry from ${date}?`,
     finishBookConfirm:(title,chapters,total)=>`Mark "${title}" as finished?\n\nYou're at ${chapters}${total?`/${total}`:""} chapters. This archives it in "Books read" and resets the counter for a new book — can't be undone after that.`,
     archiveDeleteConfirm:title=>`Remove "${title}" from your books read? (use this if it was added by mistake)`,
+    taskDetailDelete:"Delete this task", taskDetailDeleteConfirm:label=>`Delete "${label}" from your task list?`, taskDetailClose:"Close",
     archiveItemRemoveHint:"tap to remove",
     weightBarTitle:"tap to delete",
     weightAhead:"Progressing toward goal", weightOnTrack:"Stable", weightBehind:"Moving away from goal", weightGoalReached:"Goal reached!",
@@ -668,6 +694,15 @@ const STRINGS = {
     milestoneDefault:"It's taking shape. Keep going.",
     milestoneSuffix:n=>`${n}-day streak`,
     ecomFocus:["Weekly review + plan + watch trends","Weekly planning + numbers review + angles","Creative production (UGC, edits)","Store / product page optimization","Test management + product research","Analysis + scaling decisions","Big weekly project"],
+    ecomDetail:[
+      "Review last week (what worked, what didn't), plan this week's priorities, and spend 15-20 min watching what competitors and market trends are doing.",
+      "Review your numbers (revenue, ROAS, conversion rate), plan your content week, and note 2-3 new creative angles to test.",
+      "Production block: shoot or edit your UGC creatives for upcoming ads. Aim for at least 1 written script + 1 finished edit.",
+      "Look at your winning product page: title, photos, reviews, description, upsells. Make at least 1 concrete improvement today.",
+      "Check the status of your ongoing tests (ads, products), and spend time researching new potential products or angles.",
+      "Analyze the week's performance by campaign and product. Decide what to scale, what to cut, what to keep stable.",
+      "Dedicate this block to the big project in progress (launch, redesign, new offer) — make focused progress without interruption.",
+    ],
     greetMorning:"Good morning", greetAfternoon:"Good afternoon", greetEvening:"Good evening",
     greetingSub:"Ready to focus on your goals today?",
     pastDayTitle:d=>`${d}`,
@@ -744,6 +779,10 @@ function getViewedDone(){return isViewingToday()?done:load("tracker:day:"+viewed
 function taskDisplayLabel(tk){
   if(tk.id==="ecom")return `💻 ${t("ecomFocus")[new Date().getDay()]}`;
   return tk.label;
+}
+function taskDetailText(tk){
+  if(tk.id==="ecom")return t("ecomDetail")[new Date().getDay()];
+  return tk.detail||null;
 }
 
 function renderDayStrip(){
@@ -883,7 +922,7 @@ function renderTaskRow(tk){
   }else{
     const missed=!viewedDone[tk.id]&&wasTaskMissedRecently(tk);
     d.innerHTML=`<div class="check${missed?" missed":""}">${CHECK_SVG}</div><span class="task-label">${taskDisplayLabel(tk)}${missed?`<span class="missed-hint">${t("missedHint")}</span>`:""}</span><button class="task-menu" type="button">⋮</button>`;
-    d.querySelector(".task-menu").onclick=(e)=>{e.stopPropagation();toggleEditMode();};
+    d.querySelector(".task-menu").onclick=(e)=>{e.stopPropagation();openTaskDetail(tk);};
     d.onclick=()=>{
       done[tk.id]=!done[tk.id];
       save("tracker:day:"+today(),done);
@@ -1327,6 +1366,28 @@ function showCelebration(emoji,title,sub){
   document.getElementById("celebration").classList.remove("hidden");
 }
 document.getElementById("celebration").addEventListener("click",()=>document.getElementById("celebration").classList.add("hidden"));
+
+function closeTaskDetail(){document.getElementById("taskDetailSheet").classList.add("hidden");}
+function openTaskDetail(tk){
+  document.getElementById("taskDetailLabel").textContent=taskDisplayLabel(tk);
+  const detail=taskDetailText(tk);
+  const detailEl=document.getElementById("taskDetailText");
+  if(detail){detailEl.textContent=detail;detailEl.classList.remove("hidden");}
+  else{detailEl.classList.add("hidden");}
+  const delBtn=document.getElementById("taskDetailDeleteBtn");
+  delBtn.textContent=t("taskDetailDelete");
+  delBtn.onclick=()=>{
+    if(!confirm(t("taskDetailDeleteConfirm",taskDisplayLabel(tk))))return;
+    tasks=tasks.filter(x=>x.id!==tk.id);
+    save("tracker:template",tasks);
+    renderTasks();renderScore();
+    closeTaskDetail();
+  };
+  document.getElementById("taskDetailCloseBtn").textContent=t("taskDetailClose");
+  document.getElementById("taskDetailSheet").classList.remove("hidden");
+}
+document.getElementById("taskDetailCloseBtn").onclick=closeTaskDetail;
+document.getElementById("taskDetailSheet").addEventListener("click",(e)=>{if(e.target.id==="taskDetailSheet")closeTaskDetail();});
 
 function checkCelebrations(streakCurrent,weekPct,monthPct){
   const now=new Date();
