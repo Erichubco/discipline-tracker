@@ -63,7 +63,7 @@
   .score-title{display:inline-block;margin:18px auto 0;padding:8px 20px;background:var(--cardHi);border:1px solid var(--border);border-radius:9999px;font-size:13px;font-weight:700;color:var(--green);font-family:'Plus Jakarta Sans',sans-serif}
   .score-sub{color:var(--muted);font-size:12px;margin-top:10px;line-height:1.4;text-align:center}
   .fab{position:fixed;right:20px;bottom:96px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--amber));color:#fff;border:none;font-size:26px;box-shadow:var(--shadow-lg);cursor:pointer;z-index:41;display:flex;align-items:center;justify-content:center}
-  .task-menu{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px 6px;flex-shrink:0;line-height:1}
+  .task-menu{background:var(--cardHi);border:1px solid var(--border);color:var(--green);font-size:16px;font-weight:700;cursor:pointer;padding:6px 11px;border-radius:10px;flex-shrink:0;line-height:1}
   .edit-footer{text-align:center;margin-top:14px}
   .heatmap{display:flex;gap:3px;overflow-x:auto;padding-bottom:2px}
   .heatmap-week{display:flex;flex-direction:column;gap:3px}
@@ -661,6 +661,7 @@ const STRINGS = {
       "Repos. Profite du week-end, la prochaine séance (PUSH) reprend lundi.",
     ],
     mealsDetail:"🍳 Matin — Petit-déj + shake\nPremier apport facile, même sans faim. Varie selon l'envie : porridge d'avoine au lait + banane + cacahuètes écrasées, uji (mil/ulezi/sorgho) au lait + whey + pâte de cacahuète, shake whey + lait + banane, ou omelette 3-4 œufs + mozzarella + avocat. Sans sucre ajouté, la banane suffit.\n\n☀️ Midi — Déjeuner (repas principal)\nRepas principal, toujours avec un bon filet d'huile d'olive. Riz + filet de bœuf + avocat + carottes, bananes bouillies + bœuf mijoté + chou-fleur, riz + poulet + légumes, ou omelette + riz + avocat. Si peu de faim : commence petit, rattrape avec un fruit ou de la mozza après.\n\n🥤 Après-midi — Collation\nWhey ISO100 + lait (ou lait fermenté) + ta créatine dedans. Bien après le déjeuner, léger, pas lourd — ça étale tes calories et garantit tes protéines même les jours sans faim.\n\n🍽️ Soir — Dîner\nRiz + poulet + légumes, grande omelette + avocat + chou-fleur sauté, ou bœuf + bananes bouillies + carottes (+ huile d'olive). Ajoute un verre de lait fermenté ou un shake si la journée a été light côté bouffe. Pas de pression sur la quantité — la régularité, c'est ça qui paie.",
+    mealsMomentPreview:["Petit-déj : porridge, uji ou œufs","Déjeuner : riz + bœuf/poulet + légumes","Collation : whey + lait + créatine","Dîner : riz/omelette + poulet + légumes"],
     greetMorning:"Bonjour", greetAfternoon:"Bon après-midi", greetEvening:"Bonsoir",
     greetingSub:"Prêt à avancer sur tes objectifs aujourd'hui ?",
     pastDayTitle:d=>`${d}`,
@@ -775,6 +776,7 @@ const STRINGS = {
       "Rest. Enjoy the weekend, next session (PUSH) starts Monday.",
     ],
     mealsDetail:"🍳 Morning — Breakfast + shake\nEasy first intake, even without hunger. Mix it up: oat porridge with milk + banana + crushed peanuts, uji (millet/sorghum) with milk + whey + peanut butter, whey shake + milk + banana, or a 3-4 egg omelette + mozzarella + avocado. No added sugar, the banana is enough.\n\n☀️ Midday — Lunch (main meal)\nMain meal, always with a good drizzle of olive oil. Rice + beef fillet + avocado + carrots, boiled plantain + braised beef + cauliflower, rice + chicken + vegetables, or omelette + rice + avocado. Low appetite: start small, top up with fruit or mozzarella after.\n\n🥤 Afternoon — Snack\nWhey ISO100 + milk (or fermented milk) + your creatine mixed in. Well after lunch, light, not heavy — spreads your calories and guarantees your protein even on low-appetite days.\n\n🍽️ Evening — Dinner\nRice + chicken + vegetables, big omelette + avocado + sautéed cauliflower, or beef + boiled plantain + carrots (+ olive oil). Add a glass of fermented milk or a shake if the day was light on food. No pressure on quantity — consistency is what pays off.",
+    mealsMomentPreview:["Breakfast: porridge, uji or eggs","Lunch: rice + beef/chicken + veggies","Snack: whey + milk + creatine","Dinner: rice/omelette + chicken + veggies"],
     greetMorning:"Good morning", greetAfternoon:"Good afternoon", greetEvening:"Good evening",
     greetingSub:"Ready to focus on your goals today?",
     pastDayTitle:d=>`${d}`,
@@ -849,12 +851,20 @@ let viewedDate=today();
 function isViewingToday(){return viewedDate===today();}
 function getViewedDone(){return isViewingToday()?done:load("tracker:day:"+viewedDate,{});}
 
+function mealMomentIdx(){
+  const h=new Date().getHours();
+  if(h<11)return 0;
+  if(h<15)return 1;
+  if(h<18)return 2;
+  return 3;
+}
 function taskDisplayLabel(tk){
   if(tk.id==="ecom")return `💻 ${t("ecomFocus")[dowOf(new Date())]}`;
   if(tk.id==="gym"){
     const split=t("gymSplitLbl")[dowOf(new Date())];
     return split.toLowerCase()==="repos"||split.toLowerCase()==="rest"?tk.label:`💪 Muscu — ${split}`;
   }
+  if(tk.id==="meals")return `${tk.label} — ${t("mealsMomentPreview")[mealMomentIdx()]}`;
   return tk.label;
 }
 function taskDetailText(tk){
