@@ -523,6 +523,12 @@
         </div>
       </div>
 
+      <div class="goal-row" style="margin-top:16px">
+        <span id="apiKeyLbl">Clé de sécurité</span>
+        <input id="apiKeyInput" type="password" placeholder="Colle ta clé ici" style="flex:1" />
+      </div>
+      <div class="sub" id="apiKeySub" style="margin-top:-6px;margin-bottom:14px"></div>
+
       <button class="btn-export" id="exportBtn"><span>⇪</span><span id="exportBtnLbl">Exporter mes données (JSON)</span></button>
     </div>
   </div>
@@ -634,6 +640,8 @@ const STRINGS = {
     footerLine:"Tes données restent sur ton téléphone et se sauvegardent toutes seules.",
     storageLbl:"Stockage", settingsTagline:"Suivi personnel",
     exportBtn:"Exporter mes données (JSON)", sheetClose:"Fermer",
+    apiKeyLbl:"Clé de sécurité", apiKeySub:"Protège tes données sur le serveur — sans cette clé, personne d'autre ne peut y accéder, même en trouvant le lien.",
+    apiKeySaved:"✓ Enregistrée", apiKeyMissing:"Pas encore configurée",
     celebTap:"Touche pour continuer",
     scoreFull:"Journée pleine", scoreSolid:"Solide, continue", scoreMoving:"En marche", scoreStart:"On y va",
     scoreFullSub:"Toutes tes tâches cochées. C'est ça qui construit le résultat.",
@@ -760,6 +768,8 @@ const STRINGS = {
     footerLine:"Your data stays on your phone and saves itself automatically.",
     storageLbl:"Storage", settingsTagline:"Personal tracking",
     exportBtn:"Export my data (JSON)", sheetClose:"Close",
+    apiKeyLbl:"Security key", apiKeySub:"Protects your data on the server — without this key, no one else can access it, even if they find the link.",
+    apiKeySaved:"✓ Saved", apiKeyMissing:"Not set yet",
     celebTap:"Tap to continue",
     scoreFull:"Full day", scoreSolid:"Solid, keep going", scoreMoving:"Moving", scoreStart:"Let's go",
     scoreFullSub:"All your tasks checked. That's what builds the result.",
@@ -1010,6 +1020,8 @@ function applyStaticI18n(){
   document.getElementById("exportBtnLbl").textContent=t("exportBtn");
   document.getElementById("storageLbl").textContent=t("storageLbl");
   document.getElementById("settingsTagline").textContent=t("settingsTagline");
+  document.getElementById("apiKeyLbl").textContent=t("apiKeyLbl");
+  document.getElementById("apiKeySub").textContent=getApiKey()?t("apiKeySaved"):t("apiKeyMissing");
   let bytes=0;
   for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);bytes+=(k.length+(localStorage.getItem(k)||"").length)*2;}
   document.getElementById("storageValue").textContent=bytes<1024*1024?`${(bytes/1024).toFixed(1)} KB`:`${(bytes/1024/1024).toFixed(1)} MB`;
@@ -1590,7 +1602,7 @@ function renderPeriodStats(){
   document.getElementById("weeklyProgressBreakdown").classList.toggle("hidden",businessAvg==null&&devAvg==null);
 
   checkCelebrations(current,weekPct,monthPct);
-  fetch(PUSH_API+"/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({weekPct,monthPct,streakCurrent:current,streakBest:best})}).catch(()=>{});
+  apiFetch("/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({weekPct,monthPct,streakCurrent:current,streakBest:best})}).catch(()=>{});
   syncFullBackup();
 }
 // Guards against a real bug: on a fresh/empty device, the very first renderScore()
@@ -1605,7 +1617,7 @@ function syncFullBackup(){
     const k=localStorage.key(i);
     if(k&&k.startsWith("tracker:"))out[k]=load(k,null);
   }
-  return fetch(PUSH_API+"/backup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(out)}).catch(()=>{});
+  return apiFetch("/backup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(out)}).catch(()=>{});
 }
 
 const MILESTONES=[3,7,14,21,30,45,60,90,120,180,365];
@@ -1655,7 +1667,7 @@ async function uploadFoodPhoto(dataUrl){
   loadingEl.classList.remove("hidden");
   document.getElementById("foodLogAddBtn").classList.add("hidden");
   try{
-    const res=await fetch(PUSH_API+"/food-lookup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:dataUrl})});
+    const res=await apiFetch("/food-lookup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:dataUrl})});
     const data=await res.json();
     if(data.description&&data.kcal){
       const dateKey=today();
@@ -1756,6 +1768,14 @@ function checkCelebrations(streakCurrent,weekPct,monthPct){
 
 const VAPID_PUBLIC_KEY="BH-IbiXBYm_V4K8ZsXdItoqqVeLntLETs6t9atSpRpSs88LXjBDisam8ysuxAds_a3JLiun1rNHBIpfeCWgk6w8";
 const PUSH_API="https://discipline.178-105-186-53.sslip.io";
+// Not "tracker:"-prefixed on purpose: it must never be swept into syncFullBackup()
+// or restoreFromBackupIfEmpty() — the whole point is that it doesn't travel through
+// the backup payload it's used to protect.
+function getApiKey(){return localStorage.getItem("disciplineApiKey")||"";}
+function apiFetch(pathAndQuery,options={}){
+  const headers={...(options.headers||{}),"x-api-key":getApiKey()};
+  return fetch(PUSH_API+pathAndQuery,{...options,headers});
+}
 function urlBase64ToUint8Array(base64String){
   const padding="=".repeat((4-base64String.length%4)%4);
   const base64=(base64String+padding).replace(/-/g,"+").replace(/_/g,"/");
@@ -1783,7 +1803,7 @@ async function initReminder(){
   const reg=await navigator.serviceWorker.ready;
   const existing=await reg.pushManager.getSubscription();
   if(existing){
-    fetch(PUSH_API+"/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(existing)}).catch(()=>{});
+    apiFetch("/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(existing)}).catch(()=>{});
   }
   pushSubscribed=!!existing;
   setReminderBtnState(pushSubscribed);
@@ -1792,7 +1812,7 @@ async function initReminder(){
     const current=await reg.pushManager.getSubscription();
     if(current){
       await current.unsubscribe();
-      fetch(PUSH_API+"/unsubscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({endpoint:current.endpoint})}).catch(()=>{});
+      apiFetch("/unsubscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({endpoint:current.endpoint})}).catch(()=>{});
       pushSubscribed=false;
       setReminderBtnState(false);
       return;
@@ -1800,7 +1820,7 @@ async function initReminder(){
     const perm=await Notification.requestPermission();
     if(perm!=="granted"){sub.textContent=t("reminderSubDenied");return;}
     const newSub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
-    await fetch(PUSH_API+"/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(newSub)});
+    await apiFetch("/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(newSub)});
     pushSubscribed=true;
     setReminderBtnState(true);
   };
@@ -1949,6 +1969,14 @@ document.getElementById("bizGoalInput").addEventListener("blur",()=>{
   renderBiz();
 });
 document.getElementById("bizGoalInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
+document.getElementById("apiKeyInput").value=getApiKey();
+document.getElementById("apiKeyInput").addEventListener("blur",()=>{
+  const v=document.getElementById("apiKeyInput").value.trim();
+  if(v)localStorage.setItem("disciplineApiKey",v);
+  else localStorage.removeItem("disciplineApiKey");
+  document.getElementById("apiKeySub").textContent=getApiKey()?t("apiKeySaved"):t("apiKeyMissing");
+});
+document.getElementById("apiKeyInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
 document.getElementById("bizBtn").onclick=logBiz;
 document.getElementById("bizInput").addEventListener("keydown",e=>{if(e.key==="Enter")logBiz();});
 function logBiz(){
@@ -1997,7 +2025,7 @@ async function lookupBook(imageDataUrl){
   infoEl.textContent=t("bookLookupLoading");
   infoEl.classList.remove("hidden");
   try{
-    const res=await fetch(PUSH_API+"/book-lookup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:imageDataUrl})});
+    const res=await apiFetch("/book-lookup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:imageDataUrl})});
     const data=await res.json();
     if(data.title){
       if(!reading.book)reading.startDate=today();
@@ -2042,7 +2070,7 @@ function scheduleAiPageEstimate(){
   aiPageEstimateTimer=setTimeout(async()=>{
     const forChapter=reading.chapters,forBook=reading.book;
     try{
-      const res=await fetch(PUSH_API+"/chapter-page-estimate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+      const res=await apiFetch("/chapter-page-estimate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
         title:reading.book,author:reading.author,chapter:forChapter,totalChapters:reading.totalChapters,pageCount:reading.pageCount
       })});
       if(!res.ok)return;
@@ -2084,7 +2112,7 @@ renderScore();renderTasks();renderHeatmap();renderWeight();renderCalories();rend
 
 async function loadHealthToday(){
   try{
-    const res=await fetch(PUSH_API+"/health-log/"+today());
+    const res=await apiFetch("/health-log/"+today());
     if(!res.ok)return;
     const data=await res.json();
     if(!data)return;
@@ -2100,7 +2128,7 @@ async function loadHealthToday(){
 
 async function syncTaskSuggestions(){
   try{
-    const res=await fetch(PUSH_API+"/task-suggestions");
+    const res=await apiFetch("/task-suggestions");
     if(!res.ok)return;
     const suggestions=await res.json();
     if(!Array.isArray(suggestions)||!suggestions.length)return;
@@ -2122,7 +2150,7 @@ async function syncTaskSuggestions(){
       save("tracker:template",tasks);
       renderTasks();renderScore();
       await syncFullBackup();
-      fetch(PUSH_API+"/task-suggestions/ack",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids:applied})}).catch(()=>{});
+      apiFetch("/task-suggestions/ack",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids:applied})}).catch(()=>{});
     }
   }catch(e){}
 }
@@ -2134,7 +2162,7 @@ async function restoreFromBackupIfEmpty(){
   }
   if(hasAnyDayData)return false;
   try{
-    const res=await fetch(PUSH_API+"/backup");
+    const res=await apiFetch("/backup");
     if(!res.ok)return false;
     const backup=await res.json();
     const data=backup.data;
