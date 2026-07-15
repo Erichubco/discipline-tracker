@@ -174,10 +174,20 @@
   .celebration-title{font-size:21px;font-weight:700;margin-bottom:8px;font-family:'Quicksand',sans-serif}
   .celebration-sub{color:var(--muted);font-size:14px;line-height:1.4}
   .celebration-tap{color:var(--muted);font-size:11px;margin-top:18px;text-transform:uppercase;letter-spacing:1px}
-  .task-detail-card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px 22px;text-align:left;max-width:340px;width:100%;animation:popIn .3s ease;box-shadow:var(--shadow-lg)}
+  .task-detail-card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px 22px;text-align:left;max-width:340px;width:100%;max-height:80vh;overflow-y:auto;animation:popIn .3s ease;box-shadow:var(--shadow-lg)}
   .task-detail-label{font-size:19px;font-weight:700;font-family:'Quicksand',sans-serif;line-height:1.3;margin-bottom:12px}
-  .task-detail-text{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:20px}
+  .task-detail-text{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:20px;white-space:pre-line}
   .task-detail-actions{display:flex;gap:10px}
+  .food-log{border-top:1px solid var(--border);margin-top:4px;padding-top:16px;margin-bottom:16px}
+  .food-log-total{font-size:15px;font-weight:700;font-family:'Quicksand',sans-serif;margin-bottom:8px}
+  .food-log-empty{color:var(--muted);font-size:13px;margin-bottom:10px}
+  .food-log-items{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+  .food-log-item{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--cardHi);border-radius:12px;padding:8px 12px;font-size:13px}
+  .food-log-item-desc{color:var(--text);flex:1}
+  .food-log-item-kcal{color:var(--muted);white-space:nowrap}
+  .food-log-add-btn{width:100%;background:var(--cardHi);border:1px solid var(--border);color:var(--green);padding:10px 12px;border-radius:12px;font-size:14px;font-weight:600;text-align:center}
+  .food-log-loading{color:var(--muted);font-size:13px;text-align:center;padding:8px 0}
+  .food-log-approx{color:var(--muted);font-size:11px;line-height:1.4;margin-top:8px}
   @keyframes fadeIn{from{opacity:0}to{opacity:1}}
   @keyframes popIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
   .settings-brand{text-align:center;margin-bottom:18px}
@@ -525,6 +535,15 @@
   <div class="task-detail-card">
     <div class="task-detail-label" id="taskDetailLabel"></div>
     <div class="task-detail-text hidden" id="taskDetailText"></div>
+    <div class="food-log hidden" id="foodLogSection">
+      <div class="food-log-total" id="foodLogTotal"></div>
+      <div class="food-log-empty hidden" id="foodLogEmpty"></div>
+      <div class="food-log-items" id="foodLogItems"></div>
+      <div class="food-log-loading hidden" id="foodLogLoading"></div>
+      <div class="food-log-add-btn" id="foodLogAddBtn"></div>
+      <input type="file" accept="image/*" capture="environment" class="hidden" id="foodLogInput">
+      <div class="food-log-approx" id="foodLogApprox"></div>
+    </div>
     <div class="task-detail-actions">
       <button class="btn btn-ghost" id="taskDetailDeleteBtn" style="flex:1"></button>
       <button class="btn btn-green" id="taskDetailCloseBtn" style="flex:1"></button>
@@ -575,6 +594,11 @@ const STRINGS = {
     bookLookupLoading:"🔍 Identification du livre…",
     bookNotIdentified:"Livre non identifié — tape le titre toi-même.",
     pageCountBadge:n=>`📄 ${n} pages (Open Library)`,
+    foodLogAddBtn:"📸 Ajouter une photo", foodLogLoading:"🔍 Estimation en cours…",
+    foodLogNotFood:"Photo non reconnue comme un repas — réessaie avec une photo plus claire.",
+    foodLogTotal:n=>`≈ ${n} kcal aujourd'hui`, foodLogEmpty:"Aucun repas loggé aujourd'hui.",
+    foodLogApprox:"Estimation approximative par IA (±20-30%), à prendre comme repère, pas comme mesure exacte.",
+    foodLogDeleteConfirm:desc=>`Supprimer "${desc}" du log du jour ?`,
     archiveToggleLbl:n=>`📚 ${n} livre${n>1?"s":""} lu${n>1?"s":""}`,
     catDevLbl:"Perso", catBusinessLbl:"Business",
     noTasksInPanel:"Aucune tâche ici pour l'instant. Ajoute-en une avec Modifier.",
@@ -609,6 +633,17 @@ const STRINGS = {
       "Analyse les performances de la semaine par campagne et par produit. Décide quoi scaler, quoi couper, quoi garder stable.",
       "Consacre ce bloc au gros chantier en cours (lancement, refonte, nouvelle offre) — avance dessus sans interruption.",
     ],
+    gymSplitLbl:["PUSH","PULL","JAMBES","UPPER","LOWER + abdos","Repos","Repos"],
+    gymDetail:[
+      "💪 PUSH — Pec / Épaules / Triceps\n\n1. Développé couché haltères — 4×8-10\n2. Développé incliné haltères — 3×10\n3. Développé militaire (épaules) — 3×10\n4. Élévations latérales — 3×15\n5. Extensions triceps — 3×12\n\n⏱️ Repos 90 sec. Charge progressive : vise à ajouter un peu chaque semaine.\n🥤 Shake whey juste après.",
+      "💪 PULL — Dos / Biceps\n\n1. Tractions ou rowing barre — 4×8\n2. Rowing haltère unilatéral — 4×10\n3. Tirage / face pull élastique — 3×15\n4. Curl biceps haltères — 3×12\n5. Curl marteau — 3×12\n\n⏱️ Repos 90 sec. Serre bien les omoplates sur le tirage.\n🥤 Shake whey juste après.",
+      "💪 JAMBES — Quadris / Ischios / Fessiers / Mollets\n\n1. Squats — 4×10\n2. Fentes marchées — 3×12 / jambe\n3. Soulevé de terre jambes tendues — 4×10\n4. Hip thrust — 3×12\n5. Mollets debout — 4×20\n\n⏱️ Repos 2 min sur les squats, 90 sec le reste. Les jambes = grosse prise de masse globale.\n🥤 Shake whey juste après.",
+      "💪 UPPER — Haut du corps complet\n\n1. Développé incliné haltères — 4×10\n2. Rowing haltères — 4×10\n3. Développé militaire — 3×10\n4. Curl biceps — 3×12\n5. Extensions triceps — 3×12\n\n⏱️ Repos 90 sec. Deuxième passage sur le haut du corps dans la semaine = plus de volume = plus de muscle.\n🥤 Shake whey juste après.",
+      "💪 LOWER + ABDOS — Bas du corps & gainage\n\n1. Squats bulgares — 4×10 / jambe\n2. Hip thrust — 4×12\n3. Soulevé de terre jambes tendues — 3×12\n4. Mollets debout — 4×20\n5. Gainage (planche) — 3×45 sec + relevés de jambes 3×15\n\n⏱️ Repos 90 sec. Dernière séance de la semaine — donne tout, puis repos bien mérité.\n🥤 Shake whey juste après.",
+      "Repos. Ton corps récupère et se reconstruit — la récup fait partie du programme. Pas de séance aujourd'hui.",
+      "Repos. Profite du week-end, la prochaine séance (PUSH) reprend lundi.",
+    ],
+    mealsDetail:"🍳 Matin — Petit-déj + shake\nPremier apport facile, même sans faim. Varie selon l'envie : porridge d'avoine au lait + banane + cacahuètes écrasées, uji (mil/ulezi/sorgho) au lait + whey + pâte de cacahuète, shake whey + lait + banane, ou omelette 3-4 œufs + mozzarella + avocat. Sans sucre ajouté, la banane suffit.\n\n☀️ Midi — Déjeuner (repas principal)\nRepas principal, toujours avec un bon filet d'huile d'olive. Riz + filet de bœuf + avocat + carottes, bananes bouillies + bœuf mijoté + chou-fleur, riz + poulet + légumes, ou omelette + riz + avocat. Si peu de faim : commence petit, rattrape avec un fruit ou de la mozza après.\n\n🥤 Après-midi — Collation\nWhey ISO100 + lait (ou lait fermenté) + ta créatine dedans. Bien après le déjeuner, léger, pas lourd — ça étale tes calories et garantit tes protéines même les jours sans faim.\n\n🍽️ Soir — Dîner\nRiz + poulet + légumes, grande omelette + avocat + chou-fleur sauté, ou bœuf + bananes bouillies + carottes (+ huile d'olive). Ajoute un verre de lait fermenté ou un shake si la journée a été light côté bouffe. Pas de pression sur la quantité — la régularité, c'est ça qui paie.",
     greetMorning:"Bonjour", greetAfternoon:"Bon après-midi", greetEvening:"Bonsoir",
     greetingSub:"Prêt à avancer sur tes objectifs aujourd'hui ?",
     pastDayTitle:d=>`${d}`,
@@ -669,6 +704,11 @@ const STRINGS = {
     bookLookupLoading:"🔍 Identifying the book…",
     bookNotIdentified:"Book not identified — type the title yourself.",
     pageCountBadge:n=>`📄 ${n} pages (Open Library)`,
+    foodLogAddBtn:"📸 Add a photo", foodLogLoading:"🔍 Estimating…",
+    foodLogNotFood:"Photo not recognized as a meal — try again with a clearer photo.",
+    foodLogTotal:n=>`≈ ${n} kcal today`, foodLogEmpty:"No meals logged today.",
+    foodLogApprox:"Approximate AI estimate (±20-30%), use it as a rough guide, not an exact measurement.",
+    foodLogDeleteConfirm:desc=>`Delete "${desc}" from today's log?`,
     archiveToggleLbl:n=>`📚 ${n} book${n>1?"s":""} read`,
     catDevLbl:"Personal", catBusinessLbl:"Business",
     noTasksInPanel:"No tasks here yet. Add one with Edit.",
@@ -703,6 +743,17 @@ const STRINGS = {
       "Analyze the week's performance by campaign and product. Decide what to scale, what to cut, what to keep stable.",
       "Dedicate this block to the big project in progress (launch, redesign, new offer) — make focused progress without interruption.",
     ],
+    gymSplitLbl:["PUSH","PULL","LEGS","UPPER","LOWER + abs","Rest","Rest"],
+    gymDetail:[
+      "💪 PUSH — Chest / Shoulders / Triceps\n\n1. Dumbbell bench press — 4×8-10\n2. Incline dumbbell press — 3×10\n3. Overhead press (shoulders) — 3×10\n4. Lateral raises — 3×15\n5. Triceps extensions — 3×12\n\n⏱️ Rest 90 sec. Progressive overload: aim to add a bit each week.\n🥤 Whey shake right after.",
+      "💪 PULL — Back / Biceps\n\n1. Pull-ups or barbell rows — 4×8\n2. Single-arm dumbbell row — 4×10\n3. Band pull / face pull — 3×15\n4. Dumbbell biceps curl — 3×12\n5. Hammer curl — 3×12\n\n⏱️ Rest 90 sec. Squeeze your shoulder blades on the row.\n🥤 Whey shake right after.",
+      "💪 LEGS — Quads / Hamstrings / Glutes / Calves\n\n1. Squats — 4×10\n2. Walking lunges — 3×12 / leg\n3. Stiff-leg deadlift — 4×10\n4. Hip thrust — 3×12\n5. Standing calf raises — 4×20\n\n⏱️ Rest 2 min on squats, 90 sec the rest. Legs = biggest overall mass builder.\n🥤 Whey shake right after.",
+      "💪 UPPER — Full upper body\n\n1. Incline dumbbell press — 4×10\n2. Dumbbell rows — 4×10\n3. Overhead press — 3×10\n4. Biceps curl — 3×12\n5. Triceps extensions — 3×12\n\n⏱️ Rest 90 sec. Second upper-body pass this week = more volume = more muscle.\n🥤 Whey shake right after.",
+      "💪 LOWER + ABS — Lower body & core\n\n1. Bulgarian split squats — 4×10 / leg\n2. Hip thrust — 4×12\n3. Stiff-leg deadlift — 3×12\n4. Standing calf raises — 4×20\n5. Plank — 3×45 sec + leg raises 3×15\n\n⏱️ Rest 90 sec. Last session of the week — give it everything, then well-earned rest.\n🥤 Whey shake right after.",
+      "Rest. Your body recovers and rebuilds — recovery is part of the program. No session today.",
+      "Rest. Enjoy the weekend, next session (PUSH) starts Monday.",
+    ],
+    mealsDetail:"🍳 Morning — Breakfast + shake\nEasy first intake, even without hunger. Mix it up: oat porridge with milk + banana + crushed peanuts, uji (millet/sorghum) with milk + whey + peanut butter, whey shake + milk + banana, or a 3-4 egg omelette + mozzarella + avocado. No added sugar, the banana is enough.\n\n☀️ Midday — Lunch (main meal)\nMain meal, always with a good drizzle of olive oil. Rice + beef fillet + avocado + carrots, boiled plantain + braised beef + cauliflower, rice + chicken + vegetables, or omelette + rice + avocado. Low appetite: start small, top up with fruit or mozzarella after.\n\n🥤 Afternoon — Snack\nWhey ISO100 + milk (or fermented milk) + your creatine mixed in. Well after lunch, light, not heavy — spreads your calories and guarantees your protein even on low-appetite days.\n\n🍽️ Evening — Dinner\nRice + chicken + vegetables, big omelette + avocado + sautéed cauliflower, or beef + boiled plantain + carrots (+ olive oil). Add a glass of fermented milk or a shake if the day was light on food. No pressure on quantity — consistency is what pays off.",
     greetMorning:"Good morning", greetAfternoon:"Good afternoon", greetEvening:"Good evening",
     greetingSub:"Ready to focus on your goals today?",
     pastDayTitle:d=>`${d}`,
@@ -777,11 +828,17 @@ function isViewingToday(){return viewedDate===today();}
 function getViewedDone(){return isViewingToday()?done:load("tracker:day:"+viewedDate,{});}
 
 function taskDisplayLabel(tk){
-  if(tk.id==="ecom")return `💻 ${t("ecomFocus")[new Date().getDay()]}`;
+  if(tk.id==="ecom")return `💻 ${t("ecomFocus")[dowOf(new Date())]}`;
+  if(tk.id==="gym"){
+    const split=t("gymSplitLbl")[dowOf(new Date())];
+    return split.toLowerCase()==="repos"||split.toLowerCase()==="rest"?tk.label:`💪 Muscu — ${split}`;
+  }
   return tk.label;
 }
 function taskDetailText(tk){
-  if(tk.id==="ecom")return t("ecomDetail")[new Date().getDay()];
+  if(tk.id==="ecom")return t("ecomDetail")[dowOf(new Date())];
+  if(tk.id==="gym")return t("gymDetail")[dowOf(new Date())];
+  if(tk.id==="meals")return t("mealsDetail");
   return tk.detail||null;
 }
 
@@ -1367,6 +1424,66 @@ function showCelebration(emoji,title,sub){
 }
 document.getElementById("celebration").addEventListener("click",()=>document.getElementById("celebration").classList.add("hidden"));
 
+function loadCalories(dateKey){return load("tracker:cal:"+dateKey,[]);}
+function saveCalories(dateKey,arr){save("tracker:cal:"+dateKey,arr);}
+function renderFoodLog(){
+  const dateKey=today();
+  const items=loadCalories(dateKey);
+  const total=items.reduce((s,it)=>s+it.kcal,0);
+  document.getElementById("foodLogTotal").textContent=t("foodLogTotal",total);
+  const emptyEl=document.getElementById("foodLogEmpty");
+  emptyEl.textContent=t("foodLogEmpty");
+  emptyEl.classList.toggle("hidden",items.length>0);
+  const listEl=document.getElementById("foodLogItems");
+  listEl.innerHTML="";
+  items.forEach(it=>{
+    const row=document.createElement("div");
+    row.className="food-log-item";
+    row.innerHTML=`<span class="food-log-item-desc">${it.description}</span><span class="food-log-item-kcal">${it.kcal} kcal</span>`;
+    row.onclick=()=>{
+      if(!confirm(t("foodLogDeleteConfirm",it.description)))return;
+      saveCalories(dateKey,loadCalories(dateKey).filter(x=>x.id!==it.id));
+      renderFoodLog();
+    };
+    listEl.appendChild(row);
+  });
+}
+async function uploadFoodPhoto(dataUrl){
+  const loadingEl=document.getElementById("foodLogLoading");
+  loadingEl.textContent=t("foodLogLoading");
+  loadingEl.classList.remove("hidden");
+  document.getElementById("foodLogAddBtn").classList.add("hidden");
+  try{
+    const res=await fetch(PUSH_API+"/food-lookup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:dataUrl})});
+    const data=await res.json();
+    if(data.description&&data.kcal){
+      const dateKey=today();
+      const items=loadCalories(dateKey);
+      items.push({id:Date.now()+"-"+Math.random().toString(36).slice(2),time:new Date().toTimeString().slice(0,5),description:data.description,kcal:data.kcal});
+      saveCalories(dateKey,items);
+      renderFoodLog();
+    }else{
+      alert(t("foodLogNotFood"));
+    }
+  }catch(e){
+    alert(t("foodLogNotFood"));
+  }
+  loadingEl.classList.add("hidden");
+  document.getElementById("foodLogAddBtn").classList.remove("hidden");
+}
+document.getElementById("foodLogAddBtn").onclick=()=>document.getElementById("foodLogInput").click();
+document.getElementById("foodLogInput").addEventListener("change",e=>{
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>uploadFoodPhoto(resizeToDataUrl(img,800,0.85));
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value="";
+});
+
 function closeTaskDetail(){document.getElementById("taskDetailSheet").classList.add("hidden");}
 function openTaskDetail(tk){
   document.getElementById("taskDetailLabel").textContent=taskDisplayLabel(tk);
@@ -1374,6 +1491,15 @@ function openTaskDetail(tk){
   const detailEl=document.getElementById("taskDetailText");
   if(detail){detailEl.textContent=detail;detailEl.classList.remove("hidden");}
   else{detailEl.classList.add("hidden");}
+  const foodSection=document.getElementById("foodLogSection");
+  if(tk.id==="meals"&&isViewingToday()){
+    document.getElementById("foodLogAddBtn").textContent=t("foodLogAddBtn");
+    document.getElementById("foodLogApprox").textContent=t("foodLogApprox");
+    renderFoodLog();
+    foodSection.classList.remove("hidden");
+  }else{
+    foodSection.classList.add("hidden");
+  }
   const delBtn=document.getElementById("taskDetailDeleteBtn");
   delBtn.textContent=t("taskDetailDelete");
   delBtn.onclick=()=>{
