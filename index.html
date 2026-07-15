@@ -1670,9 +1670,14 @@ async function syncTaskSuggestions(){
     suggestions.forEach(s=>{
       if(!s.id||!s.label)return;
       applied.push(s.id);
-      if(existingIds.has(s.id))return;
-      tasks.push({id:s.id,label:s.label,period:s.period||"day",category:s.category==="business"?"business":"dev",days:Array.isArray(s.days)?s.days:null});
-      existingIds.add(s.id);
+      const incoming={id:s.id,label:s.label,period:s.period||"day",category:s.category==="business"?"business":"dev",days:Array.isArray(s.days)?s.days:null};
+      const existingIdx=tasks.findIndex(tk=>tk.id===s.id);
+      if(existingIdx===-1){
+        tasks.push(incoming);
+        existingIds.add(s.id);
+      }else{
+        tasks[existingIdx]=incoming;
+      }
     });
     if(applied.length){
       save("tracker:template",tasks);
