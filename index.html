@@ -114,8 +114,8 @@
   .weight-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
   .weight-current-target{font-size:13px;color:var(--muted);font-weight:600}
   .weight-current-target b{color:var(--text);font-weight:700}
-  .weight-remaining-block{text-align:right;flex-shrink:0}
-  .weight-remaining-num{font-size:18px;font-weight:700;font-family:'Quicksand',sans-serif;color:var(--green);margin-bottom:6px;white-space:nowrap}
+  .weight-remaining-block{flex-shrink:0;text-align:center;min-width:100%;margin-top:4px}
+  .weight-remaining-num{font-size:20px;font-weight:700;font-family:'Quicksand',sans-serif;color:var(--green);margin-bottom:6px;white-space:nowrap}
   .status-dot{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse-dot 1.6s ease-in-out infinite}
   @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
   .streak-card{border-left:4px solid var(--red)}
@@ -375,7 +375,7 @@
           <span class="stat-lbl" id="bizEyebrow">Objectif business</span>
           <span class="biz-h-title" id="bizTitle">Chiffre d'affaires mensuel</span>
         </div>
-        <div class="biz-icon-badge">💳</div>
+        <div class="biz-icon-badge">💶</div>
       </div>
       <div class="biz-amount">
         <span class="biz-amount-cur" id="bizCurrentAmt">—</span>
@@ -449,17 +449,15 @@
 
     <!-- Weight -->
     <div class="card">
-      <div class="weight-head">
-        <div>
-          <div class="card-h" style="margin-bottom:6px"><span class="dot" style="background:var(--green)"></span><span id="weightTitle">Poids</span></div>
-          <div class="weight-current-target" id="weightCurrentTarget">Actuel : — · Objectif : —</div>
-        </div>
+      <div class="card-h" style="margin-bottom:6px"><span class="dot" style="background:var(--green)"></span><span id="weightTitle">Poids</span></div>
+      <div class="sub" id="weightSub">Pèse-toi 1×/semaine, le matin. Pas tous les jours.</div>
+      <div class="weight-head" style="margin-top:12px">
+        <div class="weight-current-target" id="weightCurrentTarget">Actuel : — · Objectif : —</div>
         <div class="weight-remaining-block hidden" id="weightRemainingBlock">
           <div class="weight-remaining-num" id="weightRemainingNum"></div>
           <div class="weight-status hidden" id="weightStatus"></div>
         </div>
       </div>
-      <div class="sub" id="weightSub" style="margin-top:10px">Pèse-toi 1×/semaine, le matin. Pas tous les jours.</div>
       <svg class="weight-chart hidden" id="weightChart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
       <div class="sub hidden" id="weightPaceInfo" style="margin:10px 0 0"></div>
       <div class="goal-row" style="margin-top:14px">
