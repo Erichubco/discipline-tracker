@@ -1473,7 +1473,13 @@ function renderPeriodStats(){
   fetch(PUSH_API+"/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({weekPct,monthPct,streakCurrent:current,streakBest:best})}).catch(()=>{});
   syncFullBackup();
 }
+// Guards against a real bug: on a fresh/empty device, the very first renderScore()
+// runs synchronously before the "load" handler below has had a chance to check
+// whether real data should be restored from the server first. Without this gate,
+// that first sync would push empty/default state and overwrite the real backup.
+let backupPushReady=false;
 function syncFullBackup(){
+  if(!backupPushReady)return Promise.resolve();
   const out={};
   for(let i=0;i<localStorage.length;i++){
     const k=localStorage.key(i);
@@ -1998,6 +2004,11 @@ async function restoreFromBackupIfEmpty(){
     const backup=await res.json();
     const data=backup.data;
     if(!data||typeof data!=="object")return false;
+    // If the server backup itself has no day data (e.g. it was written from a fresh/
+    // empty device), restoring it would never satisfy hasAnyDayData — reloading in
+    // that case would just loop forever. Only proceed if there's something real to restore.
+    const hasBackupDayData=Object.keys(data).some(k=>k.startsWith("tracker:day:"));
+    if(!hasBackupDayData)return false;
     let restoredAny=false;
     Object.keys(data).forEach(k=>{
       if(k.startsWith("tracker:")&&data[k]!=null){
@@ -2014,10 +2025,14 @@ if("serviceWorker" in navigator){
     navigator.serviceWorker.register("sw.js").catch(()=>{});
     const restored=await restoreFromBackupIfEmpty();
     if(restored){location.reload();return;}
+    backupPushReady=true;
+    syncFullBackup();
     initReminder();
     loadHealthToday();
     syncTaskSuggestions();
   });
+}else{
+  backupPushReady=true;
 }
 </script>
 </body>
