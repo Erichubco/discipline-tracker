@@ -558,6 +558,9 @@
       <input type="file" accept="image/*" capture="environment" class="hidden" id="foodLogInput">
       <div class="food-log-approx" id="foodLogApprox"></div>
     </div>
+    <div class="hidden" id="ecomSprintSection" style="margin-bottom:16px">
+      <div class="food-log-add-btn" id="ecomSprintAdvanceBtn" style="background:var(--green);color:#fff"></div>
+    </div>
     <div class="task-detail-actions">
       <button class="btn btn-ghost" id="taskDetailDeleteBtn" style="flex:1"></button>
       <button class="btn btn-green" id="taskDetailCloseBtn" style="flex:1"></button>
@@ -642,16 +645,18 @@ const STRINGS = {
     milestone7title:"Une semaine complète !", milestone7sub:"7 jours d'affilée, journée pleine à chaque fois.",
     milestoneDefault:"Ça prend forme. Continue comme ça.",
     milestoneSuffix:n=>`${n} jours d'affilée`,
-    ecomFocus:["Bilan semaine + plan + veille","Planning semaine + revue chiffres + angles","Production créatifs (UGC, montages)","Optimisation boutique / page produit","Gestion des tests + recherche produit","Analyse + décisions scaling","Gros chantier de la semaine"],
-    ecomDetail:[
-      "Fais le bilan de la semaine passée (ce qui a marché, ce qui n'a pas marché), planifie les priorités de la semaine à venir, et passe 15-20 min à regarder ce que font tes concurrents et les tendances du marché.",
-      "Revois tes chiffres (CA, ROAS, taux de conversion), planifie ta semaine de contenu, et note 2-3 nouveaux angles créatifs à tester.",
-      "Bloc de production : tourne ou monte tes créas UGC pour les prochaines pubs. Vise au moins 1 script écrit + 1 montage terminé.",
-      "Regarde ta page produit gagnante : titre, photos, avis, description, upsells. Fais au moins 1 amélioration concrète aujourd'hui.",
-      "Vérifie l'état de tes tests en cours (ads, produits), et passe du temps à chercher de nouveaux produits ou angles potentiels.",
-      "Analyse les performances de la semaine par campagne et par produit. Décide quoi scaler, quoi couper, quoi garder stable.",
-      "Consacre ce bloc au gros chantier en cours (lancement, refonte, nouvelle offre) — avance dessus sans interruption.",
+    ecomSprintFocus:["Produit + concurrence","Page produit","Créas + finalisation","Lancement du testing"],
+    ecomSprintDetail:[
+      "🎯 Objectif : produit CHOISI + concurrence analysée.\n\n☐ Critères : résout un problème, effet wow, marge x3, léger à livrer, pas trop saturé\n☐ Shortlist 3-5 produits\n☐ CHOISIR LE produit (un seul)\n\n☐ Qui le vend + leurs pubs (Meta Ad Library)\n☐ Leurs angles / prix / avis\n☐ Repérer les trous à exploiter\n\nUne fois le produit choisi, enchaîne sur la recherche créative :\n☐ Repérer les hooks/angles qui marchent chez les concurrents\n☐ Collecter UGC / visuels existants + images fournisseur\n☐ Lister 3-5 angles à tester (problème, avant/après, preuve, offre, émotion)",
+      "🎯 Objectif : page produit ferme & créative, prête.\n\n☐ Structure : hero + offre claire + preuves + FAQ\n☐ Copy sur ton angle unique\n☐ Avis / preuves sociales\n☐ Mobile ultra-rapide\n☐ Pixel + tracking des events\n\n⚠️ C'est LA pièce à ne pas bâcler — si ça déborde, tant pis, mais fais-la solide.",
+      "🎯 Objectif : 3-5 créas prêtes + test structuré.\n\n☐ Produire 3-5 créas (IA + contenu existant), plusieurs angles/hooks\n☐ Finaliser la page (derniers réglages)\n☐ Préparer la structure de test (budget 20-50€/jour)\n☐ Vérifier que TOUT le tracking fonctionne (achat test)",
+      "🎯 Objectif : campagnes EN LIGNE. 🔥\n\n☐ Lancer les campagnes (3-5 créas / angles)\n☐ Budget test 20-50€/jour\n☐ Re-vérifier tracking / conversions\n☐ Noter la baseline (date, budget, créas)\n\n☐ Surveille les premiers chiffres (hook rate, CTR)\n☐ Ne touche à RIEN trop vite — laisse la data se construire (min 24-48h)",
     ],
+    ecomSprintDoneMsg:"Sprint terminé — tu es en phase de test actif. Reviens ici une fois que t'as assez de data (min 24-48h) pour décider : scaler, couper ou ajuster.",
+    ecomSprintAdvanceBtn:n=>`✅ Étape terminée → passer à J${n}`,
+    ecomSprintAdvanceConfirm:"Tu es sûr d'avoir fini cette étape ? Ça passe à la suivante.",
+    ecomSprintTestingLbl:"test en cours",
+    ecomSprintFinishBtn:"✅ J4 terminé → passer en phase de test",
     gymSplitLbl:["PUSH","PULL","JAMBES","UPPER","LOWER + abdos","Repos","Repos"],
     gymDetail:[
       "💪 PUSH — Pec / Épaules / Triceps\n\n1. Développé couché haltères — 4×8-10\n2. Développé incliné haltères — 3×10\n3. Développé militaire (épaules) — 3×10\n4. Élévations latérales — 3×15\n5. Extensions triceps — 3×12\n\n⏱️ Repos 90 sec. Charge progressive : vise à ajouter un peu chaque semaine.\n🥤 Shake whey juste après.",
@@ -662,7 +667,7 @@ const STRINGS = {
       "Repos. Ton corps récupère et se reconstruit — la récup fait partie du programme. Pas de séance aujourd'hui.",
       "Repos. Profite du week-end, la prochaine séance (PUSH) reprend lundi.",
     ],
-    mealsDetail:"🍳 Matin — Petit-déj\nPremier apport facile, même sans faim. Varie selon l'envie : porridge d'avoine au lait + banane + cacahuètes écrasées, uji (mil/ulezi/sorgho) au lait + whey + pâte de cacahuète, shake whey + lait + banane, ou omelette 3-4 œufs + mozzarella + avocat. Sans sucre ajouté, la banane suffit.\n\n☀️ Midi — Déjeuner (repas principal)\nRepas principal, toujours avec un bon filet d'huile d'olive. Riz + filet de bœuf + avocat + carottes, bananes bouillies + bœuf mijoté + chou-fleur, riz + poulet + légumes, ou omelette + riz + avocat. Si peu de faim : commence petit, rattrape avec un fruit ou de la mozza après.\n\n🍽️ Soir — Dîner\nRiz + poulet + légumes, grande omelette + avocat + chou-fleur sauté, ou bœuf + bananes bouillies + carottes (+ huile d'olive). Ajoute un verre de lait fermenté ou un shake si la journée a été light côté bouffe. Pas de pression sur la quantité — la régularité, c'est ça qui paie.",
+    mealsDetail:"🍳 Matin — Petit-déj\nVarie selon l'envie :\n🥣 Porridge d'avoine au lait + banane + cacahuètes écrasées\n🍲 Uji (mil / ulezi / sorgho) au lait + whey + pâte de cacahuète\n🍳 Omelette 3-4 œufs + mozzarella + avocat\nSans sucre ajouté, la banane suffit. Jours sans faim : un verre d'uji passe tout seul.\n\n☀️ Midi — Déjeuner (repas principal)\nChoisis UNE option (+ huile d'olive) :\n🍚 Riz + filet de bœuf + avocat + carottes\n🍌 Bananes bouillies + bœuf mijoté + chou-fleur\n🍚 Riz + poulet + légumes\n🍳 Omelette + riz + avocat\nSi peu de faim : commence petit, rattrape avec un fruit après.\n\n🍽️ Soir — Dîner\nChoisis UNE option (+ huile d'olive) :\n🍚 Riz + poulet + légumes\n🍳 Grande omelette + avocat + chou-fleur sauté\n🍌 Bœuf + bananes bouillies + carottes\nPas de pression sur la quantité — la régularité, c'est ça qui paie.",
     mealsMomentPreview:["Petit-déj : porridge, uji ou œufs","Déjeuner : riz + bœuf/poulet + légumes","Dîner : riz/omelette + poulet + légumes"],
     shakeDetail:"🥤 Collation de l'après-midi, tous les jours :\n\n• Whey ISO100\n• Lait (ou lait fermenté)\n• + ta créatine dedans (dose du pot)\n\nBien après le déjeuner = léger, pas lourd. Parfait pour étaler tes calories et garantir tes protéines même les jours sans faim, sans te couper l'appétit du dîner.",
     greetMorning:"Bonjour", greetAfternoon:"Bon après-midi", greetEvening:"Bonsoir",
@@ -759,16 +764,18 @@ const STRINGS = {
     milestone7title:"A full week!", milestone7sub:"7 days in a row, full day every time.",
     milestoneDefault:"It's taking shape. Keep going.",
     milestoneSuffix:n=>`${n}-day streak`,
-    ecomFocus:["Weekly review + plan + watch trends","Weekly planning + numbers review + angles","Creative production (UGC, edits)","Store / product page optimization","Test management + product research","Analysis + scaling decisions","Big weekly project"],
-    ecomDetail:[
-      "Review last week (what worked, what didn't), plan this week's priorities, and spend 15-20 min watching what competitors and market trends are doing.",
-      "Review your numbers (revenue, ROAS, conversion rate), plan your content week, and note 2-3 new creative angles to test.",
-      "Production block: shoot or edit your UGC creatives for upcoming ads. Aim for at least 1 written script + 1 finished edit.",
-      "Look at your winning product page: title, photos, reviews, description, upsells. Make at least 1 concrete improvement today.",
-      "Check the status of your ongoing tests (ads, products), and spend time researching new potential products or angles.",
-      "Analyze the week's performance by campaign and product. Decide what to scale, what to cut, what to keep stable.",
-      "Dedicate this block to the big project in progress (launch, redesign, new offer) — make focused progress without interruption.",
+    ecomSprintFocus:["Product + competitors","Product page","Creatives + finalize","Launch testing"],
+    ecomSprintDetail:[
+      "🎯 Goal: product CHOSEN + competitors analyzed.\n\n☐ Criteria: solves a problem, wow factor, 3x margin, light to ship, not too saturated\n☐ Shortlist 3-5 products\n☐ PICK the product (just one)\n\n☐ Who sells it + their ads (Meta Ad Library)\n☐ Their angles / price / reviews\n☐ Spot the gaps to exploit\n\nOnce the product is picked, move on to creative research:\n☐ Spot the hooks/angles that work for competitors\n☐ Collect existing UGC / visuals + supplier images\n☐ List 3-5 angles to test (problem, before/after, proof, offer, emotion)",
+      "🎯 Goal: firm, creative product page, ready.\n\n☐ Structure: hero + clear offer + proof + FAQ\n☐ Copy on your unique angle\n☐ Reviews / social proof\n☐ Mobile ultra-fast\n☐ Pixel + event tracking\n\n⚠️ This is THE piece not to rush — if it spills over, so be it, but make it solid.",
+      "🎯 Goal: 3-5 creatives ready + structured test.\n\n☐ Produce 3-5 creatives (AI + existing content), multiple angles/hooks\n☐ Finalize the page (last tweaks)\n☐ Prep the test structure (€20-50/day budget)\n☐ Verify ALL tracking works (test purchase)",
+      "🎯 Goal: campaigns LIVE. 🔥\n\n☐ Launch campaigns (3-5 creatives / angles)\n☐ Test budget €20-50/day\n☐ Double-check tracking / conversions\n☐ Note the baseline (date, budget, creatives)\n\n☐ Watch the first numbers (hook rate, CTR)\n☐ Don't touch ANYTHING too fast — let the data build up (min 24-48h)",
     ],
+    ecomSprintDoneMsg:"Sprint done — you're in active testing. Come back once you have enough data (min 24-48h) to decide: scale, cut, or adjust.",
+    ecomSprintAdvanceBtn:n=>`✅ Stage done → move to Day ${n}`,
+    ecomSprintAdvanceConfirm:"Sure you're done with this stage? This moves on to the next one.",
+    ecomSprintTestingLbl:"testing in progress",
+    ecomSprintFinishBtn:"✅ Day 4 done → move to testing phase",
     gymSplitLbl:["PUSH","PULL","LEGS","UPPER","LOWER + abs","Rest","Rest"],
     gymDetail:[
       "💪 PUSH — Chest / Shoulders / Triceps\n\n1. Dumbbell bench press — 4×8-10\n2. Incline dumbbell press — 3×10\n3. Overhead press (shoulders) — 3×10\n4. Lateral raises — 3×15\n5. Triceps extensions — 3×12\n\n⏱️ Rest 90 sec. Progressive overload: aim to add a bit each week.\n🥤 Whey shake right after.",
@@ -779,7 +786,7 @@ const STRINGS = {
       "Rest. Your body recovers and rebuilds — recovery is part of the program. No session today.",
       "Rest. Enjoy the weekend, next session (PUSH) starts Monday.",
     ],
-    mealsDetail:"🍳 Morning — Breakfast\nEasy first intake, even without hunger. Mix it up: oat porridge with milk + banana + crushed peanuts, uji (millet/sorghum) with milk + whey + peanut butter, whey shake + milk + banana, or a 3-4 egg omelette + mozzarella + avocado. No added sugar, the banana is enough.\n\n☀️ Midday — Lunch (main meal)\nMain meal, always with a good drizzle of olive oil. Rice + beef fillet + avocado + carrots, boiled plantain + braised beef + cauliflower, rice + chicken + vegetables, or omelette + rice + avocado. Low appetite: start small, top up with fruit or mozzarella after.\n\n🍽️ Evening — Dinner\nRice + chicken + vegetables, big omelette + avocado + sautéed cauliflower, or beef + boiled plantain + carrots (+ olive oil). Add a glass of fermented milk or a shake if the day was light on food. No pressure on quantity — consistency is what pays off.",
+    mealsDetail:"🍳 Morning — Breakfast\nMix it up:\n🥣 Oat porridge with milk + banana + crushed peanuts\n🍲 Uji (millet/sorghum) with milk + whey + peanut butter\n🍳 3-4 egg omelette + mozzarella + avocado\nNo added sugar, the banana is enough. Low appetite days: a glass of uji goes down easy.\n\n☀️ Midday — Lunch (main meal)\nPick ONE option (+ olive oil):\n🍚 Rice + beef fillet + avocado + carrots\n🍌 Boiled plantain + braised beef + cauliflower\n🍚 Rice + chicken + vegetables\n🍳 Omelette + rice + avocado\nLow appetite: start small, top up with fruit after.\n\n🍽️ Evening — Dinner\nPick ONE option (+ olive oil):\n🍚 Rice + chicken + vegetables\n🍳 Big omelette + avocado + sautéed cauliflower\n🍌 Beef + boiled plantain + carrots\nNo pressure on quantity — consistency is what pays off.",
     mealsMomentPreview:["Breakfast: porridge, uji or eggs","Lunch: rice + beef/chicken + veggies","Dinner: rice/omelette + chicken + veggies"],
     shakeDetail:"🥤 Afternoon snack, every day:\n\n• Whey ISO100\n• Milk (or fermented milk)\n• + your creatine mixed in (scoop from the tub)\n\nWell after lunch = light, not heavy. Perfect for spreading out your calories and guaranteeing your protein even on low-appetite days, without killing your dinner appetite.",
     greetMorning:"Good morning", greetAfternoon:"Good afternoon", greetEvening:"Good evening",
@@ -847,6 +854,7 @@ save("tracker:template",tasks);
 let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
 let calorieGoal=load("tracker:calorieGoal",{value:null,auto:true});
+let ecomSprintDay=load("tracker:ecomSprintDay",1);
 let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null,author:null});
 let booksArchive=load("tracker:booksArchive",[]);
 let archiveExpanded=false;
@@ -863,7 +871,10 @@ function mealMomentIdx(){
   return 2;
 }
 function taskDisplayLabel(tk){
-  if(tk.id==="ecom")return `💻 ${t("ecomFocus")[dowOf(new Date())]}`;
+  if(tk.id==="ecom"){
+    if(ecomSprintDay>4)return `${tk.label} — ${t("ecomSprintTestingLbl")}`;
+    return `💻 J${ecomSprintDay} — ${t("ecomSprintFocus")[ecomSprintDay-1]}`;
+  }
   if(tk.id==="gym"){
     const split=t("gymSplitLbl")[dowOf(new Date())];
     return split.toLowerCase()==="repos"||split.toLowerCase()==="rest"?tk.label:`💪 Muscu — ${split}`;
@@ -872,7 +883,7 @@ function taskDisplayLabel(tk){
   return tk.label;
 }
 function taskDetailText(tk){
-  if(tk.id==="ecom")return t("ecomDetail")[dowOf(new Date())];
+  if(tk.id==="ecom")return ecomSprintDay>4?t("ecomSprintDoneMsg"):t("ecomSprintDetail")[ecomSprintDay-1];
   if(tk.id==="gym")return t("gymDetail")[dowOf(new Date())];
   if(tk.id==="meals")return t("mealsDetail");
   if(tk.id==="shake")return t("shakeDetail");
@@ -1593,6 +1604,21 @@ function openTaskDetail(tk){
     foodSection.classList.remove("hidden");
   }else{
     foodSection.classList.add("hidden");
+  }
+  const sprintSection=document.getElementById("ecomSprintSection");
+  if(tk.id==="ecom"&&isViewingToday()&&ecomSprintDay<=4){
+    const advBtn=document.getElementById("ecomSprintAdvanceBtn");
+    advBtn.textContent=ecomSprintDay<4?t("ecomSprintAdvanceBtn",ecomSprintDay+1):t("ecomSprintFinishBtn");
+    advBtn.onclick=()=>{
+      if(!confirm(t("ecomSprintAdvanceConfirm")))return;
+      ecomSprintDay=Math.min(ecomSprintDay+1,5);
+      save("tracker:ecomSprintDay",ecomSprintDay);
+      renderTasks();
+      openTaskDetail(tk);
+    };
+    sprintSection.classList.remove("hidden");
+  }else{
+    sprintSection.classList.add("hidden");
   }
   const delBtn=document.getElementById("taskDetailDeleteBtn");
   delBtn.textContent=t("taskDetailDelete");
