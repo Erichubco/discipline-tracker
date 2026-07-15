@@ -2156,6 +2156,16 @@ async function restoreFromBackupIfEmpty(){
 }
 
 if("serviceWorker" in navigator){
+  // When a fresh deploy is picked up (new sw.js takes control), reload once
+  // automatically so the app is never silently stuck on stale code — this is
+  // the only reliable trigger on iOS, where a home-screen PWA resumed from
+  // suspend never re-checks for updates on its own.
+  let swRefreshing=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(swRefreshing)return;
+    swRefreshing=true;
+    location.reload();
+  });
   window.addEventListener("load",async()=>{
     navigator.serviceWorker.register("sw.js").catch(()=>{});
     const restored=await restoreFromBackupIfEmpty();
