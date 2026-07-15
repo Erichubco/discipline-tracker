@@ -87,6 +87,8 @@
   .task.readonly{cursor:default}
   .check{width:24px;height:24px;border-radius:8px;flex-shrink:0;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;transition:all .15s}
   .task.done .check{background:var(--green);border-color:var(--green)}
+  .check.missed{border-color:var(--red)}
+  .missed-hint{display:block;font-size:10px;font-weight:700;color:var(--red);margin-top:1px}
   .check svg{opacity:0;transition:opacity .15s}
   .task.done .check svg{opacity:1}
   .task-label{font-size:14px}
@@ -560,6 +562,7 @@ const STRINGS = {
     archiveToggleLbl:n=>`📚 ${n} livre${n>1?"s":""} lu${n>1?"s":""}`,
     catDevLbl:"Perso", catBusinessLbl:"Business",
     noTasksInPanel:"Aucune tâche ici pour l'instant. Ajoute-en une avec Modifier.",
+    missedHint:"non fait la dernière fois",
     businessWeekLbl:"Business", devWeekLbl:"Perso",
     paceInfo:(pace,date)=>`${pace} chap./jour · fin estimée le ${date}`,
     footerLine:"Tes données restent sur ton téléphone et se sauvegardent toutes seules.",
@@ -643,6 +646,7 @@ const STRINGS = {
     archiveToggleLbl:n=>`📚 ${n} book${n>1?"s":""} read`,
     catDevLbl:"Personal", catBusinessLbl:"Business",
     noTasksInPanel:"No tasks here yet. Add one with Edit.",
+    missedHint:"not done last time",
     businessWeekLbl:"Business", devWeekLbl:"Personal",
     paceInfo:(pace,date)=>`${pace} ch./day · estimated finish ${date}`,
     footerLine:"Your data stays on your phone and saves itself automatically.",
@@ -877,20 +881,28 @@ function renderTaskRow(tk){
     d.innerHTML=`<button class="del">✕</button><span class="task-label">${taskDisplayLabel(tk)}</span>`;
     d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==tk.id);save("tracker:template",tasks);renderTasks();renderScore();};
   }else{
-    d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label">${taskDisplayLabel(tk)}</span><button class="task-menu" type="button">⋮</button>`;
+    const missed=!viewedDone[tk.id]&&wasTaskMissedRecently(tk);
+    d.innerHTML=`<div class="check${missed?" missed":""}">${CHECK_SVG}</div><span class="task-label">${taskDisplayLabel(tk)}${missed?`<span class="missed-hint">${t("missedHint")}</span>`:""}</span><button class="task-menu" type="button">⋮</button>`;
     d.querySelector(".task-menu").onclick=(e)=>{e.stopPropagation();toggleEditMode();};
     d.onclick=()=>{
       done[tk.id]=!done[tk.id];
       save("tracker:day:"+today(),done);
       const wasCompleted=done[tk.id];
       d.classList.toggle("done",wasCompleted);
+      const freshCheck=d.querySelector(".check");
+      const hintEl=d.querySelector(".missed-hint");
+      if(wasCompleted){
+        if(freshCheck)freshCheck.classList.remove("missed");
+        if(hintEl)hintEl.remove();
+      }
       renderScore();renderHeatmap();renderPeriodStats();
       if(wasCompleted){
-        const freshCheck=d.querySelector(".check");
         if(freshCheck)freshCheck.animate(
           [{transform:"scale(1)"},{transform:"scale(1.3)"},{transform:"scale(1)"}],
           {duration:320,easing:"cubic-bezier(.34,1.56,.64,1)"}
         );
+      }else{
+        if(freshCheck&&wasTaskMissedRecently(tk))freshCheck.classList.add("missed");
       }
     };
   }
@@ -1192,6 +1204,21 @@ function getAllDoneRecords(){
 }
 function dowOf(d){return (d.getDay()+6)%7;}
 function tasksForDow(dow){return tasks.filter(tk=>!tk.days||tk.days.includes(dow));}
+function mostRecentScheduledDayBefore(tk,beforeDateKey){
+  const before=dateFromKey(beforeDateKey);
+  for(let i=1;i<=14;i++){
+    const d=new Date(before);d.setDate(d.getDate()-i);
+    if(!tk.days||tk.days.includes(dowOf(d)))return keyFor(d);
+  }
+  return null;
+}
+function wasTaskMissedRecently(tk){
+  if(!isViewingToday())return false;
+  const prevKey=mostRecentScheduledDayBefore(tk,viewedDate);
+  if(!prevKey)return false;
+  const prevDone=load("tracker:day:"+prevKey,{});
+  return !prevDone[tk.id];
+}
 function dayRatio(doneObj,dow){const dayTasks=tasksForDow(dow);if(!dayTasks.length)return 0;return dayTasks.filter(tk=>doneObj[tk.id]).length/dayTasks.length;}
 function isPerfectDay(doneObj,dow){const dayTasks=tasksForDow(dow);return dayTasks.length>0&&dayTasks.every(tk=>doneObj[tk.id]);}
 function periodAvg(startDate,records){
