@@ -471,6 +471,19 @@
         <button class="btn btn-green" id="wBtn">Enregistrer</button>
       </div>
     </div>
+
+    <!-- Calories -->
+    <div class="card">
+      <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="calorieTitle">Calories</span></div>
+      <div class="sub" id="calorieSub" style="margin-top:4px"></div>
+      <div class="sub" id="calorieStatusLine" style="margin-top:10px;font-weight:700;color:var(--text)"></div>
+      <svg class="weight-chart hidden" id="calorieChart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
+      <div class="goal-row" style="margin-top:14px">
+        <span id="calorieGoalLbl">Objectif</span>
+        <input id="calorieGoalInput" inputmode="numeric" placeholder="kcal" />
+        <span>kcal/j</span>
+      </div>
+    </div>
   </div>
 
   <!-- SETTINGS -->
@@ -596,9 +609,13 @@ const STRINGS = {
     pageCountBadge:n=>`📄 ${n} pages (Open Library)`,
     foodLogAddBtn:"📸 Ajouter une photo", foodLogLoading:"🔍 Estimation en cours…",
     foodLogNotFood:"Photo non reconnue comme un repas — réessaie avec une photo plus claire.",
-    foodLogTotal:n=>`≈ ${n} kcal aujourd'hui`, foodLogEmpty:"Aucun repas loggé aujourd'hui.",
+    foodLogTotal:(n,goal)=>goal?`≈ ${n} / ${goal} kcal aujourd'hui`:`≈ ${n} kcal aujourd'hui`,
+    foodLogEmpty:"Aucun repas loggé aujourd'hui.",
     foodLogApprox:"Estimation approximative par IA (±20-30%), à prendre comme repère, pas comme mesure exacte.",
     foodLogDeleteConfirm:desc=>`Supprimer "${desc}" du log du jour ?`,
+    calorieTitle:"Calories", calorieGoalLbl:"Objectif",
+    calorieSub:"Objectif calculé pour viser +2kg/mois à partir de ton poids actuel (mis à jour auto à chaque pesée). Modifiable si tu veux fixer ton propre chiffre.",
+    calorieStatusLine:(n,goal)=>goal?`Aujourd'hui : ${n} / ${goal} kcal`:`Aujourd'hui : ${n} kcal`,
     archiveToggleLbl:n=>`📚 ${n} livre${n>1?"s":""} lu${n>1?"s":""}`,
     catDevLbl:"Perso", catBusinessLbl:"Business",
     noTasksInPanel:"Aucune tâche ici pour l'instant. Ajoute-en une avec Modifier.",
@@ -706,9 +723,13 @@ const STRINGS = {
     pageCountBadge:n=>`📄 ${n} pages (Open Library)`,
     foodLogAddBtn:"📸 Add a photo", foodLogLoading:"🔍 Estimating…",
     foodLogNotFood:"Photo not recognized as a meal — try again with a clearer photo.",
-    foodLogTotal:n=>`≈ ${n} kcal today`, foodLogEmpty:"No meals logged today.",
+    foodLogTotal:(n,goal)=>goal?`≈ ${n} / ${goal} kcal today`:`≈ ${n} kcal today`,
+    foodLogEmpty:"No meals logged today.",
     foodLogApprox:"Approximate AI estimate (±20-30%), use it as a rough guide, not an exact measurement.",
     foodLogDeleteConfirm:desc=>`Delete "${desc}" from today's log?`,
+    calorieTitle:"Calories", calorieGoalLbl:"Goal",
+    calorieSub:"Target calculated to aim for +2kg/month based on your current weight (auto-updates on each weigh-in). Editable if you want to set your own number.",
+    calorieStatusLine:(n,goal)=>goal?`Today: ${n} / ${goal} kcal`:`Today: ${n} kcal`,
     archiveToggleLbl:n=>`📚 ${n} book${n>1?"s":""} read`,
     catDevLbl:"Personal", catBusinessLbl:"Business",
     noTasksInPanel:"No tasks here yet. Add one with Edit.",
@@ -818,6 +839,7 @@ save("tracker:taskMigVersion",taskMigVersion);
 save("tracker:template",tasks);
 let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
+let calorieGoal=load("tracker:calorieGoal",{value:null,auto:true});
 let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null,author:null});
 let booksArchive=load("tracker:booksArchive",[]);
 let archiveExpanded=false;
@@ -914,6 +936,9 @@ function applyStaticI18n(){
   document.getElementById("weightTitle").textContent=t("weightTitle");
   document.getElementById("weightSub").textContent=t("weightSub");
   document.getElementById("weightGoalLbl").textContent=t("weightGoalLbl");
+  document.getElementById("calorieTitle").textContent=t("calorieTitle");
+  document.getElementById("calorieSub").textContent=t("calorieSub");
+  document.getElementById("calorieGoalLbl").textContent=t("calorieGoalLbl");
   document.getElementById("progressionTitle").textContent=t("progressionTitle");
   document.getElementById("progressionSub").textContent=t("progressionSub");
   document.getElementById("bizTitle").textContent=t("bizTitle");
@@ -1165,10 +1190,50 @@ function renderWeight(){
       c.onclick=()=>{
         const w=slice[+c.dataset.idx];
         if(confirm(t("weightDeleteConfirm",w.kg,new Date(w.date).toLocaleDateString(t("dateLocale"))))){
-          weights=weights.filter(x=>x!==w);save("tracker:weights",weights);renderWeight();
+          weights=weights.filter(x=>x!==w);save("tracker:weights",weights);maybeUpdateCalorieGoal();renderWeight();renderCalories();
         }
       };
     });
+    svgEl.classList.remove("hidden");
+  }else{
+    svgEl.innerHTML="";svgEl.classList.add("hidden");
+  }
+}
+// ~35 kcal/kg = maintenance for a moderately active adult training 5x/week.
+// +500 kcal/day surplus ≈ +2kg/month (2kg × 7700kcal ÷ 30 days ≈ 513kcal, rounded).
+function computeAutoCalorieGoal(weightKg){return Math.round((weightKg*35+500)/10)*10;}
+function maybeUpdateCalorieGoal(){
+  if(!weights.length)return;
+  if(calorieGoal.auto||calorieGoal.value==null){
+    calorieGoal={value:computeAutoCalorieGoal(weights[weights.length-1].kg),auto:true};
+    save("tracker:calorieGoal",calorieGoal);
+  }
+}
+function todayCalorieTotal(){return loadCalories(today()).reduce((s,it)=>s+it.kcal,0);}
+function renderCalories(){
+  document.getElementById("calorieGoalInput").value=calorieGoal.value??"";
+  const todayTotal=todayCalorieTotal();
+  document.getElementById("calorieStatusLine").textContent=t("calorieStatusLine",todayTotal,calorieGoal.value);
+  const svgEl=document.getElementById("calorieChart");
+  const days=[];
+  for(let i=13;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const key=keyFor(d);
+    days.push({key,total:loadCalories(key).reduce((s,it)=>s+it.kcal,0)});
+  }
+  const hasData=days.some(d=>d.total>0);
+  if(hasData){
+    const W=300,H=90,PAD=8;
+    const maxVal=Math.max(...days.map(d=>d.total),calorieGoal.value||0)*1.1||1;
+    const barW=((W-2*PAD)/days.length)*0.6;
+    const x=i=>PAD+(i/(days.length-1))*(W-2*PAD)-barW/2;
+    const y=v=>H-PAD-(v/maxVal)*(H-2*PAD);
+    const bars=days.map((d,i)=>{
+      const h=(d.total/maxVal)*(H-2*PAD);
+      return `<rect x="${x(i)}" y="${H-PAD-h}" width="${barW}" height="${h}" rx="2" fill="var(--amber)" opacity="${d.total>0?1:0.15}"/>`;
+    }).join("");
+    const goalLine=calorieGoal.value?`<line x1="${PAD}" y1="${y(calorieGoal.value)}" x2="${W-PAD}" y2="${y(calorieGoal.value)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3"/>`:"";
+    svgEl.innerHTML=`${bars}${goalLine}`;
     svgEl.classList.remove("hidden");
   }else{
     svgEl.innerHTML="";svgEl.classList.add("hidden");
@@ -1430,7 +1495,7 @@ function renderFoodLog(){
   const dateKey=today();
   const items=loadCalories(dateKey);
   const total=items.reduce((s,it)=>s+it.kcal,0);
-  document.getElementById("foodLogTotal").textContent=t("foodLogTotal",total);
+  document.getElementById("foodLogTotal").textContent=t("foodLogTotal",total,calorieGoal.value);
   const emptyEl=document.getElementById("foodLogEmpty");
   emptyEl.textContent=t("foodLogEmpty");
   emptyEl.classList.toggle("hidden",items.length>0);
@@ -1443,7 +1508,7 @@ function renderFoodLog(){
     row.onclick=()=>{
       if(!confirm(t("foodLogDeleteConfirm",it.description)))return;
       saveCalories(dateKey,loadCalories(dateKey).filter(x=>x.id!==it.id));
-      renderFoodLog();
+      renderFoodLog();renderCalories();
     };
     listEl.appendChild(row);
   });
@@ -1461,7 +1526,7 @@ async function uploadFoodPhoto(dataUrl){
       const items=loadCalories(dateKey);
       items.push({id:Date.now()+"-"+Math.random().toString(36).slice(2),time:new Date().toTimeString().slice(0,5),description:data.description,kcal:data.kcal});
       saveCalories(dateKey,items);
-      renderFoodLog();
+      renderFoodLog();renderCalories();
     }else{
       alert(t("foodLogNotFood"));
     }
@@ -1603,7 +1668,7 @@ function setLang(l){
   lang=l;
   save("tracker:lang",lang);
   applyStaticI18n();
-  renderScore();renderTasks();renderHeatmap();renderWeight();renderReading();renderPeriodStats();renderBiz();
+  renderScore();renderTasks();renderHeatmap();renderWeight();renderCalories();renderReading();renderPeriodStats();renderBiz();
   if(document.getElementById("reminderCard")){
     setReminderBtnState(pushSubscribed);
     if(!(window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true)){
@@ -1708,7 +1773,7 @@ taskSliderViewport.addEventListener("touchend",()=>{
 
 document.getElementById("wBtn").onclick=logW;
 document.getElementById("wInput").addEventListener("keydown",e=>{if(e.key==="Enter")logW();});
-function logW(){const i=document.getElementById("wInput");const kg=parseFloat(i.value.replace(",","."));if(!kg||kg<30||kg>200)return;weights.push({date:today(),kg});save("tracker:weights",weights);i.value="";renderWeight();}
+function logW(){const i=document.getElementById("wInput");const kg=parseFloat(i.value.replace(",","."));if(!kg||kg<30||kg>200)return;weights.push({date:today(),kg});save("tracker:weights",weights);i.value="";maybeUpdateCalorieGoal();renderWeight();renderCalories();}
 
 document.getElementById("weightGoalInput").addEventListener("blur",()=>{
   const v=parseFloat(document.getElementById("weightGoalInput").value.replace(",","."));
@@ -1717,6 +1782,14 @@ document.getElementById("weightGoalInput").addEventListener("blur",()=>{
   renderWeight();
 });
 document.getElementById("weightGoalInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
+document.getElementById("calorieGoalInput").addEventListener("blur",()=>{
+  const v=parseInt(document.getElementById("calorieGoalInput").value);
+  if(v&&v>=1000&&v<=6000){calorieGoal={value:v,auto:false};}
+  else{calorieGoal={value:weights.length?computeAutoCalorieGoal(weights[weights.length-1].kg):null,auto:true};}
+  save("tracker:calorieGoal",calorieGoal);
+  renderCalories();
+});
+document.getElementById("calorieGoalInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
 
 document.getElementById("bizGoalInput").addEventListener("blur",()=>{
   const v=parseFloat(document.getElementById("bizGoalInput").value.replace(",","."));
@@ -1855,7 +1928,8 @@ document.getElementById("exportBtn").onclick=()=>{
 };
 
 applyStaticI18n();
-renderScore();renderTasks();renderHeatmap();renderWeight();renderReading();renderPeriodStats();renderBiz();
+maybeUpdateCalorieGoal();
+renderScore();renderTasks();renderHeatmap();renderWeight();renderCalories();renderReading();renderPeriodStats();renderBiz();
 
 async function loadHealthToday(){
   try{
