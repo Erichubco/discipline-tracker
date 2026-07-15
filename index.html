@@ -62,6 +62,7 @@
   .ring-lbl{color:var(--muted);font-size:12px;margin-top:4px}
   .score-title{display:inline-block;margin:18px auto 0;padding:8px 20px;background:var(--cardHi);border:1px solid var(--border);border-radius:9999px;font-size:13px;font-weight:700;color:var(--green);font-family:'Plus Jakarta Sans',sans-serif}
   .score-sub{color:var(--muted);font-size:12px;margin-top:10px;line-height:1.4;text-align:center}
+  .score-wins{margin-top:10px;padding:8px 14px;background:var(--cardHi);border-radius:12px;font-size:12px;font-weight:600;color:var(--green);text-align:center;line-height:1.4}
   .fab{position:fixed;right:20px;bottom:96px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--amber));color:#fff;border:none;font-size:26px;box-shadow:var(--shadow-lg);cursor:pointer;z-index:41;display:flex;align-items:center;justify-content:center}
   .task-menu{background:var(--cardHi);border:1px solid var(--border);color:var(--green);font-size:16px;font-weight:700;cursor:pointer;padding:6px 11px;border-radius:10px;flex-shrink:0;line-height:1}
   .task-camera{background:var(--amber);border:none;color:#fff;font-size:15px;cursor:pointer;padding:6px 10px;border-radius:10px;flex-shrink:0;line-height:1}
@@ -267,6 +268,7 @@
       </div>
       <div class="score-title" id="scoreTitle">On y va</div>
       <div class="score-sub" id="scoreSub"></div>
+      <div class="score-wins hidden" id="scoreWins"></div>
       <div class="sub hidden" id="healthLine" style="margin-top:8px;margin-bottom:0;text-align:center"></div>
     </div>
 
@@ -385,6 +387,9 @@
         <div class="pbar-lbl"><span id="bizPctLbl">0% complété</span><b id="bizRemainingLbl" style="color:var(--green)"></b></div>
         <div class="pbar-bg"><div class="pbar-fill" id="bizBarFill" style="width:0%;background:var(--amber)"></div></div>
       </div>
+      <div class="sub hidden" id="bizVsLastMonth" style="margin-top:10px"></div>
+      <svg class="weight-chart hidden" id="bizChart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
+      <div class="sub hidden" id="bizPaceInfo" style="margin-top:6px"></div>
       <div class="goal-row" style="margin-top:16px">
         <span id="bizGoalLbl">Objectif CA</span>
         <input id="bizGoalInput" inputmode="numeric" placeholder="€" style="width:80px" />
@@ -599,6 +604,9 @@ const STRINGS = {
     progressionTitle:"Progression", progressionSub:"Ta progression, jour après jour.",
     bizTitle:"Chiffre d'affaires mensuel", bizEyebrow:"Objectif business", bizGoalLbl:"Objectif CA", bizPlaceholder:"CA actuel (€)",
     bizPctCompleted:pct=>`${pct}% complété`, bizRemainingAmt:amt=>`${amt} restant`,
+    bizVsLastMonth:(prev,sign,diff,pct)=>`Mois dernier : ${prev}€ → ${sign}${diff}€${pct!=null?` (${sign}${pct}%)`:""}`,
+    bizPaceInfo:date=>`Au rythme actuel, objectif atteint vers le ${date}`,
+    bizDeleteConfirm:(amt,date)=>`Supprimer l'entrée ${amt}€ du ${date} ?`,
     readingTitle:"Lecture · 1 chapitre/jour → 1 livre/mois",
     booksThisYear:n=>`${n} livre${n>1?"s":""} terminé${n>1?"s":""} cette année`,
     bookPlaceholder:"Titre du livre…", totalChapPlaceholder:"Nb de chapitres total (optionnel)",
@@ -670,6 +678,11 @@ const STRINGS = {
     shakeDetail:"🥤 Collation de l'après-midi, tous les jours :\n\n• Whey ISO100\n• Lait (ou lait fermenté)\n• + ta créatine dedans (dose du pot)\n\nBien après le déjeuner = léger, pas lourd. Parfait pour étaler tes calories et garantir tes protéines même les jours sans faim, sans te couper l'appétit du dîner.",
     greetMorning:"Bonjour", greetAfternoon:"Bon après-midi", greetEvening:"Bonsoir",
     greetingSub:"Prêt à avancer sur tes objectifs aujourd'hui ?",
+    motivZero:"Rien coché encore — la première tâche est toujours la plus dure. Go.",
+    motivLow:(c,t)=>`${c}/${t} fait. Continue, chaque tâche cochée compte.`,
+    motivHigh:(c,t)=>`${c}/${t} fait — plus qu'un dernier effort pour boucler la journée !`,
+    motivFull:"Journée complète. C'est exactement ça qui construit le résultat, bravo.",
+    scoreWinsPrefix:list=>`✅ Déjà fait : ${list}`,
     pastDayTitle:d=>`${d}`,
     pastDayBannerText:"Lecture seule — les jours passés ne peuvent plus être modifiés.",
     backToTodayBtn:"Aujourd'hui",
@@ -718,6 +731,9 @@ const STRINGS = {
     progressionTitle:"Progress", progressionSub:"Your progress, day by day.",
     bizTitle:"Monthly revenue", bizEyebrow:"Business goal", bizGoalLbl:"Revenue goal", bizPlaceholder:"Current revenue (€)",
     bizPctCompleted:pct=>`${pct}% completed`, bizRemainingAmt:amt=>`${amt} remaining`,
+    bizVsLastMonth:(prev,sign,diff,pct)=>`Last month: €${prev} → ${sign}€${diff}${pct!=null?` (${sign}${pct}%)`:""}`,
+    bizPaceInfo:date=>`At the current pace, goal reached around ${date}`,
+    bizDeleteConfirm:(amt,date)=>`Delete the €${amt} entry from ${date}?`,
     readingTitle:"Reading · 1 chapter/day → 1 book/month",
     booksThisYear:n=>`${n} book${n>1?"s":""} finished this year`,
     bookPlaceholder:"Book title…", totalChapPlaceholder:"Total chapters (optional)",
@@ -789,6 +805,11 @@ const STRINGS = {
     shakeDetail:"🥤 Afternoon snack, every day:\n\n• Whey ISO100\n• Milk (or fermented milk)\n• + your creatine mixed in (scoop from the tub)\n\nWell after lunch = light, not heavy. Perfect for spreading out your calories and guaranteeing your protein even on low-appetite days, without killing your dinner appetite.",
     greetMorning:"Good morning", greetAfternoon:"Good afternoon", greetEvening:"Good evening",
     greetingSub:"Ready to focus on your goals today?",
+    motivZero:"Nothing checked yet — the first task is always the hardest. Go.",
+    motivLow:(c,t)=>`${c}/${t} done. Keep going, every checked task counts.`,
+    motivHigh:(c,t)=>`${c}/${t} done — just one last push to close out the day!`,
+    motivFull:"Full day. That's exactly what builds the result, well done.",
+    scoreWinsPrefix:list=>`✅ Already done: ${list}`,
     pastDayTitle:d=>`${d}`,
     pastDayBannerText:"Read-only — past days can no longer be edited.",
     backToTodayBtn:"Today",
@@ -913,13 +934,22 @@ function switchViewedDate(key){
   document.getElementById("fabAdd").classList.toggle("hidden",!isViewingToday());
   document.getElementById("editBtn").classList.toggle("hidden",!isViewingToday());
 }
+function motivationalSub(){
+  const dayTasks=tasksForDow(dowOf(new Date()));
+  if(!dayTasks.length)return t("greetingSub");
+  const comp=dayTasks.filter(tk=>done[tk.id]).length,total=dayTasks.length;
+  if(comp>=total)return t("motivFull");
+  if(comp===0)return t("motivZero");
+  if(comp/total>=0.5)return t("motivHigh",comp,total);
+  return t("motivLow",comp,total);
+}
 function renderGreeting(){
   const banner=document.getElementById("pastDayBanner");
   if(isViewingToday()){
     const h=new Date().getHours();
     const key=h<12?"greetMorning":h<18?"greetAfternoon":"greetEvening";
     document.getElementById("greetingTitle").textContent=`${t(key)}, Eric !`;
-    document.getElementById("greetingSub").textContent=t("greetingSub");
+    document.getElementById("greetingSub").textContent=motivationalSub();
     banner.classList.add("hidden");
   }else{
     const d=dateFromKey(viewedDate);
@@ -1011,6 +1041,14 @@ function renderScore(){
   else{ti.style.color="var(--text)";
     ti.textContent=pct>=0.7?t("scoreSolid"):pct>0?t("scoreMoving"):t("scoreStart");
     const left=total-comp;s.textContent=t("scoreRemainingSub",left);}
+  const winsEl=document.getElementById("scoreWins");
+  if(comp>0&&pct<1){
+    const doneLabels=dayTasks.filter(tk=>viewedDone[tk.id]).map(tk=>tk.label.replace(/^\S+\s/,""));
+    winsEl.textContent=t("scoreWinsPrefix",doneLabels.join(", "));
+    winsEl.classList.remove("hidden");
+  }else{
+    winsEl.classList.add("hidden");
+  }
 }
 const PERIOD_KEYS={morning:"periodMorning",day:"periodDay",evening:"periodEvening"};
 const PERIOD_EMOJI={morning:"🌅",day:"☀️",evening:"🌙"};
@@ -1049,6 +1087,7 @@ function renderTaskRow(tk){
         if(hintEl)hintEl.remove();
       }
       renderScore();renderHeatmap();renderPeriodStats();
+      if(isViewingToday())document.getElementById("greetingSub").textContent=motivationalSub();
       if(wasCompleted){
         if(freshCheck)freshCheck.animate(
           [{transform:"scale(1)"},{transform:"scale(1.3)"},{transform:"scale(1)"}],
@@ -1139,6 +1178,70 @@ function renderBiz(){
     remainingEl.textContent="";
   }
   document.getElementById("bizBarFill").style.width=pct+"%";
+
+  const vsLastMonthEl=document.getElementById("bizVsLastMonth");
+  if(last){
+    const curMonth=new Date(last.date).getMonth(),curYear=new Date(last.date).getFullYear();
+    const prevMonthEntries=bizRevenue.filter(r=>{
+      const d=new Date(r.date);
+      const monthsAgo=(curYear-d.getFullYear())*12+(curMonth-d.getMonth());
+      return monthsAgo===1;
+    });
+    if(prevMonthEntries.length){
+      const prevLast=prevMonthEntries[prevMonthEntries.length-1];
+      const diff=last.amount-prevLast.amount;
+      const pctDiff=prevLast.amount>0?Math.round((diff/prevLast.amount)*100):null;
+      vsLastMonthEl.textContent=t("bizVsLastMonth",prevLast.amount.toLocaleString(t("dateLocale")),diff>=0?"+":"",diff.toLocaleString(t("dateLocale")),pctDiff);
+      vsLastMonthEl.classList.remove("hidden");
+    }else{
+      vsLastMonthEl.classList.add("hidden");
+    }
+  }else{
+    vsLastMonthEl.classList.add("hidden");
+  }
+
+  const bizChartEl=document.getElementById("bizChart");
+  const paceEl=document.getElementById("bizPaceInfo");
+  if(bizRevenue.length>1){
+    const slice=bizRevenue.slice(-12);
+    const allVals=[...slice.map(r=>r.amount),...(bizGoal!=null?[bizGoal]:[])];
+    const min=Math.min(0,...allVals),max=Math.max(...allVals,1)*1.05;
+    const W=300,H=90,PAD=8;
+    const x=i=>slice.length>1?PAD+(i/(slice.length-1))*(W-2*PAD):W/2;
+    const y=v=>max>min?H-PAD-((v-min)/(max-min))*(H-2*PAD):H/2;
+    const pts=slice.map((r,i)=>`${x(i)},${y(r.amount)}`).join(" ");
+    const goalLine=bizGoal!=null?`<line x1="${PAD}" y1="${y(bizGoal)}" x2="${W-PAD}" y2="${y(bizGoal)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3"/>`:"";
+    const dots=slice.map((r,i)=>`<circle data-idx="${i}" cx="${x(i)}" cy="${y(r.amount)}" r="7" fill="transparent" style="cursor:pointer"/><circle cx="${x(i)}" cy="${y(r.amount)}" r="2" fill="var(--amber)" style="pointer-events:none"/>`).join("");
+    bizChartEl.innerHTML=`${goalLine}<polyline points="${pts}" fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${dots}`;
+    bizChartEl.querySelectorAll("circle[data-idx]").forEach(c=>{
+      c.onclick=()=>{
+        const r=slice[+c.dataset.idx];
+        if(confirm(t("bizDeleteConfirm",r.amount,new Date(r.date).toLocaleDateString(t("dateLocale"))))){
+          bizRevenue=bizRevenue.filter(x=>x!==r);save("tracker:bizRevenue",bizRevenue);renderBiz();
+        }
+      };
+    });
+    bizChartEl.classList.remove("hidden");
+
+    const first=bizRevenue[0];
+    const daysSpan=Math.round((new Date(last.date)-new Date(first.date))/DAY_MS);
+    if(daysSpan>=5&&bizGoal!=null&&last.amount<bizGoal){
+      const perDay=(last.amount-first.amount)/daysSpan;
+      if(perDay>0.5){
+        const daysLeft=(bizGoal-last.amount)/perDay;
+        const eta=new Date();eta.setDate(eta.getDate()+Math.round(daysLeft));
+        paceEl.textContent=t("bizPaceInfo",eta.toLocaleDateString(t("dateLocale"),{day:"numeric",month:"long"}));
+        paceEl.classList.remove("hidden");
+      }else{
+        paceEl.classList.add("hidden");
+      }
+    }else{
+      paceEl.classList.add("hidden");
+    }
+  }else{
+    bizChartEl.innerHTML="";bizChartEl.classList.add("hidden");
+    paceEl.classList.add("hidden");
+  }
 }
 function weightRateKgPerWeek(){
   const first=weights[0], last=weights[weights.length-1];
