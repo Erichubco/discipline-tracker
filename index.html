@@ -119,7 +119,7 @@
   .status-dot{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse-dot 1.6s ease-in-out infinite}
   @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
   .streak-card{border-left:4px solid var(--red)}
-  .streak-icon{font-size:16px}
+  .streak-icon{display:inline-flex;vertical-align:middle;color:var(--red)}
   .streak-big{display:flex;align-items:baseline;gap:6px;margin:4px 0 16px}
   .streak-big .stat-num{font-size:36px}
   .streak-unit{font-size:14px;color:var(--muted);font-weight:600}
@@ -133,7 +133,7 @@
   .book-cover img{width:100%;height:100%;object-fit:cover}
   .book-info{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
   .archive-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-  .archive-toggle{background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;padding:10px 0 0;margin-top:2px;cursor:pointer;font-family:inherit;width:100%;text-align:center}
+  .archive-toggle{background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;padding:10px 0 0;margin-top:2px;cursor:pointer;font-family:inherit;width:100%;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px}
   .archive-title{font-size:17px;font-weight:700;color:var(--text);font-family:'Quicksand',sans-serif}
   .book-archive{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px}
   .book-archive-item{flex-shrink:0;width:72px;text-align:center;cursor:pointer}
@@ -211,9 +211,9 @@
   .settings-bento{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
   .bento-tile{background:var(--cardHi);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:96px}
   .bento-tile p{font-size:12px;color:var(--text);font-weight:600;line-height:1.35;margin:0}
-  .bento-icon{font-size:18px}
+  .bento-icon{display:inline-flex;vertical-align:middle;color:var(--green)}
   .bento-tile-head{display:flex;justify-content:space-between;align-items:flex-start}
-  .bento-icon-sm{font-size:15px;color:var(--muted)}
+  .bento-icon-sm{display:inline-flex;vertical-align:middle;color:var(--muted)}
   .bento-tile-value{font-size:20px;font-weight:700;font-family:'Quicksand',sans-serif;color:var(--green)}
   .btn-export{width:100%;margin-top:16px;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--green),var(--amber));color:#fff;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--shadow-lg);font-family:inherit}
   .tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:40;box-shadow:0 -4px 20px rgba(83,65,205,.06)}
@@ -241,7 +241,7 @@
       </div>
       <div class="head-actions">
         <button class="icon-btn" style="border-radius:50%;font-size:11px;font-weight:800;color:var(--green)" id="langIconBtn" type="button">FR</button>
-        <button class="icon-btn" style="border-radius:50%" id="settingsIconBtn" type="button">⚙️</button>
+        <button class="icon-btn" style="border-radius:50%" id="settingsIconBtn" type="button"></button>
       </div>
     </div>
 
@@ -336,7 +336,7 @@
 
     <!-- Streak -->
     <div class="card streak-card">
-      <div class="card-h"><span class="streak-icon">🔥</span><span id="streakCardTitle">Consistance</span></div>
+      <div class="card-h"><span class="streak-icon"></span><span id="streakCardTitle">Consistance</span></div>
       <div class="stat-lbl" id="streakCurLbl">série actuelle</div>
       <div class="streak-big"><span class="stat-num" id="streakCur">0</span><span class="streak-unit" id="streakCurUnit">jours</span></div>
       <div class="streak-sep"></div>
@@ -379,7 +379,7 @@
           <span class="stat-lbl" id="bizEyebrow">Objectif business</span>
           <span class="biz-h-title" id="bizTitle">Chiffre d'affaires mensuel</span>
         </div>
-        <div class="biz-icon-badge">💶</div>
+        <div class="biz-icon-badge" id="bizIconBadge"></div>
       </div>
       <div class="biz-amount">
         <span class="biz-amount-cur" id="bizCurrentAmt">—</span>
@@ -410,7 +410,7 @@
       <div class="reading-hero">
         <button class="book-cover-lg" id="coverBtn" type="button">
           <img id="coverImg" class="hidden" />
-          <span id="coverPlaceholder">📷</span>
+          <span id="coverPlaceholder"></span>
         </button>
         <input type="file" accept="image/*" capture="environment" id="coverInput" class="hidden" />
         <div class="reading-hero-info">
@@ -525,7 +525,7 @@
       </div>
 
       <div class="toggle-row" id="reminderCard">
-        <div class="toggle-icon">🔔</div>
+        <div class="toggle-icon"></div>
         <div class="toggle-info">
           <b id="reminderTitle">Rappel du soir</b>
           <span id="reminderSub">Une notification à 21h pour cocher tes tâches avant la coupure d'écran.</span>
@@ -535,13 +535,13 @@
 
       <div class="settings-bento">
         <div class="bento-tile">
-          <span class="bento-icon">🔒</span>
+          <span class="bento-icon"></span>
           <p id="footerLine">Tes données restent sur ton téléphone et se sauvegardent toutes seules.</p>
         </div>
         <div class="bento-tile">
           <div class="bento-tile-head">
             <span class="stat-lbl" id="storageLbl">Stockage</span>
-            <span class="bento-icon-sm">🗄</span>
+            <span class="bento-icon-sm"></span>
           </div>
           <span class="bento-tile-value" id="storageValue">—</span>
         </div>
@@ -553,7 +553,7 @@
       </div>
       <div class="sub" id="apiKeySub" style="margin-top:-6px;margin-bottom:14px"></div>
 
-      <button class="btn-export" id="exportBtn"><span>⇪</span><span id="exportBtnLbl">Exporter mes données (JSON)</span></button>
+      <button class="btn-export" id="exportBtn"><span id="exportBtnIcon"></span><span id="exportBtnLbl">Exporter mes données (JSON)</span></button>
     </div>
   </div>
 
@@ -657,7 +657,7 @@ const STRINGS = {
     calorieStatusLine:(n,goal)=>goal?`Aujourd'hui : ${n} / ${goal} kcal`:`Aujourd'hui : ${n} kcal`,
     photoTitle:"Progression physique", photoSub:"Une photo par mois pour voir ta vraie évolution — à croiser avec le poids, pas juste la balance.",
     photoAddBtn:"Ajouter une photo", photoDeleteBtn:"Supprimer", photoDeleteConfirm:"Supprimer cette photo ?",
-    archiveToggleLbl:n=>`📚 ${n} livre${n>1?"s":""} lu${n>1?"s":""}`,
+    archiveToggleLbl:n=>`${n} livre${n>1?"s":""} lu${n>1?"s":""}`,
     catDevLbl:"Perso", catBusinessLbl:"Business",
     noTasksInPanel:"Aucune tâche ici pour l'instant. Ajoute-en une avec Modifier.",
     missedHint:"non fait la dernière fois",
@@ -787,7 +787,7 @@ const STRINGS = {
     calorieStatusLine:(n,goal)=>goal?`Today: ${n} / ${goal} kcal`:`Today: ${n} kcal`,
     photoTitle:"Physical progress", photoSub:"One photo a month to see your real progress — cross-reference it with your weight, not just the scale.",
     photoAddBtn:"Add a photo", photoDeleteBtn:"Delete", photoDeleteConfirm:"Delete this photo?",
-    archiveToggleLbl:n=>`📚 ${n} book${n>1?"s":""} read`,
+    archiveToggleLbl:n=>`${n} book${n>1?"s":""} read`,
     catDevLbl:"Personal", catBusinessLbl:"Business",
     noTasksInPanel:"No tasks here yet. Add one with Edit.",
     missedHint:"not done last time",
@@ -872,6 +872,23 @@ function load2(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f
 
 const CHECK_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 const CAMERA_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+// Line-icon set matching the tab bar style, used in place of emoji for functional
+// UI chrome (card icons, badges, toggles) — task labels/detail content keep emoji.
+const GEAR_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+const TRENDING_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>';
+const ZAP_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>';
+const BELL_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+const LOCK_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+const DATABASE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>';
+const BOOK_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>';
+const DOWNLOAD_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+document.getElementById("bizIconBadge").innerHTML=TRENDING_SVG;
+document.getElementById("exportBtnIcon").innerHTML=DOWNLOAD_SVG;
+document.getElementById("coverPlaceholder").innerHTML=CAMERA_SVG;
+document.querySelector(".streak-icon").innerHTML=ZAP_SVG;
+document.querySelector(".toggle-icon").innerHTML=BELL_SVG;
+document.querySelector(".bento-icon").innerHTML=LOCK_SVG;
+document.querySelector(".bento-icon-sm").innerHTML=DATABASE_SVG;
 const DEFAULT_PERIODS={wake:"morning",read:"evening",gym:"day",ecom:"day",shake:"day",supps:"day",meals:"day",screens:"evening"};
 const DEFAULT_CATEGORIES={wake:"dev",read:"dev",gym:"dev",ecom:"business",shake:"dev",supps:"dev",meals:"dev",screens:"dev"};
 const pad=n=>String(n).padStart(2,"0");
@@ -1568,7 +1585,7 @@ function renderReading(){
   const archiveToggle=document.getElementById("archiveToggle");
   if(booksArchive.length){
     archiveToggle.classList.remove("hidden");
-    archiveToggle.textContent=t("archiveToggleLbl",booksArchive.length)+(archiveExpanded?" ▲":" ▼");
+    archiveToggle.innerHTML=BOOK_SVG+`<span>${t("archiveToggleLbl",booksArchive.length)}${archiveExpanded?" ▲":" ▼"}</span>`;
     archiveToggle.onclick=()=>{archiveExpanded=!archiveExpanded;renderReading();};
     archiveWrap.classList.toggle("hidden",!archiveExpanded);
     archiveEl.innerHTML=booksArchive.slice().reverse().map((b,i)=>{
@@ -1577,7 +1594,7 @@ function renderReading(){
       <div class="book-archive-item" data-idx="${origIdx}" title="${b.title.replace(/"/g,"&quot;")} — ${t("archiveItemRemoveHint")}">
         ${b.coverPhoto
           ? `<img class="book-archive-cover" src="${b.coverPhoto}" />`
-          : `<div class="book-archive-cover placeholder">📖</div>`}
+          : `<div class="book-archive-cover placeholder">${BOOK_SVG}</div>`}
         <div class="book-archive-title">${b.title}</div>
       </div>
     `;}).join("");
@@ -1954,6 +1971,7 @@ function setLang(l){
   }
 }
 document.getElementById("langIconBtn").onclick=()=>setLang(lang==="fr"?"en":"fr");
+document.getElementById("settingsIconBtn").innerHTML=GEAR_SVG;
 document.getElementById("settingsIconBtn").onclick=()=>switchView("settings");
 
 function toggleEditMode(){
