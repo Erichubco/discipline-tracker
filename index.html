@@ -64,7 +64,7 @@
   .score-sub{color:var(--muted);font-size:12px;margin-top:10px;line-height:1.4;text-align:center}
   .fab{position:fixed;right:20px;bottom:96px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--amber));color:#fff;border:none;font-size:26px;box-shadow:var(--shadow-lg);cursor:pointer;z-index:41;display:flex;align-items:center;justify-content:center}
   .task-menu{background:var(--cardHi);border:1px solid var(--border);color:var(--green);font-size:16px;font-weight:700;cursor:pointer;padding:6px 11px;border-radius:10px;flex-shrink:0;line-height:1}
-  .task-camera{background:var(--amber);border:none;color:#fff;font-size:15px;cursor:pointer;padding:6px 10px;border-radius:10px;flex-shrink:0;line-height:1}
+  .task-camera{background:var(--amber);border:none;color:#fff;cursor:pointer;padding:7px 10px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
   .edit-footer{text-align:center;margin-top:14px}
   .heatmap{display:flex;gap:3px;overflow-x:auto;padding-bottom:2px}
   .heatmap-week{display:flex;flex-direction:column;gap:3px}
@@ -186,7 +186,7 @@
   .food-log-item{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--cardHi);border-radius:12px;padding:8px 12px;font-size:13px}
   .food-log-item-desc{color:var(--text);flex:1}
   .food-log-item-kcal{color:var(--muted);white-space:nowrap}
-  .food-log-add-btn{width:100%;background:var(--cardHi);border:1px solid var(--border);color:var(--green);padding:10px 12px;border-radius:12px;font-size:14px;font-weight:600;text-align:center}
+  .food-log-add-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--cardHi);border:1px solid var(--border);color:var(--green);padding:10px 12px;border-radius:12px;font-size:14px;font-weight:600;text-align:center}
   .food-log-loading{color:var(--muted);font-size:13px;text-align:center;padding:8px 0}
   .food-log-approx{color:var(--muted);font-size:11px;line-height:1.4;margin-top:8px}
   .photo-gallery{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;margin-top:10px}
@@ -646,7 +646,7 @@ const STRINGS = {
     bookLookupLoading:"🔍 Identification du livre…",
     bookNotIdentified:"Livre non identifié — tape le titre toi-même.",
     pageCountBadge:n=>`📄 ${n} pages (Open Library)`,
-    foodLogAddBtn:"📸 Ajouter une photo", foodLogLoading:"🔍 Estimation en cours…",
+    foodLogAddBtn:"Ajouter une photo", foodLogLoading:"🔍 Estimation en cours…",
     foodLogNotFood:"Photo non reconnue comme un repas — réessaie avec une photo plus claire.",
     foodLogTotal:(n,goal)=>goal?`≈ ${n} / ${goal} kcal aujourd'hui`:`≈ ${n} kcal aujourd'hui`,
     foodLogEmpty:"Aucun repas loggé aujourd'hui.",
@@ -656,7 +656,7 @@ const STRINGS = {
     calorieSub:"Objectif calculé pour +2kg/mois en restant lean : ta dépense de base + ta marche du matin (30-35 min, ~250 kcal) + ta séance muscu (~45-60 min) + un surplus modéré (pas de dirty bulk). Mis à jour auto à chaque pesée, modifiable si tu veux fixer ton propre chiffre.",
     calorieStatusLine:(n,goal)=>goal?`Aujourd'hui : ${n} / ${goal} kcal`:`Aujourd'hui : ${n} kcal`,
     photoTitle:"Progression physique", photoSub:"Une photo par mois pour voir ta vraie évolution — à croiser avec le poids, pas juste la balance.",
-    photoAddBtn:"📸 Ajouter une photo", photoDeleteBtn:"Supprimer", photoDeleteConfirm:"Supprimer cette photo ?",
+    photoAddBtn:"Ajouter une photo", photoDeleteBtn:"Supprimer", photoDeleteConfirm:"Supprimer cette photo ?",
     archiveToggleLbl:n=>`📚 ${n} livre${n>1?"s":""} lu${n>1?"s":""}`,
     catDevLbl:"Perso", catBusinessLbl:"Business",
     noTasksInPanel:"Aucune tâche ici pour l'instant. Ajoute-en une avec Modifier.",
@@ -776,7 +776,7 @@ const STRINGS = {
     bookLookupLoading:"🔍 Identifying the book…",
     bookNotIdentified:"Book not identified — type the title yourself.",
     pageCountBadge:n=>`📄 ${n} pages (Open Library)`,
-    foodLogAddBtn:"📸 Add a photo", foodLogLoading:"🔍 Estimating…",
+    foodLogAddBtn:"Add a photo", foodLogLoading:"🔍 Estimating…",
     foodLogNotFood:"Photo not recognized as a meal — try again with a clearer photo.",
     foodLogTotal:(n,goal)=>goal?`≈ ${n} / ${goal} kcal today`:`≈ ${n} kcal today`,
     foodLogEmpty:"No meals logged today.",
@@ -786,7 +786,7 @@ const STRINGS = {
     calorieSub:"Target calculated for +2kg/month while staying lean: your baseline + morning walk (30-35 min, ~250 kcal) + your training session (~45-60 min) + a moderate surplus (no dirty bulk). Auto-updates on each weigh-in, editable if you want to set your own number.",
     calorieStatusLine:(n,goal)=>goal?`Today: ${n} / ${goal} kcal`:`Today: ${n} kcal`,
     photoTitle:"Physical progress", photoSub:"One photo a month to see your real progress — cross-reference it with your weight, not just the scale.",
-    photoAddBtn:"📸 Add a photo", photoDeleteBtn:"Delete", photoDeleteConfirm:"Delete this photo?",
+    photoAddBtn:"Add a photo", photoDeleteBtn:"Delete", photoDeleteConfirm:"Delete this photo?",
     archiveToggleLbl:n=>`📚 ${n} book${n>1?"s":""} read`,
     catDevLbl:"Personal", catBusinessLbl:"Business",
     noTasksInPanel:"No tasks here yet. Add one with Edit.",
@@ -871,6 +871,7 @@ function t(key,...args){
 function load2(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch(e){return f;}}
 
 const CHECK_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+const CAMERA_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
 const DEFAULT_PERIODS={wake:"morning",read:"evening",gym:"day",ecom:"day",shake:"day",supps:"day",meals:"day",screens:"evening"};
 const DEFAULT_CATEGORIES={wake:"dev",read:"dev",gym:"dev",ecom:"business",shake:"dev",supps:"dev",meals:"dev",screens:"dev"};
 const pad=n=>String(n).padStart(2,"0");
@@ -1096,7 +1097,7 @@ function renderTaskRow(tk){
     d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==tk.id);save("tracker:template",tasks);renderTasks();renderScore();};
   }else{
     const missed=!viewedDone[tk.id]&&wasTaskMissedRecently(tk);
-    const cameraBtn=tk.id==="meals"?`<button class="task-camera" type="button" title="${t("foodLogAddBtn")}">📸</button>`:"";
+    const cameraBtn=tk.id==="meals"?`<button class="task-camera" type="button" title="${t("foodLogAddBtn")}">${CAMERA_SVG}</button>`:"";
     d.innerHTML=`<div class="check${missed?" missed":""}">${CHECK_SVG}</div><span class="task-label">${taskDisplayLabel(tk)}${missed?`<span class="missed-hint">${t("missedHint")}</span>`:""}</span>${cameraBtn}<button class="task-menu" type="button">⋮</button>`;
     d.querySelector(".task-menu").onclick=(e)=>{e.stopPropagation();openTaskDetail(tk);};
     if(tk.id==="meals"){
@@ -1448,7 +1449,7 @@ function renderProgressPhotos(){
       gallery.appendChild(wrap);
     });
   }
-  document.getElementById("photoAddBtn").textContent=t("photoAddBtn");
+  document.getElementById("photoAddBtn").innerHTML=CAMERA_SVG+`<span>${t("photoAddBtn")}</span>`;
 }
 function openPhotoView(idx){
   const p=progressPhotos[idx];
@@ -1811,7 +1812,7 @@ function openTaskDetail(tk){
   else{detailEl.classList.add("hidden");}
   const foodSection=document.getElementById("foodLogSection");
   if(tk.id==="meals"&&isViewingToday()){
-    document.getElementById("foodLogAddBtn").textContent=t("foodLogAddBtn");
+    document.getElementById("foodLogAddBtn").innerHTML=CAMERA_SVG+`<span>${t("foodLogAddBtn")}</span>`;
     document.getElementById("foodLogApprox").textContent=t("foodLogApprox");
     renderFoodLog();
     foodSection.classList.remove("hidden");
