@@ -271,7 +271,7 @@
       </div>
       <div class="score-title" id="scoreTitle">On y va</div>
       <div class="score-sub" id="scoreSub"></div>
-      <div class="sub hidden" id="healthLine" style="margin-top:8px;margin-bottom:0;text-align:center"></div>
+      <div class="sub" id="healthLine" style="margin-top:8px;margin-bottom:0;text-align:center;min-height:16px"></div>
     </div>
 
     <!-- Tasks -->
@@ -2297,9 +2297,7 @@ async function loadHealthToday(){
     if(data.steps!=null)parts.push(t("healthSteps",data.steps.toLocaleString(t("dateLocale"))));
     if(data.workoutMinutes!=null)parts.push(t("healthActive",data.workoutMinutes));
     if(!parts.length)return;
-    const el=document.getElementById("healthLine");
-    el.textContent=parts.join(" · ");
-    el.classList.remove("hidden");
+    document.getElementById("healthLine").textContent=parts.join(" · ");
   }catch(e){}
 }
 
@@ -2361,16 +2359,27 @@ async function restoreFromBackupIfEmpty(){
 }
 
 if("serviceWorker" in navigator){
-  // When a fresh deploy is picked up (new sw.js takes control), reload once
-  // automatically so the app is never silently stuck on stale code — this is
-  // the only reliable trigger on iOS, where a home-screen PWA resumed from
-  // suspend never re-checks for updates on its own.
+  // When a fresh deploy is picked up (new sw.js takes control), reload so the
+  // app is never silently stuck on stale code — this is the only reliable
+  // trigger on iOS, where a home-screen PWA resumed from suspend never
+  // re-checks for updates on its own. But never reload while the page is
+  // actually being looked at (mid-scroll, mid-typing) — that's jarring and
+  // reads as a random glitch. Instead wait until the app is backgrounded
+  // (locked, switched away from) and reload then, invisibly; by the time
+  // it's reopened it's already fresh.
   let swRefreshing=false;
-  navigator.serviceWorker.addEventListener("controllerchange",()=>{
-    if(swRefreshing)return;
+  let swUpdatePending=false;
+  function reloadIfSafe(){
+    if(swRefreshing||!swUpdatePending)return;
+    if(document.visibilityState!=="hidden")return;
     swRefreshing=true;
     location.reload();
+  }
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    swUpdatePending=true;
+    reloadIfSafe();
   });
+  document.addEventListener("visibilitychange",reloadIfSafe);
   window.addEventListener("load",async()=>{
     navigator.serviceWorker.register("sw.js").catch(()=>{});
     const restored=await restoreFromBackupIfEmpty();
