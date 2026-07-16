@@ -702,7 +702,7 @@ const STRINGS = {
     exportBtn:"Exporter mes données (JSON)", sheetClose:"Fermer",
     googleSignInBtn:"Se connecter avec Google", loggedInLbl:"Connecté", logoutBtn:"Se déconnecter",
     securityTitle:"Sécurité & connexions", calendarStatusLbl:"Google Calendar",
-    calendarConnected:"Connecté — la synchro calendrier fonctionne.", calendarError:"Problème de connexion, dis-le-moi.", calendarUnknown:"Impossible de vérifier (hors ligne ?).",
+    calendarConnected:"Connecté — la synchro calendrier fonctionne.", calendarError:"Problème de connexion, dis-le-moi.", calendarUnknown:"Impossible de vérifier (hors ligne ?).", calendarNotSignedIn:"Connecte-toi avec Google ci-dessous pour l'activer.",
     celebTap:"Touche pour continuer",
     scoreFull:"Journée pleine", scoreSolid:"Solide, continue", scoreMoving:"En marche", scoreStart:"On y va",
     scoreFullSub:"Toutes tes tâches cochées. C'est ça qui construit le résultat.",
@@ -833,7 +833,7 @@ const STRINGS = {
     exportBtn:"Export my data (JSON)", sheetClose:"Close",
     googleSignInBtn:"Sign in with Google", loggedInLbl:"Signed in", logoutBtn:"Sign out",
     securityTitle:"Security & connections", calendarStatusLbl:"Google Calendar",
-    calendarConnected:"Connected — calendar sync is working.", calendarError:"Connection issue, let me know.", calendarUnknown:"Can't check right now (offline?).",
+    calendarConnected:"Connected — calendar sync is working.", calendarError:"Connection issue, let me know.", calendarUnknown:"Can't check right now (offline?).", calendarNotSignedIn:"Sign in with Google below to enable it.",
     celebTap:"Tap to continue",
     scoreFull:"Full day", scoreSolid:"Solid, keep going", scoreMoving:"Moving", scoreStart:"Let's go",
     scoreFullSub:"All your tasks checked. That's what builds the result.",
@@ -2161,6 +2161,11 @@ renderAuthUI();
 
 async function checkCalendarStatus(){
   const iconEl=document.getElementById("calendarStatusIcon"),subEl=document.getElementById("calendarStatusSub");
+  if(!getApiKey()){
+    iconEl.textContent="";iconEl.style.background="var(--card)";
+    subEl.textContent=t("calendarNotSignedIn");
+    return;
+  }
   try{
     const res=await apiFetch("/calendar-status");
     const data=await res.json();
