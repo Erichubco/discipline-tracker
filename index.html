@@ -2145,14 +2145,12 @@ function renderAuthUI(){
 }
 document.getElementById("googleSignInBtn").onclick=()=>{location.href=PUSH_API+"/auth/start";};
 document.getElementById("logoutBtn").onclick=async()=>{
+  // Only clear the session — never the local tracker: data. Wiping it here
+  // was a real bug: on a personal phone (the normal case), logging out and
+  // back in as the same person must never lose anything. The local data is
+  // the actual source of truth; it re-syncs to the account on next sign-in
+  // regardless of whether it was ever wiped.
   try{await apiFetch("/auth/logout",{method:"POST"});}catch(e){}
-  // Clear all local tracker: state too, not just the session — otherwise the
-  // next person to sign in on this device would briefly see the previous
-  // user's cached data before anything reloads.
-  for(let i=localStorage.length-1;i>=0;i--){
-    const k=localStorage.key(i);
-    if(k&&k.startsWith("tracker:"))localStorage.removeItem(k);
-  }
   localStorage.removeItem("disciplineApiKey");
   localStorage.removeItem("userEmail");
   location.reload();
