@@ -189,6 +189,10 @@
   .food-log-add-btn{width:100%;background:var(--cardHi);border:1px solid var(--border);color:var(--green);padding:10px 12px;border-radius:12px;font-size:14px;font-weight:600;text-align:center}
   .food-log-loading{color:var(--muted);font-size:13px;text-align:center;padding:8px 0}
   .food-log-approx{color:var(--muted);font-size:11px;line-height:1.4;margin-top:8px}
+  .photo-gallery{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;margin-top:10px}
+  .photo-thumb-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0}
+  .photo-thumb{width:70px;height:70px;border-radius:12px;object-fit:cover;flex-shrink:0;cursor:pointer;border:1px solid var(--border);display:block}
+  .photo-thumb-date{font-size:10px;color:var(--muted)}
   @keyframes fadeIn{from{opacity:0}to{opacity:1}}
   @keyframes popIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
   .settings-brand{text-align:center;margin-bottom:18px}
@@ -486,6 +490,26 @@
         <span>kcal/j</span>
       </div>
     </div>
+
+    <!-- Progress Photos -->
+    <div class="card">
+      <div class="card-h"><span class="dot" style="background:var(--green)"></span><span id="photoTitle">Progression physique</span></div>
+      <div class="sub" id="photoSub" style="margin-top:4px"></div>
+      <div class="photo-gallery hidden" id="photoGallery"></div>
+      <div class="food-log-add-btn" id="photoAddBtn" style="margin-top:12px"></div>
+      <input type="file" accept="image/*" capture="environment" class="hidden" id="photoInput">
+    </div>
+  </div>
+
+  <div class="celebration hidden" id="photoViewSheet">
+    <div class="task-detail-card" style="text-align:center">
+      <img id="photoViewImg" style="width:100%;border-radius:16px;margin-bottom:16px;display:block" />
+      <div class="sub" id="photoViewDate" style="margin-bottom:16px"></div>
+      <div class="task-detail-actions">
+        <button class="btn btn-ghost" id="photoDeleteBtn" style="flex:1"></button>
+        <button class="btn btn-green" id="photoViewCloseBtn" style="flex:1"></button>
+      </div>
+    </div>
   </div>
 
   <!-- SETTINGS -->
@@ -631,6 +655,8 @@ const STRINGS = {
     calorieTitle:"Calories", calorieGoalLbl:"Objectif",
     calorieSub:"Objectif calculé pour +2kg/mois en restant lean : ta dépense de base + ta marche du matin (30-35 min, ~250 kcal) + ta séance muscu (~45-60 min) + un surplus modéré (pas de dirty bulk). Mis à jour auto à chaque pesée, modifiable si tu veux fixer ton propre chiffre.",
     calorieStatusLine:(n,goal)=>goal?`Aujourd'hui : ${n} / ${goal} kcal`:`Aujourd'hui : ${n} kcal`,
+    photoTitle:"Progression physique", photoSub:"Une photo par mois pour voir ta vraie évolution — à croiser avec le poids, pas juste la balance.",
+    photoAddBtn:"📸 Ajouter une photo", photoDeleteBtn:"Supprimer", photoDeleteConfirm:"Supprimer cette photo ?",
     archiveToggleLbl:n=>`📚 ${n} livre${n>1?"s":""} lu${n>1?"s":""}`,
     catDevLbl:"Perso", catBusinessLbl:"Business",
     noTasksInPanel:"Aucune tâche ici pour l'instant. Ajoute-en une avec Modifier.",
@@ -759,6 +785,8 @@ const STRINGS = {
     calorieTitle:"Calories", calorieGoalLbl:"Goal",
     calorieSub:"Target calculated for +2kg/month while staying lean: your baseline + morning walk (30-35 min, ~250 kcal) + your training session (~45-60 min) + a moderate surplus (no dirty bulk). Auto-updates on each weigh-in, editable if you want to set your own number.",
     calorieStatusLine:(n,goal)=>goal?`Today: ${n} / ${goal} kcal`:`Today: ${n} kcal`,
+    photoTitle:"Physical progress", photoSub:"One photo a month to see your real progress — cross-reference it with your weight, not just the scale.",
+    photoAddBtn:"📸 Add a photo", photoDeleteBtn:"Delete", photoDeleteConfirm:"Delete this photo?",
     archiveToggleLbl:n=>`📚 ${n} book${n>1?"s":""} read`,
     catDevLbl:"Personal", catBusinessLbl:"Business",
     noTasksInPanel:"No tasks here yet. Add one with Edit.",
@@ -879,6 +907,7 @@ save("tracker:template",tasks);
 let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
 let calorieGoal=load("tracker:calorieGoal",{value:null,auto:true});
+let progressPhotos=load("tracker:progressPhotos",[]);
 let ecomSprintDay=load("tracker:ecomSprintDay",1);
 let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null,author:null});
 let booksArchive=load("tracker:booksArchive",[]);
@@ -999,6 +1028,8 @@ function applyStaticI18n(){
   document.getElementById("calorieTitle").textContent=t("calorieTitle");
   document.getElementById("calorieSub").textContent=t("calorieSub");
   document.getElementById("calorieGoalLbl").textContent=t("calorieGoalLbl");
+  document.getElementById("photoTitle").textContent=t("photoTitle");
+  document.getElementById("photoSub").textContent=t("photoSub");
   document.getElementById("progressionTitle").textContent=t("progressionTitle");
   document.getElementById("progressionSub").textContent=t("progressionSub");
   document.getElementById("bizTitle").textContent=t("bizTitle");
@@ -1395,6 +1426,66 @@ function renderCalories(){
     svgEl.innerHTML="";svgEl.classList.add("hidden");
   }
 }
+function renderProgressPhotos(){
+  const gallery=document.getElementById("photoGallery");
+  gallery.innerHTML="";
+  if(!progressPhotos.length){
+    gallery.classList.add("hidden");
+  }else{
+    gallery.classList.remove("hidden");
+    progressPhotos.forEach((p,i)=>{
+      const wrap=document.createElement("div");
+      wrap.className="photo-thumb-wrap";
+      const d=new Date(p.date);
+      const img=document.createElement("img");
+      img.className="photo-thumb";
+      img.src=p.photo;
+      img.onclick=()=>openPhotoView(i);
+      const dateEl=document.createElement("span");
+      dateEl.className="photo-thumb-date";
+      dateEl.textContent=d.toLocaleDateString(t("dateLocale"),{day:"numeric",month:"short"});
+      wrap.appendChild(img);wrap.appendChild(dateEl);
+      gallery.appendChild(wrap);
+    });
+  }
+  document.getElementById("photoAddBtn").textContent=t("photoAddBtn");
+}
+function openPhotoView(idx){
+  const p=progressPhotos[idx];
+  document.getElementById("photoViewImg").src=p.photo;
+  document.getElementById("photoViewDate").textContent=new Date(p.date).toLocaleDateString(t("dateLocale"),{day:"numeric",month:"long",year:"numeric"});
+  const delBtn=document.getElementById("photoDeleteBtn");
+  delBtn.textContent=t("photoDeleteBtn");
+  delBtn.onclick=()=>{
+    if(!confirm(t("photoDeleteConfirm")))return;
+    progressPhotos=progressPhotos.filter((_,i)=>i!==idx);
+    save("tracker:progressPhotos",progressPhotos);
+    closePhotoView();
+    renderProgressPhotos();
+  };
+  document.getElementById("photoViewCloseBtn").textContent=t("sheetClose");
+  document.getElementById("photoViewSheet").classList.remove("hidden");
+}
+function closePhotoView(){document.getElementById("photoViewSheet").classList.add("hidden");}
+document.getElementById("photoViewCloseBtn").onclick=closePhotoView;
+document.getElementById("photoViewSheet").addEventListener("click",e=>{if(e.target.id==="photoViewSheet")closePhotoView();});
+document.getElementById("photoAddBtn").onclick=()=>document.getElementById("photoInput").click();
+document.getElementById("photoInput").addEventListener("change",e=>{
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const dataUrl=resizeToDataUrl(img,700,0.8);
+      progressPhotos.push({date:today(),photo:dataUrl});
+      save("tracker:progressPhotos",progressPhotos);
+      renderProgressPhotos();
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value="";
+});
 function renderReading(){
   const thisYear=new Date().getFullYear();
   const booksThisYearCount=booksArchive.filter(b=>new Date(b.finishedDate).getFullYear()===thisYear).length;
@@ -1853,7 +1944,7 @@ function setLang(l){
   lang=l;
   save("tracker:lang",lang);
   applyStaticI18n();
-  renderScore();renderTasks();renderHeatmap();renderWeight();renderCalories();renderReading();renderPeriodStats();renderBiz();
+  renderScore();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderReading();renderPeriodStats();renderBiz();
   if(document.getElementById("reminderCard")){
     setReminderBtnState(pushSubscribed);
     if(!(window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true)){
@@ -2122,7 +2213,7 @@ document.getElementById("exportBtn").onclick=()=>{
 
 applyStaticI18n();
 maybeUpdateCalorieGoal();
-renderScore();renderTasks();renderHeatmap();renderWeight();renderCalories();renderReading();renderPeriodStats();renderBiz();
+renderScore();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderReading();renderPeriodStats();renderBiz();
 
 async function loadHealthToday(){
   try{
