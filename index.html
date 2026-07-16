@@ -629,7 +629,7 @@ const STRINGS = {
     foodLogApprox:"Estimation approximative par IA (±20-30%), à prendre comme repère, pas comme mesure exacte.",
     foodLogDeleteConfirm:desc=>`Supprimer "${desc}" du log du jour ?`,
     calorieTitle:"Calories", calorieGoalLbl:"Objectif",
-    calorieSub:"Objectif calculé pour viser +2kg/mois à partir de ton poids actuel (mis à jour auto à chaque pesée). Modifiable si tu veux fixer ton propre chiffre.",
+    calorieSub:"Objectif calculé pour +2kg/mois en restant lean : ta dépense de base + ta marche du matin (~214 kcal) + ta séance muscu (~45-60 min) + un surplus modéré (pas de dirty bulk). Mis à jour auto à chaque pesée, modifiable si tu veux fixer ton propre chiffre.",
     calorieStatusLine:(n,goal)=>goal?`Aujourd'hui : ${n} / ${goal} kcal`:`Aujourd'hui : ${n} kcal`,
     archiveToggleLbl:n=>`📚 ${n} livre${n>1?"s":""} lu${n>1?"s":""}`,
     catDevLbl:"Perso", catBusinessLbl:"Business",
@@ -757,7 +757,7 @@ const STRINGS = {
     foodLogApprox:"Approximate AI estimate (±20-30%), use it as a rough guide, not an exact measurement.",
     foodLogDeleteConfirm:desc=>`Delete "${desc}" from today's log?`,
     calorieTitle:"Calories", calorieGoalLbl:"Goal",
-    calorieSub:"Target calculated to aim for +2kg/month based on your current weight (auto-updates on each weigh-in). Editable if you want to set your own number.",
+    calorieSub:"Target calculated for +2kg/month while staying lean: your baseline + morning walk (~214 kcal) + your training session (~45-60 min) + a moderate surplus (no dirty bulk). Auto-updates on each weigh-in, editable if you want to set your own number.",
     calorieStatusLine:(n,goal)=>goal?`Today: ${n} / ${goal} kcal`:`Today: ${n} kcal`,
     archiveToggleLbl:n=>`📚 ${n} book${n>1?"s":""} read`,
     catDevLbl:"Personal", catBusinessLbl:"Business",
@@ -1341,9 +1341,21 @@ function renderWeight(){
     svgEl.innerHTML="";svgEl.classList.add("hidden");
   }
 }
-// ~35 kcal/kg = maintenance for a moderately active adult training 5x/week.
-// +500 kcal/day surplus ≈ +2kg/month (2kg × 7700kcal ÷ 30 days ≈ 513kcal, rounded).
-function computeAutoCalorieGoal(weightKg){return Math.round((weightKg*35+500)/10)*10;}
+// Built from Eric's real daily activity instead of a flat "active" multiplier:
+// - 30 kcal/kg = BMR + non-exercise baseline (lighter than before since exercise
+//   is now counted separately, explicitly, below).
+// - Daily morning walk: ~4000 steps / 3.24km ≈ 214 kcal (his real tracked number).
+// - Resistance training: ~50 min average (his stated 45-60 min), moderate
+//   intensity ≈ 6 MET → kcal/min = MET×3.5×kg/200.
+// - +400 kcal/day surplus (kept moderate on purpose — the goal is +2kg/month
+//   while staying lean, not a dirty bulk).
+function computeAutoCalorieGoal(weightKg){
+  const baseMaintenance=weightKg*30;
+  const walkBurn=214;
+  const trainingBurn=Math.round(6*3.5*weightKg/200*50);
+  const leanSurplus=400;
+  return Math.round((baseMaintenance+walkBurn+trainingBurn+leanSurplus)/10)*10;
+}
 function maybeUpdateCalorieGoal(){
   if(!weights.length)return;
   if(calorieGoal.auto||calorieGoal.value==null){
