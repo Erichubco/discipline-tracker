@@ -92,7 +92,7 @@
   .missed-hint{display:block;font-size:10px;font-weight:700;color:var(--red);margin-top:1px}
   .check svg{opacity:0;transition:opacity .15s}
   .task.done .check svg{opacity:1}
-  .task-label{font-size:14px}
+  .task-label{font-size:14px;flex:1;min-width:0}
   .task.done .task-label{color:var(--muted);text-decoration:line-through}
   .del{background:#fdecea;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--red);width:32px;height:32px;border-radius:50%;flex-shrink:0;font-size:14px}
   .btn-link{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:4px;font-family:inherit}
@@ -705,8 +705,8 @@ const STRINGS = {
       "Repos. Ton corps récupère et se reconstruit — la récup fait partie du programme. Pas de séance aujourd'hui.",
       "Repos. Profite du week-end, la prochaine séance (PUSH) reprend lundi.",
     ],
-    mealsDetail:"🍳 Matin — Petit-déj\nVarie selon l'envie :\n🥣 Porridge d'avoine au lait + banane + cacahuètes écrasées\n🍲 Uji (mil / ulezi / sorgho) au lait + whey + pâte de cacahuète\n🍳 Omelette 3-4 œufs + mozzarella + avocat\nSans sucre ajouté, la banane suffit. Jours sans faim : un verre d'uji passe tout seul.\n\n☀️ Midi — Déjeuner (repas principal)\nChoisis UNE option (+ huile d'olive) :\n🍚 Riz + filet de bœuf + avocat + carottes\n🍌 Bananes bouillies + bœuf mijoté + chou-fleur\n🍚 Riz + poulet + légumes\n🍳 Omelette + riz + avocat\nSi peu de faim : commence petit, rattrape avec un fruit après.\n\n🍽️ Soir — Dîner\nChoisis UNE option (+ huile d'olive) :\n🍚 Riz + poulet + légumes\n🍳 Grande omelette + avocat + chou-fleur sauté\n🍌 Bœuf + bananes bouillies + carottes\nPas de pression sur la quantité — la régularité, c'est ça qui paie.",
-    mealsMomentPreview:["Petit-déj : porridge, uji ou œufs","Déjeuner : riz + bœuf/poulet + légumes","Dîner : riz/omelette + poulet + légumes"],
+    mealsDetail:"🍳 Matin — Petit-déj\nChoisis UNE option (+ huile d'olive) :\n🥣 Porridge d'avoine au lait + banane + cacahuètes écrasées\n🍲 Uji (mil / ulezi / sorgho) au lait + whey + pâte de cacahuète\n🍳 Omelette 3-4 œufs + mozzarella + avocat\nSans sucre ajouté, la banane suffit. Jours sans faim : un verre d'uji passe tout seul.\n\n☀️ Midi — Déjeuner (repas principal)\nChoisis UNE option (+ huile d'olive) :\n🍚 Riz + filet de bœuf + avocat + carottes\n🍌 Bananes bouillies + bœuf mijoté + chou-fleur\n🍚 Riz + poulet + légumes\nSi peu de faim : commence petit, rattrape avec un fruit après.\n\n🍽️ Soir — Dîner\nChoisis UNE option (+ huile d'olive) :\n🍳 Grande omelette + avocat + chou-fleur sauté\n🍌 Bœuf + bananes bouillies + carottes\n🥑 Poulet + légumes + avocat (sans riz, pour varier du midi)\nPas de pression sur la quantité — la régularité, c'est ça qui paie.",
+    mealsMomentPreview:["Petit-déj : porridge, uji ou œufs","Déjeuner : riz + bœuf/poulet + légumes","Dîner : omelette, bœuf ou poulet + avocat"],
     shakeDetail:"🥤 Collation de l'après-midi, tous les jours :\n\n• Whey ISO100\n• Lait (ou lait fermenté)\n• + ta créatine dedans (dose du pot)\n\nBien après le déjeuner = léger, pas lourd. Parfait pour étaler tes calories et garantir tes protéines même les jours sans faim, sans te couper l'appétit du dîner.",
     greetMorning:"Bonjour", greetAfternoon:"Bon après-midi", greetEvening:"Bonsoir",
     greetingSub:"Prêt à avancer sur tes objectifs aujourd'hui ?",
@@ -835,8 +835,8 @@ const STRINGS = {
       "Rest. Your body recovers and rebuilds — recovery is part of the program. No session today.",
       "Rest. Enjoy the weekend, next session (PUSH) starts Monday.",
     ],
-    mealsDetail:"🍳 Morning — Breakfast\nMix it up:\n🥣 Oat porridge with milk + banana + crushed peanuts\n🍲 Uji (millet/sorghum) with milk + whey + peanut butter\n🍳 3-4 egg omelette + mozzarella + avocado\nNo added sugar, the banana is enough. Low appetite days: a glass of uji goes down easy.\n\n☀️ Midday — Lunch (main meal)\nPick ONE option (+ olive oil):\n🍚 Rice + beef fillet + avocado + carrots\n🍌 Boiled plantain + braised beef + cauliflower\n🍚 Rice + chicken + vegetables\n🍳 Omelette + rice + avocado\nLow appetite: start small, top up with fruit after.\n\n🍽️ Evening — Dinner\nPick ONE option (+ olive oil):\n🍚 Rice + chicken + vegetables\n🍳 Big omelette + avocado + sautéed cauliflower\n🍌 Beef + boiled plantain + carrots\nNo pressure on quantity — consistency is what pays off.",
-    mealsMomentPreview:["Breakfast: porridge, uji or eggs","Lunch: rice + beef/chicken + veggies","Dinner: rice/omelette + chicken + veggies"],
+    mealsDetail:"🍳 Morning — Breakfast\nPick ONE option (+ olive oil):\n🥣 Oat porridge with milk + banana + crushed peanuts\n🍲 Uji (millet/sorghum) with milk + whey + peanut butter\n🍳 3-4 egg omelette + mozzarella + avocado\nNo added sugar, the banana is enough. Low appetite days: a glass of uji goes down easy.\n\n☀️ Midday — Lunch (main meal)\nPick ONE option (+ olive oil):\n🍚 Rice + beef fillet + avocado + carrots\n🍌 Boiled plantain + braised beef + cauliflower\n🍚 Rice + chicken + vegetables\nLow appetite: start small, top up with fruit after.\n\n🍽️ Evening — Dinner\nPick ONE option (+ olive oil):\n🍳 Big omelette + avocado + sautéed cauliflower\n🍌 Beef + boiled plantain + carrots\n🥑 Chicken + vegetables + avocado (no rice, for variety from lunch)\nNo pressure on quantity — consistency is what pays off.",
+    mealsMomentPreview:["Breakfast: porridge, uji or eggs","Lunch: rice + beef/chicken + veggies","Dinner: omelette, beef or chicken + avocado"],
     shakeDetail:"🥤 Afternoon snack, every day:\n\n• Whey ISO100\n• Milk (or fermented milk)\n• + your creatine mixed in (scoop from the tub)\n\nWell after lunch = light, not heavy. Perfect for spreading out your calories and guaranteeing your protein even on low-appetite days, without killing your dinner appetite.",
     greetMorning:"Good morning", greetAfternoon:"Good afternoon", greetEvening:"Good evening",
     greetingSub:"Ready to focus on your goals today?",
