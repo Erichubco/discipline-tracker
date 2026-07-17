@@ -104,6 +104,8 @@
   input{flex:1;background:var(--cardHi);border:1px solid transparent;border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit;width:100%}
   input:focus{border-color:var(--green);background:#fff}
   .btn{border:none;border-radius:9999px;cursor:pointer;font-weight:700;font-size:14px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+  .btn,.icon-btn,.period-opt,.task-tab,.chapter-pill-btn,.fab,.del,.task-menu{transition:transform .1s ease}
+  .btn:active,.icon-btn:active,.period-opt:active,.task-tab:active,.chapter-pill-btn:active,.fab:active,.del:active,.task-menu:active{transform:scale(.94)}
   .btn-amber{background:linear-gradient(135deg,var(--green),var(--amber));color:#fff;padding:0 16px;box-shadow:0 4px 14px rgba(83,65,205,.25)}
   .btn-green{background:linear-gradient(135deg,var(--green),var(--amber));color:#fff;padding:10px 16px;box-shadow:0 4px 14px rgba(83,65,205,.25)}
   .btn-ghost{background:var(--cardHi);border:1px solid var(--border);color:var(--green);padding:10px 12px}
@@ -296,21 +298,6 @@
           <div class="task-panel" id="panel-business"></div>
         </div>
       </div>
-      <div class="row hidden" id="addRow" style="margin-top:12px;flex-direction:column;gap:8px">
-        <div class="period-picker" id="periodPicker">
-          <button type="button" class="period-opt" data-period="morning">🌅</button>
-          <button type="button" class="period-opt active" data-period="day">☀️</button>
-          <button type="button" class="period-opt" data-period="evening">🌙</button>
-        </div>
-        <div class="period-picker" id="categoryPicker">
-          <button type="button" class="period-opt active" data-category="dev" id="catDevBtn"><span id="catDevLbl">Perso</span></button>
-          <button type="button" class="period-opt" data-category="business" id="catBusinessBtn"><span id="catBusinessLbl">Business</span></button>
-        </div>
-        <div class="row">
-          <input id="newTask" placeholder="Nouvelle tâche…" />
-          <button class="btn btn-amber" id="addBtn">+</button>
-        </div>
-      </div>
       <div class="edit-footer">
         <button class="btn-link" id="editBtn">Modifier</button>
       </div>
@@ -494,7 +481,7 @@
       <div class="goal-row" style="margin-top:14px">
         <span id="calorieGoalLbl">Objectif</span>
         <input id="calorieGoalInput" inputmode="numeric" placeholder="kcal" />
-        <span>kcal/j</span>
+        <span id="calorieUnitLbl">kcal/j</span>
       </div>
     </div>
 
@@ -621,6 +608,26 @@
   </div>
 </div>
 
+<div class="celebration hidden" id="addTaskSheet">
+  <div class="task-detail-card">
+    <div class="task-detail-label" id="addTaskTitle"></div>
+    <input id="newTask" placeholder="Nouvelle tâche…" style="width:100%;margin-bottom:16px" />
+    <div class="period-picker" id="periodPicker" style="margin-bottom:10px">
+      <button type="button" class="period-opt" data-period="morning">🌅</button>
+      <button type="button" class="period-opt active" data-period="day">☀️</button>
+      <button type="button" class="period-opt" data-period="evening">🌙</button>
+    </div>
+    <div class="period-picker" id="categoryPicker" style="margin-bottom:20px">
+      <button type="button" class="period-opt active" data-category="dev" id="catDevBtn"><span id="catDevLbl">Perso</span></button>
+      <button type="button" class="period-opt" data-category="business" id="catBusinessBtn"><span id="catBusinessLbl">Business</span></button>
+    </div>
+    <div class="task-detail-actions">
+      <button class="btn btn-ghost" id="addTaskCancelBtn" style="flex:1"></button>
+      <button class="btn btn-amber" id="addBtn" style="flex:1"></button>
+    </div>
+  </div>
+</div>
+
 <script>
 // Capture the session token from a Google sign-in redirect (#session=...&email=...)
 // before anything else runs, so getApiKey()/apiFetch() are correct from the very
@@ -639,7 +646,7 @@ const STRINGS = {
     dateLocale:"fr-FR",
     heatmapTitle:"Activité", heatmapSub:"Un carré = un jour. Plus foncé = plus de tâches cochées ce jour-là. 16 dernières semaines.", legendLess:"Moins", legendMore:"Plus",
     tasksTitle:"Tâches du jour", editBtn:"Modifier", editBtnDone:"Terminé",
-    newTaskPlaceholder:"Nouvelle tâche…",
+    newTaskPlaceholder:"Nouvelle tâche…", addTaskTitle:"Nouvelle tâche", addTaskCancelBtn:"Annuler", addTaskConfirmBtn:"Ajouter",
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
     streakCardTitle:"Consistance", weeklyProgressTitle:"Détail par catégorie (cette semaine)", periodStatsTitle:"Semaine · mois", periodStatsSub:"% des tâches du jour cochées, tout confondu.", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série", daysUnit:"jours",
     streakHint:"Une série se construit avec des journées à 100% (toutes les tâches cochées). Coche tout en une journée pour la démarrer.",
@@ -686,7 +693,7 @@ const STRINGS = {
     foodLogEmpty:"Aucun repas loggé aujourd'hui.",
     foodLogApprox:"Estimation approximative par IA (±20-30%), à prendre comme repère, pas comme mesure exacte.",
     foodLogDeleteConfirm:desc=>`Supprimer "${desc}" du log du jour ?`,
-    calorieTitle:"Calories", calorieGoalLbl:"Objectif",
+    calorieTitle:"Calories", calorieGoalLbl:"Objectif", calorieUnitLbl:"kcal/j",
     calorieSub:"Objectif calculé pour +2kg/mois en restant lean : ta dépense de base + ta marche du matin (30-35 min, ~250 kcal) + ta séance muscu (~45-60 min) + un surplus modéré (pas de dirty bulk). Mis à jour auto à chaque pesée, modifiable si tu veux fixer ton propre chiffre.",
     calorieStatusLine:(n,goal)=>goal?`Aujourd'hui : ${n} / ${goal} kcal`:`Aujourd'hui : ${n} kcal`,
     photoTitle:"Progression physique", photoSub:"Une photo par mois pour voir ta vraie évolution — à croiser avec le poids, pas juste la balance.",
@@ -740,8 +747,8 @@ const STRINGS = {
       "Repos. Ton corps récupère et se reconstruit — la récup fait partie du programme. Pas de séance aujourd'hui.",
       "Repos. Profite du week-end, la prochaine séance (PUSH) reprend lundi.",
     ],
-    mealsDetail:"🍳 Matin — Petit-déj\nChoisis UNE option (+ huile d'olive) :\n🥣 Porridge d'avoine au lait + banane + cacahuètes écrasées\n🍲 Uji (mil / ulezi / sorgho) au lait + pâte de cacahuète\n🍳 Omelette 3-4 œufs + mozzarella + avocat\nSans sucre ajouté, la banane suffit. Jours sans faim : un verre d'uji passe tout seul.\n\n☀️ Midi — Déjeuner (repas principal)\nChoisis UNE option (+ huile d'olive) :\n🍚 Riz + filet de bœuf + avocat + carottes\n🍌 Bananes bouillies + bœuf mijoté + chou-fleur\n🍚 Riz + poulet + légumes\nSi peu de faim : commence petit, rattrape avec un fruit après.\n\n🍽️ Soir — Dîner\nChoisis UNE option (+ huile d'olive) :\n🍳 Grande omelette + avocat + chou-fleur sauté\n🍌 Bœuf + bananes bouillies + carottes\n🥑 Poulet + légumes + avocat (sans riz, pour varier du midi)\nPas de pression sur la quantité — la régularité, c'est ça qui paie.",
-    mealsMomentPreview:["Petit-déj : porridge, uji ou œufs","Déjeuner : riz + bœuf/poulet + légumes","Dîner : omelette, bœuf ou poulet + avocat"],
+    mealsDetail:"🍳 Matin — Petit-déj (~750 kcal)\n🥣 80g flocons d'avoine cuits dans 300ml lait entier\n🍌 1 banane\n🥜 25g cacahuètes concassées\n\n☀️ Midi — Déjeuner (~1150 kcal) — grosse assiette\n🍚 280g riz cuit\n🥩 220g filet de bœuf\n🥑 1/2 avocat\n🥕 100g carottes\n🫒 1 c. à soupe d'huile d'olive\n\n🍽️ Soir — Dîner (~1000 kcal)\n🍳 5 œufs + 50g mozzarella (omelette)\n🥑 1/2 avocat\n🥦 150g chou-fleur sauté à l'huile d'olive\n🍌 150g banane bouillie\n\nTotal repas ≈ 2900 kcal + collation 15h30 (whey + lait + créatine, ~280 kcal) = ≈ 3200 kcal/jour.\nMême menu chaque jour pour rester simple — pas de choix à faire. Quantités approximatives (±10-15%).",
+    mealsMomentPreview:["Petit-déj : porridge avoine + banane","Déjeuner : riz + bœuf + avocat","Dîner : omelette + avocat + chou-fleur"],
     shakeDetail:"🥤 Collation de l'après-midi, tous les jours :\n\n• Whey ISO100\n• Lait (ou lait fermenté)\n• + ta créatine dedans (dose du pot)\n\nBien après le déjeuner = léger, pas lourd. Parfait pour étaler tes calories et garantir tes protéines même les jours sans faim, sans te couper l'appétit du dîner.",
     greetMorning:"Bonjour", greetAfternoon:"Bon après-midi", greetEvening:"Bonsoir",
     greetingSub:"Prêt à avancer sur tes objectifs aujourd'hui ?",
@@ -770,7 +777,7 @@ const STRINGS = {
     dateLocale:"en-US",
     heatmapTitle:"Activity", heatmapSub:"One square = one day. Darker = more tasks checked that day. Last 16 weeks.", legendLess:"Less", legendMore:"More",
     tasksTitle:"Today's tasks", editBtn:"Edit", editBtnDone:"Done",
-    newTaskPlaceholder:"New task…",
+    newTaskPlaceholder:"New task…", addTaskTitle:"New task", addTaskCancelBtn:"Cancel", addTaskConfirmBtn:"Add",
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
     streakCardTitle:"Consistency", weeklyProgressTitle:"Breakdown by category (this week)", periodStatsTitle:"Week · month", periodStatsSub:"% of today's tasks checked, all combined.", streakCurLbl:"current streak", streakBestLbl:"best streak", daysUnit:"days",
     streakHint:"A streak is built from 100% days (every task checked). Complete a full day to start one.",
@@ -817,7 +824,7 @@ const STRINGS = {
     foodLogEmpty:"No meals logged today.",
     foodLogApprox:"Approximate AI estimate (±20-30%), use it as a rough guide, not an exact measurement.",
     foodLogDeleteConfirm:desc=>`Delete "${desc}" from today's log?`,
-    calorieTitle:"Calories", calorieGoalLbl:"Goal",
+    calorieTitle:"Calories", calorieGoalLbl:"Goal", calorieUnitLbl:"kcal/day",
     calorieSub:"Target calculated for +2kg/month while staying lean: your baseline + morning walk (30-35 min, ~250 kcal) + your training session (~45-60 min) + a moderate surplus (no dirty bulk). Auto-updates on each weigh-in, editable if you want to set your own number.",
     calorieStatusLine:(n,goal)=>goal?`Today: ${n} / ${goal} kcal`:`Today: ${n} kcal`,
     photoTitle:"Physical progress", photoSub:"One photo a month to see your real progress — cross-reference it with your weight, not just the scale.",
@@ -871,8 +878,8 @@ const STRINGS = {
       "Rest. Your body recovers and rebuilds — recovery is part of the program. No session today.",
       "Rest. Enjoy the weekend, next session (PUSH) starts Monday.",
     ],
-    mealsDetail:"🍳 Morning — Breakfast\nPick ONE option (+ olive oil):\n🥣 Oat porridge with milk + banana + crushed peanuts\n🍲 Uji (millet/sorghum) with milk + peanut butter\n🍳 3-4 egg omelette + mozzarella + avocado\nNo added sugar, the banana is enough. Low appetite days: a glass of uji goes down easy.\n\n☀️ Midday — Lunch (main meal)\nPick ONE option (+ olive oil):\n🍚 Rice + beef fillet + avocado + carrots\n🍌 Boiled plantain + braised beef + cauliflower\n🍚 Rice + chicken + vegetables\nLow appetite: start small, top up with fruit after.\n\n🍽️ Evening — Dinner\nPick ONE option (+ olive oil):\n🍳 Big omelette + avocado + sautéed cauliflower\n🍌 Beef + boiled plantain + carrots\n🥑 Chicken + vegetables + avocado (no rice, for variety from lunch)\nNo pressure on quantity — consistency is what pays off.",
-    mealsMomentPreview:["Breakfast: porridge, uji or eggs","Lunch: rice + beef/chicken + veggies","Dinner: omelette, beef or chicken + avocado"],
+    mealsDetail:"🍳 Morning — Breakfast (~750 kcal)\n🥣 80g oat flakes cooked in 300ml whole milk\n🍌 1 banana\n🥜 25g crushed peanuts\n\n☀️ Midday — Lunch (~1150 kcal) — big plate\n🍚 280g cooked rice\n🥩 220g beef fillet\n🥑 1/2 avocado\n🥕 100g carrots\n🫒 1 tbsp olive oil\n\n🍽️ Evening — Dinner (~1000 kcal)\n🍳 5 eggs + 50g mozzarella (omelette)\n🥑 1/2 avocado\n🥦 150g sautéed cauliflower with olive oil\n🍌 150g boiled plantain\n\nMeals total ≈ 2900 kcal + 3:30pm shake (whey + milk + creatine, ~280 kcal) = ≈ 3200 kcal/day.\nSame menu every day to keep it simple — no choices to make. Approximate quantities (±10-15%).",
+    mealsMomentPreview:["Breakfast: oat porridge + banana","Lunch: rice + beef + avocado","Dinner: omelette + avocado + cauliflower"],
     shakeDetail:"🥤 Afternoon snack, every day:\n\n• Whey ISO100\n• Milk (or fermented milk)\n• + your creatine mixed in (scoop from the tub)\n\nWell after lunch = light, not heavy. Perfect for spreading out your calories and guaranteeing your protein even on low-appetite days, without killing your dinner appetite.",
     greetMorning:"Good morning", greetAfternoon:"Good afternoon", greetEvening:"Good evening",
     greetingSub:"Ready to focus on your goals today?",
@@ -1068,6 +1075,9 @@ function applyStaticI18n(){
   document.getElementById("devWeekLbl").textContent=t("devWeekLbl");
   document.getElementById("editBtn").textContent=editMode?t("editBtnDone"):t("editBtn");
   document.getElementById("newTask").placeholder=t("newTaskPlaceholder");
+  document.getElementById("addTaskTitle").textContent=t("addTaskTitle");
+  document.getElementById("addTaskCancelBtn").textContent=t("addTaskCancelBtn");
+  document.getElementById("addBtn").textContent=t("addTaskConfirmBtn");
   document.getElementById("periodStatsTitle").textContent=t("periodStatsTitle");
   document.getElementById("periodStatsSub").textContent=t("periodStatsSub");
   document.getElementById("streakCardTitle").textContent=t("streakCardTitle");
@@ -1093,6 +1103,8 @@ function applyStaticI18n(){
   document.getElementById("bizEyebrow").textContent=t("bizEyebrow");
   document.getElementById("bizGoalLbl").textContent=t("bizGoalLbl");
   document.getElementById("bizInput").placeholder=t("bizPlaceholder");
+  document.getElementById("bizBtn").textContent=t("weightSave");
+  document.getElementById("calorieUnitLbl").textContent=t("calorieUnitLbl");
   document.getElementById("wInput").placeholder=t("weightPlaceholder");
   document.getElementById("wBtn").textContent=t("weightSave");
   document.getElementById("readingTitle").textContent=t("readingTitle");
@@ -2022,24 +2034,20 @@ document.getElementById("langIconBtn").onclick=()=>setLang(lang==="fr"?"en":"fr"
 function toggleEditMode(){
   editMode=!editMode;
   document.getElementById("editBtn").textContent=editMode?t("editBtnDone"):t("editBtn");
-  document.getElementById("addRow").classList.toggle("hidden",!editMode);
   renderTasks();
 }
 function openAddTask(){
-  if(!editMode){
-    editMode=true;
-    document.getElementById("editBtn").textContent=t("editBtnDone");
-    document.getElementById("addRow").classList.remove("hidden");
-    renderTasks();
-  }
-  const addRow=document.getElementById("addRow");
-  addRow.scrollIntoView({behavior:"smooth",block:"center"});
+  document.getElementById("newTask").value="";
+  document.getElementById("addTaskSheet").classList.remove("hidden");
   document.getElementById("newTask").focus();
 }
+function closeAddTask(){document.getElementById("addTaskSheet").classList.add("hidden");}
 document.getElementById("editBtn").onclick=toggleEditMode;
 document.getElementById("fabAdd").onclick=openAddTask;
 document.getElementById("backToTodayBtn").onclick=()=>switchViewedDate(today());
 document.getElementById("addBtn").onclick=addTask;
+document.getElementById("addTaskCancelBtn").onclick=closeAddTask;
+document.getElementById("addTaskSheet").addEventListener("click",(e)=>{if(e.target.id==="addTaskSheet")closeAddTask();});
 document.getElementById("newTask").addEventListener("keydown",e=>{if(e.key==="Enter")addTask();});
 let newTaskPeriod="day";
 document.querySelectorAll("#periodPicker .period-opt").forEach(btn=>{
@@ -2057,7 +2065,7 @@ function setNewTaskCategory(cat){
 document.querySelectorAll("#categoryPicker .period-opt").forEach(btn=>{
   btn.onclick=()=>setNewTaskCategory(btn.dataset.category);
 });
-function addTask(){const i=document.getElementById("newTask");const v=i.value.trim();if(!v)return;tasks.push({id:"t"+Date.now(),label:v,period:newTaskPeriod,category:newTaskCategory});save("tracker:template",tasks);i.value="";renderTasks();renderScore();}
+function addTask(){const i=document.getElementById("newTask");const v=i.value.trim();if(!v)return;tasks.push({id:"t"+Date.now(),label:v,period:newTaskPeriod,category:newTaskCategory});save("tracker:template",tasks);i.value="";renderTasks();renderScore();closeAddTask();}
 
 const taskSlider=document.getElementById("taskSlider");
 const taskSliderViewport=document.getElementById("taskSliderViewport");
@@ -2113,7 +2121,7 @@ taskSliderViewport.addEventListener("touchend",()=>{
 
 document.getElementById("wBtn").onclick=logW;
 document.getElementById("wInput").addEventListener("keydown",e=>{if(e.key==="Enter")logW();});
-function logW(){const i=document.getElementById("wInput");const kg=parseFloat(i.value.replace(",","."));if(!kg||kg<30||kg>200)return;weights.push({date:today(),kg});save("tracker:weights",weights);i.value="";maybeUpdateCalorieGoal();renderWeight();renderCalories();}
+function logW(){const i=document.getElementById("wInput");const kg=parseFloat(i.value.replace(",","."));if(!kg||kg<30||kg>200)return;weights.push({date:today(),kg});save("tracker:weights",weights);i.value="";maybeUpdateCalorieGoal();renderWeight();renderCalories();flashSaved(document.getElementById("wBtn"));}
 
 document.getElementById("weightGoalInput").addEventListener("blur",()=>{
   const el=document.getElementById("weightGoalInput");
@@ -2195,6 +2203,7 @@ function logBiz(){
   bizRevenue.push({date:today(),amount});
   save("tracker:bizRevenue",bizRevenue);
   i.value="";renderBiz();
+  flashSaved(document.getElementById("bizBtn"));
 }
 
 document.getElementById("bookInput").addEventListener("focus",()=>{editingBookTitle=true;});
