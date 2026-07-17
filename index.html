@@ -62,7 +62,7 @@
   .ring-lbl{color:var(--muted);font-size:12px;margin-top:4px}
   .score-title{display:inline-block;margin:18px auto 0;padding:8px 20px;background:var(--cardHi);border:1px solid var(--border);border-radius:9999px;font-size:13px;font-weight:700;color:var(--green);font-family:'Plus Jakarta Sans',sans-serif}
   .score-sub{color:var(--muted);font-size:12px;margin-top:10px;line-height:1.4;text-align:center}
-  .fab{position:fixed;right:20px;bottom:96px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--amber));color:#fff;border:none;font-size:26px;box-shadow:var(--shadow-lg);cursor:pointer;z-index:41;display:flex;align-items:center;justify-content:center}
+  .fab{position:fixed;right:20px;bottom:calc(88px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--amber));color:#fff;border:none;font-size:26px;box-shadow:var(--shadow-lg);cursor:pointer;z-index:41;display:flex;align-items:center;justify-content:center}
   .task-menu{background:var(--cardHi);border:1px solid var(--border);color:var(--green);font-size:16px;font-weight:700;cursor:pointer;padding:6px 11px;border-radius:10px;flex-shrink:0;line-height:1}
   .task-camera{background:var(--amber);border:none;color:#fff;cursor:pointer;padding:7px 10px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
   .edit-footer{text-align:center;margin-top:14px}
@@ -607,14 +607,14 @@
   </div>
 </div>
 
-<div class="celebration hidden" id="addTaskSheet">
+<div class="celebration hidden" id="addTaskSheet" style="align-items:flex-start;padding-top:12vh">
   <div class="task-detail-card">
     <div class="task-detail-label" id="addTaskTitle"></div>
     <input id="newTask" placeholder="Nouvelle tâche…" style="width:100%;margin-bottom:16px" />
     <div class="period-picker" id="periodPicker" style="margin-bottom:10px">
-      <button type="button" class="period-opt" data-period="morning">🌅</button>
-      <button type="button" class="period-opt active" data-period="day">☀️</button>
-      <button type="button" class="period-opt" data-period="evening">🌙</button>
+      <button type="button" class="period-opt" data-period="morning"><span id="periodMorningBtn"></span></button>
+      <button type="button" class="period-opt active" data-period="day"><span id="periodDayBtn"></span></button>
+      <button type="button" class="period-opt" data-period="evening"><span id="periodEveningBtn"></span></button>
     </div>
     <div class="period-picker" id="categoryPicker" style="margin-bottom:20px">
       <button type="button" class="period-opt active" data-category="dev" id="catDevBtn"><span id="catDevLbl">Perso</span></button>
@@ -1107,6 +1107,9 @@ function applyStaticI18n(){
   document.getElementById("editBtn").textContent=editMode?t("editBtnDone"):t("editBtn");
   document.getElementById("newTask").placeholder=t("newTaskPlaceholder");
   document.getElementById("addTaskTitle").textContent=t("addTaskTitle");
+  document.getElementById("periodMorningBtn").textContent=t("periodMorning");
+  document.getElementById("periodDayBtn").textContent=t("periodDay");
+  document.getElementById("periodEveningBtn").textContent=t("periodEvening");
   document.getElementById("addTaskCancelBtn").textContent=t("addTaskCancelBtn");
   document.getElementById("addBtn").textContent=t("addTaskConfirmBtn");
   document.getElementById("periodStatsTitle").textContent=t("periodStatsTitle");
@@ -2069,7 +2072,6 @@ function toggleEditMode(){
 function openAddTask(){
   document.getElementById("newTask").value="";
   document.getElementById("addTaskSheet").classList.remove("hidden");
-  document.getElementById("newTask").focus();
 }
 function closeAddTask(){document.getElementById("addTaskSheet").classList.add("hidden");}
 document.getElementById("editBtn").onclick=toggleEditMode;
