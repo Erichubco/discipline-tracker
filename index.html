@@ -86,12 +86,16 @@
   .task{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff;border-radius:14px;cursor:pointer;border:1px solid var(--border);transition:all .15s;margin-bottom:8px;box-shadow:var(--shadow)}
   .task.done{background:#ede9ff;border-color:var(--greenDim)}
   .task.readonly{cursor:default}
-  .check{width:24px;height:24px;border-radius:8px;flex-shrink:0;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .check{position:relative;width:24px;height:24px;border-radius:8px;flex-shrink:0;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;transition:all .15s}
   .task.done .check{background:var(--green);border-color:var(--green)}
   .check.missed{border-color:var(--red)}
   .missed-hint{display:block;font-size:10px;font-weight:700;color:var(--red);margin-top:1px}
   .check svg{opacity:0;transition:opacity .15s}
   .task.done .check svg{opacity:1}
+  @keyframes checkRipple{0%{transform:scale(.6);opacity:.6}100%{transform:scale(2.6);opacity:0}}
+  .check-ripple{position:absolute;inset:0;border-radius:8px;background:var(--green);animation:checkRipple .55s ease-out forwards;pointer-events:none}
+  @keyframes pillPop{0%{transform:scale(1)}45%{transform:scale(1.22)}100%{transform:scale(1)}}
+  .chapter-pill-count.pop{animation:pillPop .32s cubic-bezier(.34,1.56,.64,1)}
   .task-label{font-size:14px;flex:1;min-width:0}
   .task.done .task-label{color:var(--muted);text-decoration:line-through}
   .del{background:#fdecea;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--red);width:32px;height:32px;border-radius:50%;flex-shrink:0;font-size:14px}
@@ -109,8 +113,9 @@
   .sub{color:var(--muted);font-size:12px;margin-bottom:14px}
   .weight-chart{width:100%;height:90px;display:block;margin-top:4px}
   .goal-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:13px;color:var(--muted);font-weight:600}
-  .confirm-btn{background:var(--green);border:none;color:#fff;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0}
   .goal-row input{flex:none;width:64px;padding:7px 8px;font-size:14px;text-align:right}
+  @keyframes savedFlash{0%{box-shadow:0 0 0 0 rgba(83,65,205,0)}25%{box-shadow:0 0 0 3px rgba(83,65,205,.35)}100%{box-shadow:0 0 0 0 rgba(83,65,205,0)}}
+  .input-saved{animation:savedFlash .7s ease-out}
   .weight-status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;background:var(--cardHi);color:var(--green)}
   .weight-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
   .weight-current-target{font-size:13px;color:var(--muted);font-weight:600}
@@ -398,7 +403,6 @@
         <span id="bizGoalLbl">Objectif CA</span>
         <input id="bizGoalInput" inputmode="numeric" placeholder="€" style="width:80px" />
         <span>€</span>
-        <button class="confirm-btn" id="bizGoalConfirmBtn" type="button"></button>
       </div>
       <div class="row" style="margin-top:14px">
         <input id="bizInput" inputmode="numeric" placeholder="CA actuel (€)" />
@@ -441,12 +445,10 @@
       <div class="goal-row" style="margin-top:14px">
         <span id="totalChapLbl">Total</span>
         <input id="totalChapInput" inputmode="numeric" placeholder="chapitres (optionnel)" style="flex:1;text-align:left" />
-        <button class="confirm-btn" id="totalChapConfirmBtn" type="button"></button>
       </div>
       <div class="goal-row hidden" id="currentPageRow">
         <span id="currentPageLbl">Page actuelle</span>
         <input id="currentPageInput" inputmode="numeric" placeholder="ex: 120" style="flex:1;text-align:left" />
-        <button class="confirm-btn" id="currentPageConfirmBtn" type="button"></button>
       </div>
       <div class="row" style="margin-top:14px">
         <button class="btn btn-ghost" id="finishBtn" style="flex:1">Terminé ✓</button>
@@ -476,7 +478,6 @@
         <span id="weightGoalLbl">Objectif</span>
         <input id="weightGoalInput" inputmode="decimal" placeholder="kg" />
         <span>kg</span>
-        <button class="confirm-btn" id="weightGoalConfirmBtn" type="button"></button>
       </div>
       <div class="row" style="margin-top:10px">
         <input id="wInput" inputmode="decimal" placeholder="Ton poids (kg)" />
@@ -494,7 +495,6 @@
         <span id="calorieGoalLbl">Objectif</span>
         <input id="calorieGoalInput" inputmode="numeric" placeholder="kcal" />
         <span>kcal/j</span>
-        <button class="confirm-btn" id="calorieGoalConfirmBtn" type="button"></button>
       </div>
     </div>
 
@@ -932,6 +932,7 @@ const keyFor=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const today=()=>keyFor(new Date());
 const load=(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch(e){return f;}};
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
+function flashSaved(el){el.classList.remove("input-saved");void el.offsetWidth;el.classList.add("input-saved");}
 
 let tasks=load("tracker:template",STRINGS.fr.defaultTasks); if(!tasks.length)tasks=STRINGS.fr.defaultTasks;
 tasks=tasks.map(tk=>({
@@ -1184,10 +1185,16 @@ function renderTaskRow(tk){
         scheduleAiPageEstimate();
       }
       if(wasCompleted){
-        if(freshCheck)freshCheck.animate(
-          [{transform:"scale(1)"},{transform:"scale(1.3)"},{transform:"scale(1)"}],
-          {duration:320,easing:"cubic-bezier(.34,1.56,.64,1)"}
-        );
+        if(freshCheck){
+          const ripple=document.createElement("span");
+          ripple.className="check-ripple";
+          freshCheck.appendChild(ripple);
+          ripple.addEventListener("animationend",()=>ripple.remove());
+          freshCheck.animate(
+            [{transform:"scale(1)"},{transform:"scale(1.35)"},{transform:"scale(1)"}],
+            {duration:360,easing:"cubic-bezier(.34,1.56,.64,1)"}
+          );
+        }
       }else{
         if(freshCheck&&wasTaskMissedRecently(tk))freshCheck.classList.add("missed");
       }
@@ -2109,34 +2116,34 @@ document.getElementById("wInput").addEventListener("keydown",e=>{if(e.key==="Ent
 function logW(){const i=document.getElementById("wInput");const kg=parseFloat(i.value.replace(",","."));if(!kg||kg<30||kg>200)return;weights.push({date:today(),kg});save("tracker:weights",weights);i.value="";maybeUpdateCalorieGoal();renderWeight();renderCalories();}
 
 document.getElementById("weightGoalInput").addEventListener("blur",()=>{
-  const v=parseFloat(document.getElementById("weightGoalInput").value.replace(",","."));
+  const el=document.getElementById("weightGoalInput");
+  const v=parseFloat(el.value.replace(",","."));
   weightGoal=(v&&v>=30&&v<=200)?v:null;
   save("tracker:weightGoal",weightGoal);
   renderWeight();
+  flashSaved(el);
 });
 document.getElementById("weightGoalInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
-document.getElementById("weightGoalConfirmBtn").innerHTML=CHECK_SVG;
-document.getElementById("weightGoalConfirmBtn").onclick=()=>document.getElementById("weightGoalInput").blur();
 document.getElementById("calorieGoalInput").addEventListener("blur",()=>{
-  const v=parseInt(document.getElementById("calorieGoalInput").value);
+  const el=document.getElementById("calorieGoalInput");
+  const v=parseInt(el.value);
   if(v&&v>=1000&&v<=6000){calorieGoal={value:v,auto:false};}
   else{calorieGoal={value:weights.length?computeAutoCalorieGoal(weights[weights.length-1].kg):null,auto:true};}
   save("tracker:calorieGoal",calorieGoal);
   renderCalories();
+  flashSaved(el);
 });
 document.getElementById("calorieGoalInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
-document.getElementById("calorieGoalConfirmBtn").innerHTML=CHECK_SVG;
-document.getElementById("calorieGoalConfirmBtn").onclick=()=>document.getElementById("calorieGoalInput").blur();
 
 document.getElementById("bizGoalInput").addEventListener("blur",()=>{
-  const v=parseFloat(document.getElementById("bizGoalInput").value.replace(",","."));
+  const el=document.getElementById("bizGoalInput");
+  const v=parseFloat(el.value.replace(",","."));
   bizGoal=(v&&v>0)?v:null;
   save("tracker:bizGoal",bizGoal);
   renderBiz();
+  flashSaved(el);
 });
 document.getElementById("bizGoalInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
-document.getElementById("bizGoalConfirmBtn").innerHTML=CHECK_SVG;
-document.getElementById("bizGoalConfirmBtn").onclick=()=>document.getElementById("bizGoalInput").blur();
 function renderAuthUI(){
   const loggedIn=!!getApiKey();
   document.getElementById("googleSignInBtn").classList.toggle("hidden",loggedIn);
@@ -2206,19 +2213,21 @@ document.getElementById("bookTitleDisplay").addEventListener("click",()=>{
   document.getElementById("bookInput").focus();
 });
 document.getElementById("totalChapInput").addEventListener("change",()=>{
-  const v=parseInt(document.getElementById("totalChapInput").value);
+  const el=document.getElementById("totalChapInput");
+  const v=parseInt(el.value);
   reading.totalChapters=v>0?v:null;
   save("tracker:reading",reading);renderReading();scheduleAiPageEstimate();
+  flashSaved(el);
 });
+document.getElementById("totalChapInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
 document.getElementById("currentPageInput").addEventListener("change",()=>{
-  const v=parseInt(document.getElementById("currentPageInput").value);
+  const el=document.getElementById("currentPageInput");
+  const v=parseInt(el.value);
   reading.currentPage=v>0?v:null;
   save("tracker:reading",reading);renderReading();
+  flashSaved(el);
 });
-document.getElementById("totalChapConfirmBtn").innerHTML=CHECK_SVG;
-document.getElementById("totalChapConfirmBtn").onclick=()=>document.getElementById("totalChapInput").blur();
-document.getElementById("currentPageConfirmBtn").innerHTML=CHECK_SVG;
-document.getElementById("currentPageConfirmBtn").onclick=()=>document.getElementById("currentPageInput").blur();
+document.getElementById("currentPageInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
 function resizeToDataUrl(img,maxW,quality){
   const scale=Math.min(1,maxW/img.width);
   const canvas=document.createElement("canvas");
@@ -2266,8 +2275,14 @@ document.getElementById("coverInput").addEventListener("change",e=>{
   };
   reader.readAsDataURL(file);
 });
-document.getElementById("chapBtn").onclick=()=>{reading.chapters++;save("tracker:reading",reading);renderReading();scheduleAiPageEstimate();};
-document.getElementById("chapMinusBtn").onclick=()=>{if(reading.chapters>0){reading.chapters--;save("tracker:reading",reading);renderReading();scheduleAiPageEstimate();}};
+function popChapterPill(){
+  const el=document.getElementById("chapCount");
+  el.classList.remove("pop");
+  void el.offsetWidth;
+  el.classList.add("pop");
+}
+document.getElementById("chapBtn").onclick=()=>{reading.chapters++;save("tracker:reading",reading);renderReading();popChapterPill();scheduleAiPageEstimate();};
+document.getElementById("chapMinusBtn").onclick=()=>{if(reading.chapters>0){reading.chapters--;save("tracker:reading",reading);renderReading();popChapterPill();scheduleAiPageEstimate();}};
 
 let aiPageEstimateTimer=null;
 function scheduleAiPageEstimate(){
