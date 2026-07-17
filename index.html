@@ -971,6 +971,32 @@ const today=()=>keyFor(new Date());
 const load=(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch(e){return f;}};
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
 function flashSaved(el){el.classList.remove("input-saved");void el.offsetWidth;el.classList.add("input-saved");}
+// A modal opening on top of a tall, scrollable page can leak touch-scroll
+// gestures through to the page behind it on mobile Safari (the sheet stays
+// put since it's fixed, but the body underneath scrolls) unless the body's
+// own scroll is explicitly locked while the modal is open. Guarded by
+// classList.contains so re-opening/refreshing an already-open sheet (e.g.
+// openTaskDetail calling itself after an in-sheet action) can't double-lock.
+let scrollLockY=0;
+function showSheet(id){
+  const el=document.getElementById(id);
+  if(el.classList.contains("hidden")){
+    scrollLockY=window.scrollY;
+    document.body.style.position="fixed";
+    document.body.style.top=`-${scrollLockY}px`;
+    document.body.style.width="100%";
+  }
+  el.classList.remove("hidden");
+}
+function hideSheet(id){
+  const el=document.getElementById(id);
+  if(!el.classList.contains("hidden")){
+    document.body.style.position="";
+    document.body.style.top="";
+    document.body.style.width="";
+    window.scrollTo(0,scrollLockY);
+  }
+}
 
 let tasks=load("tracker:template",STRINGS.fr.defaultTasks); if(!tasks.length)tasks=STRINGS.fr.defaultTasks;
 tasks=tasks.map(tk=>({
@@ -1576,9 +1602,9 @@ function openPhotoView(idx){
     renderProgressPhotos();
   };
   document.getElementById("photoViewCloseBtn").textContent=t("sheetClose");
-  document.getElementById("photoViewSheet").classList.remove("hidden");
+  showSheet("photoViewSheet");
 }
-function closePhotoView(){document.getElementById("photoViewSheet").classList.add("hidden");}
+function closePhotoView(){hideSheet("photoViewSheet");}
 document.getElementById("photoViewCloseBtn").onclick=closePhotoView;
 document.getElementById("photoViewSheet").addEventListener("click",e=>{if(e.target.id==="photoViewSheet")closePhotoView();});
 document.getElementById("photoAddBtn").onclick=()=>document.getElementById("photoInput").click();
@@ -1849,9 +1875,10 @@ function showCelebration(emoji,title,sub){
   document.getElementById("celebEmoji").textContent=emoji;
   document.getElementById("celebTitle").textContent=title;
   document.getElementById("celebSub").textContent=sub;
-  document.getElementById("celebration").classList.remove("hidden");
+  showSheet("celebration");
 }
-document.getElementById("celebration").addEventListener("click",()=>document.getElementById("celebration").classList.add("hidden"));
+function hideCelebration(){hideSheet("celebration");}
+document.getElementById("celebration").addEventListener("click",hideCelebration);
 
 function loadCalories(dateKey){return load("tracker:cal:"+dateKey,[]);}
 function saveCalories(dateKey,arr){save("tracker:cal:"+dateKey,arr);}
@@ -1913,7 +1940,7 @@ document.getElementById("foodLogInput").addEventListener("change",e=>{
   e.target.value="";
 });
 
-function closeTaskDetail(){document.getElementById("taskDetailSheet").classList.add("hidden");}
+function closeTaskDetail(){hideSheet("taskDetailSheet");}
 function openTaskDetail(tk){
   document.getElementById("taskDetailLabel").textContent=taskDisplayLabel(tk);
   const detail=taskDetailText(tk);
@@ -1954,7 +1981,7 @@ function openTaskDetail(tk){
     closeTaskDetail();
   };
   document.getElementById("taskDetailCloseBtn").textContent=t("taskDetailClose");
-  document.getElementById("taskDetailSheet").classList.remove("hidden");
+  showSheet("taskDetailSheet");
 }
 document.getElementById("taskDetailCloseBtn").onclick=closeTaskDetail;
 document.getElementById("taskDetailSheet").addEventListener("click",(e)=>{if(e.target.id==="taskDetailSheet")closeTaskDetail();});
@@ -2073,9 +2100,9 @@ function toggleEditMode(){
 }
 function openAddTask(){
   document.getElementById("newTask").value="";
-  document.getElementById("addTaskSheet").classList.remove("hidden");
+  showSheet("addTaskSheet");
 }
-function closeAddTask(){document.getElementById("addTaskSheet").classList.add("hidden");}
+function closeAddTask(){hideSheet("addTaskSheet");}
 document.getElementById("editBtn").onclick=toggleEditMode;
 document.getElementById("fabAdd").onclick=openAddTask;
 document.getElementById("backToTodayBtn").onclick=()=>switchViewedDate(today());
@@ -2151,9 +2178,9 @@ function renderCategoryPicker(){
 }
 function openAddCategory(){
   document.getElementById("newCategoryInput").value="";
-  document.getElementById("addCategorySheet").classList.remove("hidden");
+  showSheet("addCategorySheet");
 }
-function closeAddCategory(){document.getElementById("addCategorySheet").classList.add("hidden");}
+function closeAddCategory(){hideSheet("addCategorySheet");}
 function confirmAddCategory(){
   const i=document.getElementById("newCategoryInput");
   const label=i.value.trim();
