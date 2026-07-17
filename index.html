@@ -76,9 +76,14 @@
   .period-picker{display:flex;gap:6px}
   .period-opt{flex:1;background:var(--cardHi);border:1px solid var(--border);border-radius:10px;padding:8px;font-size:16px;cursor:pointer;line-height:1;color:var(--muted);font-family:inherit}
   .period-opt.active{border-color:var(--green);background:var(--green);color:#fff}
-  .task-tabs{display:flex;gap:8px;margin-bottom:14px}
-  .task-tab{flex:1;background:var(--cardHi);border:1px solid var(--border);border-radius:10px;padding:9px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
+  .task-tabs{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .task-tabs::-webkit-scrollbar{display:none}
+  .task-tab{flex:0 0 auto;background:var(--cardHi);border:1px solid var(--border);border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;white-space:nowrap}
   .task-tab.active{background:var(--green);color:#fff;border-color:var(--green)}
+  .task-tab-add{flex:0 0 auto;background:var(--cardHi);border:1px dashed var(--border);border-radius:10px;padding:9px 13px;font-size:15px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
+  .category-picker-scroll{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .category-picker-scroll::-webkit-scrollbar{display:none}
+  .category-picker-scroll .period-opt{flex:0 0 auto;padding:8px 16px;white-space:nowrap}
   .task-slider-viewport{overflow:hidden}
   .task-slider{display:flex;transition:transform .32s cubic-bezier(.4,0,.2,1);will-change:transform}
   .task-panel{flex:0 0 100%;min-width:100%}
@@ -288,15 +293,9 @@
       <div class="card-h" style="justify-content:space-between">
         <span style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:var(--amber)"></span><span id="tasksTitle">Tâches du jour</span></span>
       </div>
-      <div class="task-tabs" id="taskTabs">
-        <button type="button" class="task-tab active" data-panel="personal" id="taskTabPersonalLbl">Perso</button>
-        <button type="button" class="task-tab" data-panel="business" id="taskTabBusinessLbl">Business</button>
-      </div>
+      <div class="task-tabs" id="taskTabs"></div>
       <div class="task-slider-viewport" id="taskSliderViewport">
-        <div class="task-slider" id="taskSlider">
-          <div class="task-panel" id="panel-personal"></div>
-          <div class="task-panel" id="panel-business"></div>
-        </div>
+        <div class="task-slider" id="taskSlider"></div>
       </div>
       <div class="edit-footer">
         <button class="btn-link" id="editBtn">Modifier</button>
@@ -355,14 +354,7 @@
       <div class="hidden" id="weeklyProgressBreakdown">
         <div class="streak-sep" style="margin:16px 0 12px"></div>
         <div class="stat-lbl" id="weeklyProgressTitle" style="display:block;margin-bottom:10px">Détail par catégorie (cette semaine)</div>
-        <div class="pbar-row" id="businessRow" style="margin-top:0">
-          <div class="pbar-lbl"><span id="businessWeekLbl">Business</span> <b id="businessPct">0%</b></div>
-          <div class="pbar-bg"><div class="pbar-fill" id="businessBarFill" style="width:0%;background:var(--amber)"></div></div>
-        </div>
-        <div class="pbar-row" id="devRow">
-          <div class="pbar-lbl"><span id="devWeekLbl">Perso</span> <b id="devPct">0%</b></div>
-          <div class="pbar-bg"><div class="pbar-fill" id="devBarFill" style="width:0%;background:var(--green)"></div></div>
-        </div>
+        <div id="categoryProgressRows"></div>
       </div>
     </div>
 
@@ -616,13 +608,21 @@
       <button type="button" class="period-opt active" data-period="day"><span id="periodDayBtn"></span></button>
       <button type="button" class="period-opt" data-period="evening"><span id="periodEveningBtn"></span></button>
     </div>
-    <div class="period-picker" id="categoryPicker" style="margin-bottom:20px">
-      <button type="button" class="period-opt active" data-category="dev" id="catDevBtn"><span id="catDevLbl">Perso</span></button>
-      <button type="button" class="period-opt" data-category="business" id="catBusinessBtn"><span id="catBusinessLbl">Business</span></button>
-    </div>
+    <div class="period-picker category-picker-scroll" id="categoryPicker" style="margin-bottom:20px"></div>
     <div class="task-detail-actions">
       <button class="btn btn-ghost" id="addTaskCancelBtn" style="flex:1"></button>
       <button class="btn btn-amber" id="addBtn" style="flex:1"></button>
+    </div>
+  </div>
+</div>
+
+<div class="celebration hidden" id="addCategorySheet">
+  <div class="task-detail-card">
+    <div class="task-detail-label" id="addCategoryTitle"></div>
+    <input id="newCategoryInput" style="width:100%;margin-bottom:16px" />
+    <div class="task-detail-actions">
+      <button class="btn btn-ghost" id="addCategoryCancelBtn" style="flex:1"></button>
+      <button class="btn btn-amber" id="addCategoryConfirmBtn" style="flex:1"></button>
     </div>
   </div>
 </div>
@@ -646,6 +646,7 @@ const STRINGS = {
     heatmapTitle:"Activité", heatmapSub:"Un carré = un jour. Plus foncé = plus de tâches cochées ce jour-là. 16 dernières semaines.", legendLess:"Moins", legendMore:"Plus",
     tasksTitle:"Tâches du jour", editBtn:"Modifier", editBtnDone:"Terminé",
     newTaskPlaceholder:"Nouvelle tâche…", addTaskTitle:"Nouvelle tâche", addTaskCancelBtn:"Annuler", addTaskConfirmBtn:"Ajouter",
+    addCategoryTitle:"Nouvelle catégorie", newCategoryPlaceholder:"Nom (ex : Sport, Études)…", addCategoryCancelBtn:"Annuler", addCategoryConfirmBtn:"Ajouter",
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
     streakCardTitle:"Consistance", weeklyProgressTitle:"Détail par catégorie (cette semaine)", periodStatsTitle:"Semaine · mois", periodStatsSub:"% des tâches du jour cochées, tout confondu.", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série", daysUnit:"jours",
     streakHint:"Une série se construit avec des journées à 100% (toutes les tâches cochées). Coche tout en une journée pour la démarrer.",
@@ -701,7 +702,6 @@ const STRINGS = {
     catDevLbl:"Perso", catBusinessLbl:"Business",
     noTasksInPanel:"Aucune tâche ici pour l'instant. Ajoute-en une avec Modifier.",
     missedHint:"non fait la dernière fois",
-    businessWeekLbl:"Business", devWeekLbl:"Perso",
     paceInfo:(pace,date)=>`${pace} chap./jour · fin estimée le ${date}`,
     footerLine:"Tes données restent sur ton téléphone et se sauvegardent toutes seules.",
     storageLbl:"Stockage", settingsTagline:"Suivi personnel",
@@ -793,6 +793,7 @@ const STRINGS = {
     heatmapTitle:"Activity", heatmapSub:"One square = one day. Darker = more tasks checked that day. Last 16 weeks.", legendLess:"Less", legendMore:"More",
     tasksTitle:"Today's tasks", editBtn:"Edit", editBtnDone:"Done",
     newTaskPlaceholder:"New task…", addTaskTitle:"New task", addTaskCancelBtn:"Cancel", addTaskConfirmBtn:"Add",
+    addCategoryTitle:"New category", newCategoryPlaceholder:"Name (e.g. Sport, Studies)…", addCategoryCancelBtn:"Cancel", addCategoryConfirmBtn:"Add",
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
     streakCardTitle:"Consistency", weeklyProgressTitle:"Breakdown by category (this week)", periodStatsTitle:"Week · month", periodStatsSub:"% of today's tasks checked, all combined.", streakCurLbl:"current streak", streakBestLbl:"best streak", daysUnit:"days",
     streakHint:"A streak is built from 100% days (every task checked). Complete a full day to start one.",
@@ -848,7 +849,6 @@ const STRINGS = {
     catDevLbl:"Personal", catBusinessLbl:"Business",
     noTasksInPanel:"No tasks here yet. Add one with Edit.",
     missedHint:"not done last time",
-    businessWeekLbl:"Business", devWeekLbl:"Personal",
     paceInfo:(pace,date)=>`${pace} ch./day · estimated finish ${date}`,
     footerLine:"Your data stays on your phone and saves itself automatically.",
     storageLbl:"Storage", settingsTagline:"Personal tracking",
@@ -978,6 +978,13 @@ tasks=tasks.map(tk=>({
   period:tk.period||DEFAULT_PERIODS[tk.id]||"day",
   category:tk.category||DEFAULT_CATEGORIES[tk.id]||"dev",
 }));
+let categories=load("tracker:categories",[{id:"dev",label:"Perso"},{id:"business",label:"Business"}]);
+if(!categories.length)categories=[{id:"dev",label:"Perso"},{id:"business",label:"Business"}];
+function categoryLabel(cat){
+  if(cat.id==="dev")return t("catDevLbl");
+  if(cat.id==="business")return t("catBusinessLbl");
+  return cat.label;
+}
 const TASK_MIGRATIONS=[
   {version:1,ids:["ecom"]},
   {version:2,ids:["ecomAfternoon"]},
@@ -1098,12 +1105,6 @@ function applyStaticI18n(){
   document.getElementById("legendLess").textContent=t("legendLess");
   document.getElementById("legendMore").textContent=t("legendMore");
   document.getElementById("tasksTitle").textContent=t("tasksTitle");
-  document.getElementById("catDevLbl").textContent=t("catDevLbl");
-  document.getElementById("catBusinessLbl").textContent=t("catBusinessLbl");
-  document.getElementById("taskTabPersonalLbl").textContent=t("catDevLbl");
-  document.getElementById("taskTabBusinessLbl").textContent=t("catBusinessLbl");
-  document.getElementById("businessWeekLbl").textContent=t("businessWeekLbl");
-  document.getElementById("devWeekLbl").textContent=t("devWeekLbl");
   document.getElementById("editBtn").textContent=editMode?t("editBtnDone"):t("editBtn");
   document.getElementById("newTask").placeholder=t("newTaskPlaceholder");
   document.getElementById("addTaskTitle").textContent=t("addTaskTitle");
@@ -1112,6 +1113,10 @@ function applyStaticI18n(){
   document.getElementById("periodEveningBtn").textContent=t("periodEvening");
   document.getElementById("addTaskCancelBtn").textContent=t("addTaskCancelBtn");
   document.getElementById("addBtn").textContent=t("addTaskConfirmBtn");
+  document.getElementById("addCategoryTitle").textContent=t("addCategoryTitle");
+  document.getElementById("newCategoryInput").placeholder=t("newCategoryPlaceholder");
+  document.getElementById("addCategoryCancelBtn").textContent=t("addCategoryCancelBtn");
+  document.getElementById("addCategoryConfirmBtn").textContent=t("addCategoryConfirmBtn");
   document.getElementById("periodStatsTitle").textContent=t("periodStatsTitle");
   document.getElementById("periodStatsSub").textContent=t("periodStatsSub");
   document.getElementById("streakCardTitle").textContent=t("streakCardTitle");
@@ -1185,7 +1190,6 @@ function renderScore(){
     const left=total-comp;s.textContent=t("scoreRemainingSub",left);}
 }
 const PERIOD_KEYS={morning:"periodMorning",day:"periodDay",evening:"periodEvening"};
-const PERIOD_EMOJI={morning:"🌅",day:"☀️",evening:"🌙"};
 function renderTaskRow(tk){
   const d=document.createElement("div");
   const viewedDone=getViewedDone();
@@ -1259,7 +1263,7 @@ function renderTaskPanel(containerId,category){
     any=true;
     const h=document.createElement("div");
     h.className="period-h";
-    h.textContent=`${PERIOD_EMOJI[period]} ${t(PERIOD_KEYS[period])}`;
+    h.textContent=t(PERIOD_KEYS[period]);
     el.appendChild(h);
     list.forEach(tk=>el.appendChild(renderTaskRow(tk)));
   });
@@ -1271,8 +1275,7 @@ function renderTaskPanel(containerId,category){
   }
 }
 function renderTasks(){
-  renderTaskPanel("panel-personal","dev");
-  renderTaskPanel("panel-business","business");
+  categories.forEach(cat=>renderTaskPanel("panel-"+cat.id,cat.id));
 }
 function heatColor(ratio){
   if(ratio<=0)return null;
@@ -1796,24 +1799,23 @@ function renderPeriodStats(){
     streakHintEl.classList.add("hidden");
   }
 
-  const businessAvg=periodAvgForCategory(startOfWeek(now),records,"business");
-  const businessRow=document.getElementById("businessRow");
-  if(businessAvg!=null){
-    const pct=Math.round(businessAvg*100);
-    document.getElementById("businessPct").textContent=pct+"%";
-    document.getElementById("businessBarFill").style.width=pct+"%";
-    businessRow.classList.remove("hidden");
-  }else{businessRow.classList.add("hidden");}
-
-  const devAvg=periodAvgForCategory(startOfWeek(now),records,"dev");
-  const devRow=document.getElementById("devRow");
-  if(devAvg!=null){
-    const pct=Math.round(devAvg*100);
-    document.getElementById("devPct").textContent=pct+"%";
-    document.getElementById("devBarFill").style.width=pct+"%";
-    devRow.classList.remove("hidden");
-  }else{devRow.classList.add("hidden");}
-  document.getElementById("weeklyProgressBreakdown").classList.toggle("hidden",businessAvg==null&&devAvg==null);
+  const rowsEl=document.getElementById("categoryProgressRows");
+  rowsEl.innerHTML="";
+  const barColors=["var(--amber)","var(--green)","#e17055","#00b894","#0984e3","#fdcb6e"];
+  let anyCatShown=false;
+  categories.forEach((cat,i)=>{
+    const avg=periodAvgForCategory(startOfWeek(now),records,cat.id);
+    if(avg==null)return;
+    anyCatShown=true;
+    const pct=Math.round(avg*100);
+    const row=document.createElement("div");
+    row.className="pbar-row";
+    if(!rowsEl.children.length)row.style.marginTop="0";
+    row.innerHTML=`<div class="pbar-lbl"><span></span> <b>${pct}%</b></div><div class="pbar-bg"><div class="pbar-fill" style="width:${pct}%;background:${barColors[i%barColors.length]}"></div></div>`;
+    row.querySelector(".pbar-lbl span").textContent=categoryLabel(cat);
+    rowsEl.appendChild(row);
+  });
+  document.getElementById("weeklyProgressBreakdown").classList.toggle("hidden",!anyCatShown);
 
   checkCelebrations(current,weekPct,monthPct);
   apiFetch("/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({weekPct,monthPct,streakCurrent:current,streakBest:best})}).catch(()=>{});
@@ -2054,7 +2056,7 @@ function setLang(l){
   lang=l;
   save("tracker:lang",lang);
   applyStaticI18n();
-  renderScore();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderReading();renderPeriodStats();renderBiz();
+  renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderReading();renderPeriodStats();renderBiz();
   if(document.getElementById("reminderCard")){
     setReminderBtnState(pushSubscribed);
     if(!(window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true)){
@@ -2091,30 +2093,84 @@ document.querySelectorAll("#periodPicker .period-opt").forEach(btn=>{
 let newTaskCategory="dev";
 function setNewTaskCategory(cat){
   newTaskCategory=cat;
-  document.getElementById("catDevBtn").classList.toggle("active",cat==="dev");
-  document.getElementById("catBusinessBtn").classList.toggle("active",cat==="business");
+  document.querySelectorAll("#categoryPicker .period-opt").forEach(b=>b.classList.toggle("active",b.dataset.category===cat));
 }
-document.querySelectorAll("#categoryPicker .period-opt").forEach(btn=>{
-  btn.onclick=()=>setNewTaskCategory(btn.dataset.category);
-});
 function addTask(){const i=document.getElementById("newTask");const v=i.value.trim();if(!v)return;tasks.push({id:"t"+Date.now(),label:v,period:newTaskPeriod,category:newTaskCategory});save("tracker:template",tasks);i.value="";renderTasks();renderScore();closeAddTask();}
 
 const taskSlider=document.getElementById("taskSlider");
 const taskSliderViewport=document.getElementById("taskSliderViewport");
-const taskTabs=document.querySelectorAll(".task-tab");
-const taskPanelOrder=["personal","business"];
+let taskTabs=[];
+const taskPanelOrder=[];
 let currentTaskPanelIdx=0;
 function goToTaskPanel(panel){
   currentTaskPanelIdx=Math.max(0,taskPanelOrder.indexOf(panel));
   taskSlider.style.transform=`translateX(-${currentTaskPanelIdx*100}%)`;
   taskTabs.forEach(b=>b.classList.toggle("active",b.dataset.panel===taskPanelOrder[currentTaskPanelIdx]));
 }
-taskTabs.forEach(btn=>{
-  btn.onclick=()=>{
-    goToTaskPanel(btn.dataset.panel);
-    setNewTaskCategory(btn.dataset.panel==="business"?"business":"dev");
-  };
-});
+function renderTaskTabsAndPanels(){
+  const tabsEl=document.getElementById("taskTabs");
+  const previousCatId=taskPanelOrder[currentTaskPanelIdx];
+  tabsEl.innerHTML="";
+  taskSlider.innerHTML="";
+  taskPanelOrder.length=0;
+  categories.forEach(cat=>{
+    taskPanelOrder.push(cat.id);
+    const btn=document.createElement("button");
+    btn.type="button";btn.className="task-tab";btn.dataset.panel=cat.id;
+    btn.textContent=categoryLabel(cat);
+    btn.onclick=()=>{goToTaskPanel(cat.id);setNewTaskCategory(cat.id);};
+    tabsEl.appendChild(btn);
+    const panel=document.createElement("div");
+    panel.className="task-panel";panel.id="panel-"+cat.id;
+    taskSlider.appendChild(panel);
+  });
+  const addBtn=document.createElement("button");
+  addBtn.type="button";addBtn.className="task-tab-add";addBtn.textContent="+";
+  addBtn.onclick=openAddCategory;
+  tabsEl.appendChild(addBtn);
+  taskTabs=document.querySelectorAll(".task-tab");
+  const restoreId=taskPanelOrder.includes(previousCatId)?previousCatId:taskPanelOrder[0];
+  taskSlider.style.transition="none";
+  goToTaskPanel(restoreId);
+  void taskSlider.offsetWidth;
+  taskSlider.style.transition="";
+  renderCategoryPicker();
+}
+function renderCategoryPicker(){
+  const el=document.getElementById("categoryPicker");
+  const previousCat=newTaskCategory;
+  el.innerHTML="";
+  categories.forEach(cat=>{
+    const btn=document.createElement("button");
+    btn.type="button";btn.className="period-opt";btn.dataset.category=cat.id;
+    btn.textContent=categoryLabel(cat);
+    btn.onclick=()=>setNewTaskCategory(cat.id);
+    el.appendChild(btn);
+  });
+  setNewTaskCategory(categories.some(c=>c.id===previousCat)?previousCat:categories[0].id);
+}
+function openAddCategory(){
+  document.getElementById("newCategoryInput").value="";
+  document.getElementById("addCategorySheet").classList.remove("hidden");
+}
+function closeAddCategory(){document.getElementById("addCategorySheet").classList.add("hidden");}
+function confirmAddCategory(){
+  const i=document.getElementById("newCategoryInput");
+  const label=i.value.trim();
+  if(!label)return;
+  const id="cat"+Date.now();
+  categories.push({id,label});
+  save("tracker:categories",categories);
+  renderTaskTabsAndPanels();
+  renderTasks();
+  goToTaskPanel(id);
+  setNewTaskCategory(id);
+  closeAddCategory();
+}
+document.getElementById("addCategoryConfirmBtn").onclick=confirmAddCategory;
+document.getElementById("addCategoryCancelBtn").onclick=closeAddCategory;
+document.getElementById("newCategoryInput").addEventListener("keydown",e=>{if(e.key==="Enter")confirmAddCategory();});
+document.getElementById("addCategorySheet").addEventListener("click",(e)=>{if(e.target.id==="addCategorySheet")closeAddCategory();});
 let touchStartX=null,touchStartY=null,touchDeltaX=0,swipeAxis=null;
 const SWIPE_AXIS_THRESHOLD=10;
 taskSliderViewport.addEventListener("touchstart",e=>{
@@ -2359,7 +2415,7 @@ document.getElementById("finishBtn").onclick=()=>{
 
 applyStaticI18n();
 maybeUpdateCalorieGoal();
-renderScore();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderReading();renderPeriodStats();renderBiz();
+renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderReading();renderPeriodStats();renderBiz();
 
 async function loadHealthToday(){
   try{
