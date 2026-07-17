@@ -153,9 +153,9 @@
   .book-cover-lg{width:108px;height:148px;border-radius:12px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:26px;box-shadow:var(--shadow)}
   .book-cover-lg img{width:100%;height:100%;object-fit:cover}
   .reading-hero-info{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
-  .book-title-input{border:none;background:transparent;font-family:'Quicksand',sans-serif;font-size:18px;font-weight:700;color:var(--text);padding:0;width:100%;letter-spacing:-.01em}
-  .book-title-input::placeholder{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14px;color:var(--muted)}
-  .book-title-display{font-family:'Quicksand',sans-serif;font-size:18px;font-weight:700;color:var(--text);line-height:1.3;letter-spacing:-.01em;cursor:pointer;word-break:break-word}
+  .book-title-input{border:none;background:transparent;font-family:'Quicksand',sans-serif;font-size:13px;font-weight:700;color:var(--text);padding:0;width:100%;letter-spacing:-.01em}
+  .book-title-input::placeholder{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:13px;color:var(--muted)}
+  .book-title-display{font-family:'Quicksand',sans-serif;font-size:13px;font-weight:700;color:var(--text);line-height:1.3;letter-spacing:-.01em;cursor:pointer;word-break:break-word}
   .book-meta-line{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--muted);margin-top:3px}
   .reading-progress-summary{margin-top:14px}
   .reading-progress-summary .sub{margin-bottom:0}
@@ -562,7 +562,6 @@
         </div>
       </div>
 
-      <button class="btn-export" id="exportBtn"><span id="exportBtnIcon"></span><span id="exportBtnLbl">Exporter mes données (JSON)</span></button>
     </div>
   </div>
 
@@ -706,10 +705,10 @@ const STRINGS = {
     paceInfo:(pace,date)=>`${pace} chap./jour · fin estimée le ${date}`,
     footerLine:"Tes données restent sur ton téléphone et se sauvegardent toutes seules.",
     storageLbl:"Stockage", settingsTagline:"Suivi personnel",
-    exportBtn:"Exporter mes données (JSON)", sheetClose:"Fermer",
+    sheetClose:"Fermer",
     googleSignInBtn:"Se connecter avec Google", loggedInLbl:"Connecté", logoutBtn:"Se déconnecter",
     securityTitle:"Sécurité & connexions", calendarStatusLbl:"Google Calendar",
-    calendarConnected:"Connecté — la synchro calendrier fonctionne.", calendarError:"Problème de connexion, dis-le-moi.", calendarUnknown:"Impossible de vérifier (hors ligne ?).", calendarNotSignedIn:"Connecte-toi avec Google ci-dessous pour l'activer.",
+    calendarConnected:"Connecté — la synchro calendrier fonctionne.", calendarError:"Problème de connexion, dis-le-moi.", calendarUnknown:"Impossible de vérifier (hors ligne ?).", calendarNotSignedIn:"Connecte-toi avec Google ci-dessous pour l'activer.", calendarChecking:"Vérification…",
     celebTap:"Touche pour continuer",
     scoreFull:"Journée pleine", scoreSolid:"Solide, continue", scoreMoving:"En marche", scoreStart:"On y va",
     scoreFullSub:"Toutes tes tâches cochées. C'est ça qui construit le résultat.",
@@ -747,8 +746,24 @@ const STRINGS = {
       "Repos. Ton corps récupère et se reconstruit — la récup fait partie du programme. Pas de séance aujourd'hui.",
       "Repos. Profite du week-end, la prochaine séance (PUSH) reprend lundi.",
     ],
-    mealsDetail:"🍳 Matin — Petit-déj (~750 kcal)\n🥣 80g flocons d'avoine cuits dans 300ml lait entier\n🍌 1 banane\n🥜 25g cacahuètes concassées\n\n☀️ Midi — Déjeuner (~1150 kcal) — grosse assiette\n🍚 280g riz cuit\n🥩 220g filet de bœuf\n🥑 1/2 avocat\n🥕 100g carottes\n🫒 1 c. à soupe d'huile d'olive\n\n🍽️ Soir — Dîner (~1000 kcal)\n🍳 5 œufs + 50g mozzarella (omelette)\n🥑 1/2 avocat\n🥦 150g chou-fleur sauté à l'huile d'olive\n🍌 150g banane bouillie\n\nTotal repas ≈ 2900 kcal + collation 15h30 (whey + lait + créatine, ~280 kcal) = ≈ 3200 kcal/jour.\nMême menu chaque jour pour rester simple — pas de choix à faire. Quantités approximatives (±10-15%).",
-    mealsMomentPreview:["Petit-déj : porridge avoine + banane","Déjeuner : riz + bœuf + avocat","Dîner : omelette + avocat + chou-fleur"],
+    mealsDetail:[
+      "🍳 Matin — Petit-déj (~750 kcal)\n🥣 80g flocons d'avoine cuits dans 300ml lait entier\n🍌 1 banane\n🥜 25g cacahuètes concassées\n\n☀️ Midi — Déjeuner (~1150 kcal) — grosse assiette\n🍚 280g riz cuit\n🥩 220g filet de bœuf\n🥑 1/2 avocat\n🥕 100g carottes\n🫒 1 c. à soupe d'huile d'olive\n\n🍽️ Soir — Dîner (~1000 kcal)\n🍳 5 œufs + 50g mozzarella (omelette)\n🥑 1/2 avocat\n🥦 150g chou-fleur sauté à l'huile d'olive\n🍌 150g banane bouillie\n\n≈ 3200 kcal/jour avec la collation de 15h30.",
+      "🍳 Matin — Petit-déj (~800 kcal)\n🍲 90g farine d'uji cuite dans 300ml lait\n🥜 30g pâte de cacahuète\n🍌 1 banane\n\n☀️ Midi — Déjeuner (~1100 kcal) — grosse assiette\n🍚 280g riz cuit\n🍗 270g poulet\n🥑 1/2 avocat\n🥕 100g carottes\n🫒 1 c. à soupe d'huile d'olive\n\n🍽️ Soir — Dîner (~1000 kcal)\n🥩 220g bœuf mijoté\n🍌 200g banane bouillie\n🥦 150g chou-fleur sauté à l'huile d'olive\n🥑 1/2 avocat\n\n≈ 3200 kcal/jour avec la collation de 15h30.",
+      "🍳 Matin — Petit-déj (~700 kcal)\n🍳 4 œufs + 50g mozzarella\n🍌 1 banane\n🥜 20g cacahuètes concassées\n\n☀️ Midi — Déjeuner (~1100 kcal) — grosse assiette\n🍌 200g banane bouillie\n🥩 220g bœuf mijoté\n🥦 150g chou-fleur sauté à l'huile d'olive\n🥑 1/2 avocat\n\n🍽️ Soir — Dîner (~1050 kcal)\n🍚 260g riz cuit\n🍗 250g poulet\n🥕 100g carottes\n🫒 1 c. à soupe d'huile d'olive\n🥑 1/2 avocat\n\n≈ 3200 kcal/jour avec la collation de 15h30.",
+      "🍳 Matin — Petit-déj (~800 kcal)\n🥣 80g flocons d'avoine cuits dans 300ml lait entier\n🍌 1 banane\n🥜 20g pâte de cacahuète\n\n☀️ Midi — Déjeuner (~1150 kcal) — grosse assiette\n🍚 280g riz sauté à l'huile d'olive\n🍳 3 œufs\n🥩 200g bœuf\n🥕 100g carottes\n\n🍽️ Soir — Dîner (~950 kcal)\n🍗 250g poulet\n🍚 260g riz cuit\n🥦 150g chou-fleur\n🥑 1/2 avocat\n\n≈ 3200 kcal/jour avec la collation de 15h30.",
+      "🍳 Matin — Petit-déj (~750 kcal)\n🍳 5 œufs brouillés à l'huile d'olive\n🍌 150g banane bouillie\n🧀 40g mozzarella\n\n☀️ Midi — Déjeuner (~1150 kcal) — grosse assiette\n🍚 280g riz cuit\n🥩 220g filet de bœuf\n🥑 1/2 avocat\n🥦 150g légumes (carottes + chou-fleur)\n🫒 1 c. à soupe d'huile d'olive\n\n🍽️ Soir — Dîner (~950 kcal)\n🍳 4 œufs (omelette)\n🥑 1/2 avocat\n🥕 100g carottes\n🥛 150ml lait fermenté\n\n≈ 3200 kcal/jour avec la collation de 15h30.",
+      "🍳 Matin — Petit-déj (~800 kcal)\n🍲 90g farine d'uji cuite dans 300ml lait\n🍳 2 œufs à côté\n🥜 20g cacahuètes concassées\n\n☀️ Midi — Déjeuner (~1050 kcal) — grosse assiette\n🍌 200g banane bouillie\n🍗 250g poulet\n🥦 150g chou-fleur sauté à l'huile d'olive\n🥑 1/2 avocat\n\n🍽️ Soir — Dîner (~1100 kcal)\n🥩 220g bœuf\n🍚 260g riz cuit\n🥕 100g carottes\n🥑 1/2 avocat\n\n≈ 3200 kcal/jour avec la collation de 15h30.",
+      "🍳 Matin — Petit-déj (~750 kcal)\n🥣 80g flocons d'avoine cuits dans 300ml lait entier\n🍌 1 banane\n🥜 25g cacahuètes concassées\n\n☀️ Midi — Déjeuner (~1150 kcal) — grosse assiette\n🍚 280g riz cuit\n🥩 220g bœuf\n🥑 1/2 avocat\n🥕 100g carottes\n🫒 1 c. à soupe d'huile d'olive\n\n🍽️ Soir — Dîner (~1000 kcal)\n🍳 5 œufs + 50g mozzarella (grande omelette)\n🍌 150g banane bouillie\n🥦 150g chou-fleur\n\n≈ 3200 kcal/jour avec la collation de 15h30.",
+    ],
+    mealsMomentPreview:[
+      ["Avoine + banane","Riz + bœuf + avocat","Omelette + chou-fleur"],
+      ["Uji + pâte de cacahuète","Riz + poulet + avocat","Bœuf mijoté + banane"],
+      ["Œufs + mozzarella","Banane + bœuf mijoté","Riz + poulet + avocat"],
+      ["Avoine + banane","Riz + œufs + bœuf","Poulet + riz + chou-fleur"],
+      ["Œufs brouillés + banane","Riz + bœuf + légumes","Omelette + avocat"],
+      ["Uji + œufs","Banane + poulet + chou-fleur","Bœuf + riz + carottes"],
+      ["Avoine + banane","Riz + bœuf + avocat","Grande omelette + banane"],
+    ],
     shakeDetail:"🥤 Collation de l'après-midi, tous les jours :\n\n• Whey ISO100\n• Lait (ou lait fermenté)\n• + ta créatine dedans (dose du pot)\n\nBien après le déjeuner = léger, pas lourd. Parfait pour étaler tes calories et garantir tes protéines même les jours sans faim, sans te couper l'appétit du dîner.",
     greetMorning:"Bonjour", greetAfternoon:"Bon après-midi", greetEvening:"Bonsoir",
     greetingSub:"Prêt à avancer sur tes objectifs aujourd'hui ?",
@@ -837,10 +852,10 @@ const STRINGS = {
     paceInfo:(pace,date)=>`${pace} ch./day · estimated finish ${date}`,
     footerLine:"Your data stays on your phone and saves itself automatically.",
     storageLbl:"Storage", settingsTagline:"Personal tracking",
-    exportBtn:"Export my data (JSON)", sheetClose:"Close",
+    sheetClose:"Close",
     googleSignInBtn:"Sign in with Google", loggedInLbl:"Signed in", logoutBtn:"Sign out",
     securityTitle:"Security & connections", calendarStatusLbl:"Google Calendar",
-    calendarConnected:"Connected — calendar sync is working.", calendarError:"Connection issue, let me know.", calendarUnknown:"Can't check right now (offline?).", calendarNotSignedIn:"Sign in with Google below to enable it.",
+    calendarConnected:"Connected — calendar sync is working.", calendarError:"Connection issue, let me know.", calendarUnknown:"Can't check right now (offline?).", calendarNotSignedIn:"Sign in with Google below to enable it.", calendarChecking:"Checking…",
     celebTap:"Tap to continue",
     scoreFull:"Full day", scoreSolid:"Solid, keep going", scoreMoving:"Moving", scoreStart:"Let's go",
     scoreFullSub:"All your tasks checked. That's what builds the result.",
@@ -878,8 +893,24 @@ const STRINGS = {
       "Rest. Your body recovers and rebuilds — recovery is part of the program. No session today.",
       "Rest. Enjoy the weekend, next session (PUSH) starts Monday.",
     ],
-    mealsDetail:"🍳 Morning — Breakfast (~750 kcal)\n🥣 80g oat flakes cooked in 300ml whole milk\n🍌 1 banana\n🥜 25g crushed peanuts\n\n☀️ Midday — Lunch (~1150 kcal) — big plate\n🍚 280g cooked rice\n🥩 220g beef fillet\n🥑 1/2 avocado\n🥕 100g carrots\n🫒 1 tbsp olive oil\n\n🍽️ Evening — Dinner (~1000 kcal)\n🍳 5 eggs + 50g mozzarella (omelette)\n🥑 1/2 avocado\n🥦 150g sautéed cauliflower with olive oil\n🍌 150g boiled plantain\n\nMeals total ≈ 2900 kcal + 3:30pm shake (whey + milk + creatine, ~280 kcal) = ≈ 3200 kcal/day.\nSame menu every day to keep it simple — no choices to make. Approximate quantities (±10-15%).",
-    mealsMomentPreview:["Breakfast: oat porridge + banana","Lunch: rice + beef + avocado","Dinner: omelette + avocado + cauliflower"],
+    mealsDetail:[
+      "🍳 Morning — Breakfast (~750 kcal)\n🥣 80g oat flakes cooked in 300ml whole milk\n🍌 1 banana\n🥜 25g crushed peanuts\n\n☀️ Midday — Lunch (~1150 kcal) — big plate\n🍚 280g cooked rice\n🥩 220g beef fillet\n🥑 1/2 avocado\n🥕 100g carrots\n🫒 1 tbsp olive oil\n\n🍽️ Evening — Dinner (~1000 kcal)\n🍳 5 eggs + 50g mozzarella (omelette)\n🥑 1/2 avocado\n🥦 150g sautéed cauliflower with olive oil\n🍌 150g boiled plantain\n\n≈ 3200 kcal/day with the 3:30pm shake.",
+      "🍳 Morning — Breakfast (~800 kcal)\n🍲 90g uji flour cooked in 300ml milk\n🥜 30g peanut butter\n🍌 1 banana\n\n☀️ Midday — Lunch (~1100 kcal) — big plate\n🍚 280g cooked rice\n🍗 270g chicken\n🥑 1/2 avocado\n🥕 100g carrots\n🫒 1 tbsp olive oil\n\n🍽️ Evening — Dinner (~1000 kcal)\n🥩 220g braised beef\n🍌 200g boiled plantain\n🥦 150g sautéed cauliflower with olive oil\n🥑 1/2 avocado\n\n≈ 3200 kcal/day with the 3:30pm shake.",
+      "🍳 Morning — Breakfast (~700 kcal)\n🍳 4 eggs + 50g mozzarella\n🍌 1 banana\n🥜 20g crushed peanuts\n\n☀️ Midday — Lunch (~1100 kcal) — big plate\n🍌 200g boiled plantain\n🥩 220g braised beef\n🥦 150g sautéed cauliflower with olive oil\n🥑 1/2 avocado\n\n🍽️ Evening — Dinner (~1050 kcal)\n🍚 260g cooked rice\n🍗 250g chicken\n🥕 100g carrots\n🫒 1 tbsp olive oil\n🥑 1/2 avocado\n\n≈ 3200 kcal/day with the 3:30pm shake.",
+      "🍳 Morning — Breakfast (~800 kcal)\n🥣 80g oat flakes cooked in 300ml whole milk\n🍌 1 banana\n🥜 20g peanut butter\n\n☀️ Midday — Lunch (~1150 kcal) — big plate\n🍚 280g rice sautéed in olive oil\n🍳 3 eggs\n🥩 200g beef\n🥕 100g carrots\n\n🍽️ Evening — Dinner (~950 kcal)\n🍗 250g chicken\n🍚 260g cooked rice\n🥦 150g cauliflower\n🥑 1/2 avocado\n\n≈ 3200 kcal/day with the 3:30pm shake.",
+      "🍳 Morning — Breakfast (~750 kcal)\n🍳 5 eggs scrambled in olive oil\n🍌 150g boiled plantain\n🧀 40g mozzarella\n\n☀️ Midday — Lunch (~1150 kcal) — big plate\n🍚 280g cooked rice\n🥩 220g beef fillet\n🥑 1/2 avocado\n🥦 150g vegetables (carrots + cauliflower)\n🫒 1 tbsp olive oil\n\n🍽️ Evening — Dinner (~950 kcal)\n🍳 4 eggs (omelette)\n🥑 1/2 avocado\n🥕 100g carrots\n🥛 150ml fermented milk\n\n≈ 3200 kcal/day with the 3:30pm shake.",
+      "🍳 Morning — Breakfast (~800 kcal)\n🍲 90g uji flour cooked in 300ml milk\n🍳 2 eggs on the side\n🥜 20g crushed peanuts\n\n☀️ Midday — Lunch (~1050 kcal) — big plate\n🍌 200g boiled plantain\n🍗 250g chicken\n🥦 150g sautéed cauliflower with olive oil\n🥑 1/2 avocado\n\n🍽️ Evening — Dinner (~1100 kcal)\n🥩 220g beef\n🍚 260g cooked rice\n🥕 100g carrots\n🥑 1/2 avocado\n\n≈ 3200 kcal/day with the 3:30pm shake.",
+      "🍳 Morning — Breakfast (~750 kcal)\n🥣 80g oat flakes cooked in 300ml whole milk\n🍌 1 banana\n🥜 25g crushed peanuts\n\n☀️ Midday — Lunch (~1150 kcal) — big plate\n🍚 280g cooked rice\n🥩 220g beef\n🥑 1/2 avocado\n🥕 100g carrots\n🫒 1 tbsp olive oil\n\n🍽️ Evening — Dinner (~1000 kcal)\n🍳 5 eggs + 50g mozzarella (big omelette)\n🍌 150g boiled plantain\n🥦 150g cauliflower\n\n≈ 3200 kcal/day with the 3:30pm shake.",
+    ],
+    mealsMomentPreview:[
+      ["Oats + banana","Rice + beef + avocado","Omelette + cauliflower"],
+      ["Uji + peanut butter","Rice + chicken + avocado","Braised beef + plantain"],
+      ["Eggs + mozzarella","Plantain + braised beef","Rice + chicken + avocado"],
+      ["Oats + banana","Rice + eggs + beef","Chicken + rice + cauliflower"],
+      ["Scrambled eggs + plantain","Rice + beef + veggies","Omelette + avocado"],
+      ["Uji + eggs","Plantain + chicken + cauliflower","Beef + rice + carrots"],
+      ["Oats + banana","Rice + beef + avocado","Big omelette + plantain"],
+    ],
     shakeDetail:"🥤 Afternoon snack, every day:\n\n• Whey ISO100\n• Milk (or fermented milk)\n• + your creatine mixed in (scoop from the tub)\n\nWell after lunch = light, not heavy. Perfect for spreading out your calories and guaranteeing your protein even on low-appetite days, without killing your dinner appetite.",
     greetMorning:"Good morning", greetAfternoon:"Good afternoon", greetEvening:"Good evening",
     greetingSub:"Ready to focus on your goals today?",
@@ -922,11 +953,11 @@ const TRENDING_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none
 const ZAP_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>';
 const BELL_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
 const LOCK_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+const CALENDAR_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>';
 const DATABASE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>';
 const BOOK_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>';
 const DOWNLOAD_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 document.getElementById("bizIconBadge").innerHTML=TRENDING_SVG;
-document.getElementById("exportBtnIcon").innerHTML=DOWNLOAD_SVG;
 document.getElementById("coverPlaceholder").innerHTML=CAMERA_SVG;
 document.querySelector(".streak-icon").innerHTML=ZAP_SVG;
 document.querySelector(".toggle-icon").innerHTML=BELL_SVG;
@@ -995,13 +1026,13 @@ function taskDisplayLabel(tk){
     const split=t("gymSplitLbl")[dowOf(new Date())];
     return split.toLowerCase()==="repos"||split.toLowerCase()==="rest"?tk.label:`💪 Muscu — ${split}`;
   }
-  if(tk.id==="meals")return `${tk.label} — ${t("mealsMomentPreview")[mealMomentIdx()]}`;
+  if(tk.id==="meals")return `${tk.label} — ${t("mealsMomentPreview")[dowOf(new Date())][mealMomentIdx()]}`;
   return tk.label;
 }
 function taskDetailText(tk){
   if(tk.id==="ecom")return ecomSprintDay>4?t("ecomSprintDoneMsg"):t("ecomSprintDetail")[ecomSprintDay-1];
   if(tk.id==="gym")return t("gymDetail")[dowOf(new Date())];
-  if(tk.id==="meals")return t("mealsDetail");
+  if(tk.id==="meals")return t("mealsDetail")[dowOf(new Date())];
   if(tk.id==="shake")return t("shakeDetail");
   return tk.detail||null;
 }
@@ -1117,7 +1148,6 @@ function applyStaticI18n(){
   document.getElementById("chapBtn").textContent=t("addChapter");
   document.getElementById("finishBtn").textContent=t("finishBook");
   document.getElementById("footerLine").textContent=t("footerLine");
-  document.getElementById("exportBtnLbl").textContent=t("exportBtn");
   document.getElementById("storageLbl").textContent=t("storageLbl");
   document.getElementById("settingsTagline").textContent=t("settingsTagline");
   document.getElementById("googleSignInBtn").textContent=t("googleSignInBtn");
@@ -2174,23 +2204,26 @@ renderAuthUI();
 
 async function checkCalendarStatus(){
   const iconEl=document.getElementById("calendarStatusIcon"),subEl=document.getElementById("calendarStatusSub");
+  iconEl.innerHTML=CALENDAR_SVG;
   if(!getApiKey()){
-    iconEl.textContent="";iconEl.style.background="var(--card)";
+    iconEl.style.background="var(--card)";iconEl.style.color="var(--muted)";
     subEl.textContent=t("calendarNotSignedIn");
     return;
   }
+  iconEl.style.background="var(--cardHi)";iconEl.style.color="var(--muted)";
+  subEl.textContent=t("calendarChecking");
   try{
     const res=await apiFetch("/calendar-status");
     const data=await res.json();
     if(data.connected){
-      iconEl.innerHTML=CHECK_SVG;iconEl.style.background="var(--green)";
+      iconEl.style.background="var(--green)";iconEl.style.color="#fff";
       subEl.textContent=t("calendarConnected");
     }else{
-      iconEl.textContent="!";iconEl.style.background="var(--red)";
+      iconEl.style.background="var(--red)";iconEl.style.color="#fff";
       subEl.textContent=t("calendarError");
     }
   }catch(e){
-    iconEl.textContent="?";iconEl.style.background="var(--cardHi)";
+    iconEl.style.background="var(--cardHi)";iconEl.style.color="var(--muted)";
     subEl.textContent=t("calendarUnknown");
   }
 }
@@ -2320,20 +2353,6 @@ document.getElementById("finishBtn").onclick=()=>{
   save("tracker:booksArchive",booksArchive);
   reading={book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null,author:null};
   save("tracker:reading",reading);renderReading();
-};
-
-document.getElementById("exportBtn").onclick=()=>{
-  const out={};
-  for(let i=0;i<localStorage.length;i++){
-    const k=localStorage.key(i);
-    if(k&&k.startsWith("tracker:"))out[k]=load(k,null);
-  }
-  const blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;a.download=`discipline-export-${today()}.json`;
-  document.body.appendChild(a);a.click();a.remove();
-  URL.revokeObjectURL(url);
 };
 
 applyStaticI18n();
