@@ -585,6 +585,13 @@
       <div class="food-log-empty hidden" id="foodLogEmpty"></div>
       <div class="food-log-items" id="foodLogItems"></div>
       <div class="food-log-loading hidden" id="foodLogLoading"></div>
+      <div class="hidden" id="foodLogLiquidAsk">
+        <div class="sub" id="foodLogLiquidQuestion" style="margin-bottom:8px"></div>
+        <div class="row">
+          <input id="foodLogLiquidInput" inputmode="numeric" placeholder="ml" style="width:80px" />
+          <button class="btn btn-amber" id="foodLogLiquidConfirmBtn"></button>
+        </div>
+      </div>
       <div class="food-log-add-btn" id="foodLogAddBtn"></div>
       <input type="file" accept="image/*" capture="environment" class="hidden" id="foodLogInput">
       <div class="food-log-approx" id="foodLogApprox"></div>
@@ -688,6 +695,7 @@ const STRINGS = {
     bookNotIdentified:"Livre non identifié — tape le titre toi-même.",
     pageCountBadge:n=>`📄 ${n} pages (Open Library)`,
     foodLogAddBtn:"Ajouter une photo", foodLogLoading:"🔍 Estimation en cours…",
+    foodLogLiquidQuestion:label=>`Quelle quantité de ${label} (en ml) ? Ex : 200-300ml.`, foodLogLiquidConfirmBtn:"Valider",
     foodLogNotFood:"Photo non reconnue comme un repas — réessaie avec une photo plus claire.",
     foodLogTotal:(n,goal)=>goal?`≈ ${n} / ${goal} kcal aujourd'hui`:`≈ ${n} kcal aujourd'hui`,
     foodLogEmpty:"Aucun repas loggé aujourd'hui.",
@@ -835,6 +843,7 @@ const STRINGS = {
     bookNotIdentified:"Book not identified — type the title yourself.",
     pageCountBadge:n=>`📄 ${n} pages (Open Library)`,
     foodLogAddBtn:"Add a photo", foodLogLoading:"🔍 Estimating…",
+    foodLogLiquidQuestion:label=>`How much ${label} (in ml)? E.g. 200-300ml.`, foodLogLiquidConfirmBtn:"Confirm",
     foodLogNotFood:"Photo not recognized as a meal — try again with a clearer photo.",
     foodLogTotal:(n,goal)=>goal?`≈ ${n} / ${goal} kcal today`:`≈ ${n} kcal today`,
     foodLogEmpty:"No meals logged today.",
@@ -1904,6 +1913,14 @@ function renderFoodLog(){
     listEl.appendChild(row);
   });
 }
+function logFoodItem(description,kcal){
+  const dateKey=today();
+  const items=loadCalories(dateKey);
+  items.push({id:Date.now()+"-"+Math.random().toString(36).slice(2),time:new Date().toTimeString().slice(0,5),description,kcal});
+  saveCalories(dateKey,items);
+  renderFoodLog();renderCalories();
+}
+let pendingFoodPhoto=null;
 async function uploadFoodPhoto(dataUrl){
   const loadingEl=document.getElementById("foodLogLoading");
   loadingEl.textContent=t("foodLogLoading");
@@ -1912,12 +1929,16 @@ async function uploadFoodPhoto(dataUrl){
   try{
     const res=await apiFetch("/food-lookup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:dataUrl})});
     const data=await res.json();
+    if(data.needsLiquidQty){
+      pendingFoodPhoto={dataUrl,liquidLabel:data.liquidLabel,partialDescription:data.partialDescription};
+      document.getElementById("foodLogLiquidQuestion").textContent=t("foodLogLiquidQuestion",data.liquidLabel);
+      document.getElementById("foodLogLiquidInput").value="";
+      document.getElementById("foodLogLiquidAsk").classList.remove("hidden");
+      loadingEl.classList.add("hidden");
+      return;
+    }
     if(data.description&&data.kcal){
-      const dateKey=today();
-      const items=loadCalories(dateKey);
-      items.push({id:Date.now()+"-"+Math.random().toString(36).slice(2),time:new Date().toTimeString().slice(0,5),description:data.description,kcal:data.kcal});
-      saveCalories(dateKey,items);
-      renderFoodLog();renderCalories();
+      logFoodItem(data.description,data.kcal);
     }else{
       alert(t("foodLogNotFood"));
     }
@@ -1927,6 +1948,32 @@ async function uploadFoodPhoto(dataUrl){
   loadingEl.classList.add("hidden");
   document.getElementById("foodLogAddBtn").classList.remove("hidden");
 }
+async function confirmFoodLiquidQty(){
+  if(!pendingFoodPhoto)return;
+  const ml=parseInt(document.getElementById("foodLogLiquidInput").value);
+  if(!ml||ml<=0)return;
+  const photo=pendingFoodPhoto;
+  pendingFoodPhoto=null;
+  document.getElementById("foodLogLiquidAsk").classList.add("hidden");
+  const loadingEl=document.getElementById("foodLogLoading");
+  loadingEl.textContent=t("foodLogLoading");
+  loadingEl.classList.remove("hidden");
+  try{
+    const res=await apiFetch("/food-lookup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:photo.dataUrl,liquidMl:ml,liquidLabel:photo.liquidLabel,partialDescription:photo.partialDescription})});
+    const data=await res.json();
+    if(data.description&&data.kcal){
+      logFoodItem(data.description,data.kcal);
+    }else{
+      alert(t("foodLogNotFood"));
+    }
+  }catch(e){
+    alert(t("foodLogNotFood"));
+  }
+  loadingEl.classList.add("hidden");
+  document.getElementById("foodLogAddBtn").classList.remove("hidden");
+}
+document.getElementById("foodLogLiquidConfirmBtn").onclick=confirmFoodLiquidQty;
+document.getElementById("foodLogLiquidInput").addEventListener("keydown",e=>{if(e.key==="Enter")confirmFoodLiquidQty();});
 document.getElementById("foodLogAddBtn").onclick=()=>document.getElementById("foodLogInput").click();
 document.getElementById("foodLogInput").addEventListener("change",e=>{
   const file=e.target.files[0];if(!file)return;
@@ -1951,6 +1998,9 @@ function openTaskDetail(tk){
   if(tk.id==="meals"&&isViewingToday()){
     document.getElementById("foodLogAddBtn").innerHTML=CAMERA_SVG+`<span>${t("foodLogAddBtn")}</span>`;
     document.getElementById("foodLogApprox").textContent=t("foodLogApprox");
+    document.getElementById("foodLogLiquidConfirmBtn").textContent=t("foodLogLiquidConfirmBtn");
+    document.getElementById("foodLogLiquidAsk").classList.add("hidden");
+    pendingFoodPhoto=null;
     renderFoodLog();
     foodSection.classList.remove("hidden");
   }else{
