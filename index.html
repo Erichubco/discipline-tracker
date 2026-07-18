@@ -785,6 +785,12 @@ const STRINGS = {
       ["Avoine + banane","Riz + bœuf + avocat","Grande omelette + banane"],
     ],
     shakeDetail:"🥤 Collation de l'après-midi, tous les jours :\n\n• Whey ISO100\n• Lait (ou lait fermenté)\n• + ta créatine dedans (dose du pot)\n\nBien après le déjeuner = léger, pas lourd. Parfait pour étaler tes calories et garantir tes protéines même les jours sans faim, sans te couper l'appétit du dîner.",
+    wakeDetail:"Lève-toi, grand verre d'eau.\n\n🌞 Sors prendre la lumière du soleil + marche 30-45 min (≈3,5-5 km).\nC'est le meilleur anti-stress naturel : ça règle ton horloge interne, ton énergie et ton humeur pour toute la journée.\n\n📵 Toujours pas de téléphone — il reste dans l'autre pièce.",
+    weighInDetail:"⚖️ Pèse-toi le matin, si possible à jeun, toujours dans les mêmes conditions.\n\nUne seule pesée ne veut rien dire — le poids varie ±1kg selon l'eau, le sel, la digestion. C'est la moyenne sur 7 jours (visible dans Progression) qui indique ta vraie tendance.",
+    suppsDetail:"💊 Matin : Fénugrec ×3 + Magnésium ×1\n💊 Soir : Fénugrec ×3 + Magnésium ×1\n\nAvec un repas, pas à jeun.",
+    minoxidilDetail:"💊 Minoxidil 5% — 1ml, cuir chevelu SEC (pas mouillé).\n\n1. Pulvérise 1ml — vise la PEAU, pas les cheveux\n2. Concentre-toi sur les golfes temporaux\n3. Lave-toi les mains juste après\n4. Laisse sécher 2-4h avant de dormir ou laver les cheveux\n\nFlacon 60ml = 30 jours. Matin + soir, tous les jours, 6 mois — pas de jour sauté.",
+    readDetail:"📖 Bible, puis 10-15 pages de ton livre.\n\n📵 Pas de téléphone. Cerveau frais et calme avant de dormir.",
+    screensDetail:"🌙 Coupe les écrans à 21h30.\n\nLis, étire-toi ou détends-toi à la place — ça prépare le sommeil et ferme la journée proprement.",
     greetMorning:"Bonjour", greetAfternoon:"Bon après-midi", greetEvening:"Bonsoir",
     greetingSub:"Prêt à avancer sur tes objectifs aujourd'hui ?",
     motivZero:"Rien coché encore — la première tâche est toujours la plus dure. Go.",
@@ -798,7 +804,7 @@ const STRINGS = {
     dayShort:["L","M","M","J","V","S","D"], todayLbl:"Auj.",
     defaultTasks:[
       {id:"wake",label:"🌞 Réveil sans téléphone + marche",period:"morning",category:"dev"},
-      {id:"gym",label:"💪 Muscu",period:"day",category:"dev"},
+      {id:"gym",label:"💪 Muscu",period:"day",category:"dev",days:[0,1,2,3,4]},
       {id:"weighIn",label:"⚖️ Se peser",period:"morning",category:"dev"},
       {id:"ecom",label:"💻 Tâche e-com du jour",period:"day",category:"business"},
       {id:"ecomAfternoon",label:"🛒 E-com — bloc après-midi",period:"day",category:"business"},
@@ -937,6 +943,12 @@ const STRINGS = {
       ["Oats + banana","Rice + beef + avocado","Big omelette + plantain"],
     ],
     shakeDetail:"🥤 Afternoon snack, every day:\n\n• Whey ISO100\n• Milk (or fermented milk)\n• + your creatine mixed in (scoop from the tub)\n\nWell after lunch = light, not heavy. Perfect for spreading out your calories and guaranteeing your protein even on low-appetite days, without killing your dinner appetite.",
+    wakeDetail:"Get up, big glass of water.\n\n🌞 Go get sunlight + walk 30-45 min (≈3.5-5 km).\nThe best natural anti-stress: it sets your internal clock, energy and mood for the whole day.\n\n📵 Still no phone — it stays in the other room.",
+    weighInDetail:"⚖️ Weigh yourself in the morning, ideally fasted, always under the same conditions.\n\nA single weigh-in doesn't mean much — weight swings ±1kg with water, salt, digestion. The 7-day average (visible in Progress) is what shows your real trend.",
+    suppsDetail:"💊 Morning: Fenugreek ×3 + Magnesium ×1\n💊 Evening: Fenugreek ×3 + Magnesium ×1\n\nWith a meal, not on an empty stomach.",
+    minoxidilDetail:"💊 Minoxidil 5% — 1ml, DRY scalp (not wet).\n\n1. Spray 1ml — target the SKIN, not the hair\n2. Focus on the temple areas\n3. Wash your hands right after\n4. Let dry 2-4h before sleeping or washing your hair\n\n60ml bottle = 30 days. Morning + evening, every day, 6 months — no skipped day.",
+    readDetail:"📖 Bible, then 10-15 pages of your book.\n\n📵 No phone. Fresh, calm mind before sleep.",
+    screensDetail:"🌙 Screens off at 9:30pm.\n\nRead, stretch or unwind instead — it sets up sleep and closes out the day properly.",
     greetMorning:"Good morning", greetAfternoon:"Good afternoon", greetEvening:"Good evening",
     greetingSub:"Ready to focus on your goals today?",
     motivZero:"Nothing checked yet — the first task is always the hardest. Go.",
@@ -950,7 +962,7 @@ const STRINGS = {
     dayShort:["M","T","W","T","F","S","S"], todayLbl:"Today",
     defaultTasks:[
       {id:"wake",label:"🌞 Wake up phone-free + walk",period:"morning",category:"dev"},
-      {id:"gym",label:"💪 Workout",period:"day",category:"dev"},
+      {id:"gym",label:"💪 Workout",period:"day",category:"dev",days:[0,1,2,3,4]},
       {id:"weighIn",label:"⚖️ Weigh yourself",period:"morning",category:"dev"},
       {id:"ecom",label:"💻 Today's e-com task",period:"day",category:"business"},
       {id:"ecomAfternoon",label:"🛒 E-com — afternoon block",period:"day",category:"business"},
@@ -1058,6 +1070,14 @@ TASK_MIGRATIONS.forEach(m=>{
   }
 });
 taskMigVersion=Math.max(taskMigVersion,...TASK_MIGRATIONS.map(m=>m.version));
+// One-off patch (not an ID-add migration): restrict the existing "gym" task
+// to weekdays so it stops showing up as a to-do on rest days, when it was
+// already in the list before this restriction existed.
+if(!load("tracker:gymDaysPatched",false)){
+  const gymTk=tasks.find(tk=>tk.id==="gym");
+  if(gymTk&&!gymTk.days)gymTk.days=[0,1,2,3,4];
+  save("tracker:gymDaysPatched",true);
+}
 save("tracker:taskMigVersion",taskMigVersion);
 save("tracker:template",tasks);
 let done=load("tracker:day:"+today(),{});
@@ -1092,11 +1112,13 @@ function taskDisplayLabel(tk){
   if(tk.id==="meals")return `${tk.label} — ${t("mealsMomentPreview")[dowOf(new Date())][mealMomentIdx()]}`;
   return tk.label;
 }
+const SIMPLE_TASK_DETAIL_KEYS={wake:"wakeDetail",weighIn:"weighInDetail",supps:"suppsDetail",minoxidil:"minoxidilDetail",read:"readDetail",screens:"screensDetail"};
 function taskDetailText(tk){
   if(tk.id==="ecom")return ecomSprintDay>4?t("ecomSprintDoneMsg"):t("ecomSprintDetail")[ecomSprintDay-1];
   if(tk.id==="gym")return t("gymDetail")[dowOf(new Date())];
   if(tk.id==="meals")return t("mealsDetail")[dowOf(new Date())];
   if(tk.id==="shake")return t("shakeDetail");
+  if(SIMPLE_TASK_DETAIL_KEYS[tk.id])return t(SIMPLE_TASK_DETAIL_KEYS[tk.id]);
   return tk.detail||null;
 }
 
