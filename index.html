@@ -1108,7 +1108,11 @@ const TASK_MIGRATIONS=[
   {version:2,ids:["ecomAfternoon"],date:"2026-07-13"},
   {version:3,ids:["minoxidil"],date:"2026-07-18"},
   {version:4,ids:["weighIn"],date:"2026-07-18"},
-  {version:5,ids:["faceCareMorning","faceCareEvening","suppsMorning","suppsEvening","minoxidilMorning","minoxidilEvening"],date:"2026-07-18"},
+  // "Compléments" (supps) isn't new — it's been a single matin+soir checkbox
+  // since day one, just split into two today. No addedDate (null) means
+  // "always eligible", same as the tasks that were never migrated at all.
+  {version:5,ids:["suppsMorning","suppsEvening"],date:null},
+  {version:6,ids:["faceCareMorning","faceCareEvening","minoxidilMorning","minoxidilEvening"],date:"2026-07-18"},
 ];
 let taskMigVersion=load("tracker:taskMigVersion",0);
 TASK_MIGRATIONS.forEach(m=>{
@@ -1117,7 +1121,7 @@ TASK_MIGRATIONS.forEach(m=>{
     m.ids.forEach(id=>{
       if(!existingIds.has(id)){
         const def=STRINGS.fr.defaultTasks.find(tk=>tk.id===id);
-        if(def)tasks.push({...def,addedDate:m.date});
+        if(def)tasks.push(m.date?{...def,addedDate:m.date}:{...def});
       }
     });
   }
@@ -1127,12 +1131,17 @@ taskMigVersion=Math.max(taskMigVersion,...TASK_MIGRATIONS.map(m=>m.version));
 // the day's total before it existed — tasks added via a migration before
 // this addedDate tracking was introduced are missing the stamp, so backfill
 // it from the migration's known ship date rather than leaving past days'
-// completion ratios computed against today's full task count.
-if(!load("tracker:addedDateBackfilled",false)){
+// completion ratios computed against today's full task count. V2 corrects
+// suppsMorning/suppsEvening, which V1 wrongly stamped as brand new today
+// when the underlying habit (just one combined box before) goes back to day
+// one — hence hasOwnProperty rather than a truthy check, so the `null` (no
+// cutoff) correction actually overwrites V1's wrong date instead of being
+// skipped as falsy.
+if(!load("tracker:addedDateBackfilledV2",false)){
   const migrationDateById={};
   TASK_MIGRATIONS.forEach(m=>m.ids.forEach(id=>{migrationDateById[id]=m.date;}));
-  tasks.forEach(tk=>{if(!tk.addedDate&&migrationDateById[tk.id])tk.addedDate=migrationDateById[tk.id];});
-  save("tracker:addedDateBackfilled",true);
+  tasks.forEach(tk=>{if(Object.prototype.hasOwnProperty.call(migrationDateById,tk.id))tk.addedDate=migrationDateById[tk.id];});
+  save("tracker:addedDateBackfilledV2",true);
 }
 // One-off: an earlier version of the "Soin visage" (face care) routine may
 // have been added as a single custom matin+soir task before the AM/PM split
