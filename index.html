@@ -528,6 +528,10 @@
         </div>
         <button class="switch" id="reminderBtn" type="button" role="switch" aria-checked="false"><span class="switch-knob"></span></button>
       </div>
+      <div class="goal-row hidden" id="reminderHourRow" style="margin-top:10px">
+        <span id="reminderHourLbl">Heure</span>
+        <select id="reminderHourSelect" style="flex:1;width:auto"></select>
+      </div>
 
       <div class="settings-bento">
         <div class="bento-tile">
@@ -687,7 +691,7 @@ const STRINGS = {
     reminderSubDefault:"Une notification à 21h pour cocher tes tâches avant la coupure d'écran.",
     reminderSubNeedsInstall:"Ajoute d'abord l'app à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis reviens ici pour activer les rappels.",
     reminderSubDenied:"Notifications refusées — active-les dans Réglages iOS > Notifications > Discipline.",
-    reminderBtnOn:"Activer les rappels", reminderBtnOff:"Rappels activés ✓ (touche pour désactiver)",
+    reminderBtnOn:"Activer les rappels", reminderBtnOff:"Rappels activés ✓ (touche pour désactiver)", reminderHourLbl:"Heure",
     weightTitle:"Poids", weightSub:"Pèse-toi chaque matin. On calcule une moyenne sur 7 jours pour lisser les variations normales (eau, sel, digestion) — c'est elle qui compte, pas le chiffre du jour.",
     weightGoalLbl:"Objectif",
     weightCurrent:"actuel", weightGoal:"objectif", weightRemaining:"reste à faire", weightRate:"kg/semaine", weightSinceStart:"depuis le début",
@@ -846,7 +850,7 @@ const STRINGS = {
     reminderSubDefault:"A notification at 9pm to check off your tasks before screens go off.",
     reminderSubNeedsInstall:"Add the app to your home screen first (Share → Add to Home Screen), then come back here to enable reminders.",
     reminderSubDenied:"Notifications denied — enable them in iOS Settings > Notifications > Discipline.",
-    reminderBtnOn:"Enable reminders", reminderBtnOff:"Reminders on ✓ (tap to disable)",
+    reminderBtnOn:"Enable reminders", reminderBtnOff:"Reminders on ✓ (tap to disable)", reminderHourLbl:"Time",
     weightTitle:"Weight", weightSub:"Weigh yourself every morning. We compute a 7-day average to smooth out normal swings (water, salt, digestion) — that's what matters, not the day's raw number.",
     weightGoalLbl:"Goal",
     weightCurrent:"current", weightGoal:"goal", weightRemaining:"remaining", weightRate:"kg/week", weightSinceStart:"since start",
@@ -1223,6 +1227,7 @@ function applyStaticI18n(){
   document.getElementById("streakCurUnit").textContent=t("daysUnit");
   document.getElementById("streakBestUnit").textContent=t("daysUnit");
   document.getElementById("reminderTitle").textContent=t("reminderTitle");
+  document.getElementById("reminderHourLbl").textContent=t("reminderHourLbl");
   document.getElementById("weightTitle").textContent=t("weightTitle");
   document.getElementById("weightSub").textContent=t("weightSub");
   document.getElementById("weightGoalLbl").textContent=t("weightGoalLbl");
@@ -2178,25 +2183,45 @@ function setReminderBtnState(on){
   btn.title=on?t("reminderBtnOff"):t("reminderBtnOn");
 }
 let pushSubscribed=false;
+let reminderHour=load("tracker:reminderHour",21);
+function populateReminderHourSelect(){
+  const sel=document.getElementById("reminderHourSelect");
+  sel.innerHTML="";
+  for(let h=17;h<=23;h++){
+    const opt=document.createElement("option");
+    opt.value=h;
+    opt.textContent=`${h}h00`;
+    sel.appendChild(opt);
+  }
+  sel.value=reminderHour;
+}
+function subscribePayload(sub){
+  const json=sub.toJSON?sub.toJSON():sub;
+  return JSON.stringify({...json,reminderHour});
+}
 async function initReminder(){
   const card=document.getElementById("reminderCard");
   const sub=document.getElementById("reminderSub");
   const btn=document.getElementById("reminderBtn");
-  if(!("serviceWorker"in navigator)||!("PushManager"in window)){card.classList.add("hidden");btn.classList.add("hidden");return;}
+  const hourRow=document.getElementById("reminderHourRow");
+  populateReminderHourSelect();
+  if(!("serviceWorker"in navigator)||!("PushManager"in window)){card.classList.add("hidden");btn.classList.add("hidden");hourRow.classList.add("hidden");return;}
   const isStandalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
   if(!isStandalone){
     sub.textContent=t("reminderSubNeedsInstall");
     btn.classList.add("hidden");
+    hourRow.classList.add("hidden");
     return;
   }
   sub.textContent=t("reminderSubDefault");
   const reg=await navigator.serviceWorker.ready;
   const existing=await reg.pushManager.getSubscription();
   if(existing){
-    apiFetch("/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(existing)}).catch(()=>{});
+    apiFetch("/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:subscribePayload(existing)}).catch(()=>{});
   }
   pushSubscribed=!!existing;
   setReminderBtnState(pushSubscribed);
+  hourRow.classList.toggle("hidden",!pushSubscribed);
   btn.onclick=async()=>{
     const reg=await navigator.serviceWorker.ready;
     const current=await reg.pushManager.getSubscription();
@@ -2205,14 +2230,23 @@ async function initReminder(){
       apiFetch("/unsubscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({endpoint:current.endpoint})}).catch(()=>{});
       pushSubscribed=false;
       setReminderBtnState(false);
+      hourRow.classList.add("hidden");
       return;
     }
     const perm=await Notification.requestPermission();
     if(perm!=="granted"){sub.textContent=t("reminderSubDenied");return;}
     const newSub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
-    await apiFetch("/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(newSub)});
+    await apiFetch("/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:subscribePayload(newSub)});
     pushSubscribed=true;
     setReminderBtnState(true);
+    hourRow.classList.remove("hidden");
+  };
+  document.getElementById("reminderHourSelect").onchange=async(e)=>{
+    reminderHour=parseInt(e.target.value);
+    save("tracker:reminderHour",reminderHour);
+    const reg2=await navigator.serviceWorker.ready;
+    const current=await reg2.pushManager.getSubscription();
+    if(current)apiFetch("/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:subscribePayload(current)}).catch(()=>{});
   };
 }
 
@@ -2441,6 +2475,16 @@ document.getElementById("logoutBtn").onclick=async()=>{
 };
 renderAuthUI();
 
+function applyCalendarStatusUI(connected){
+  const iconEl=document.getElementById("calendarStatusIcon"),subEl=document.getElementById("calendarStatusSub");
+  if(connected){
+    iconEl.style.background="var(--green)";iconEl.style.color="#fff";
+    subEl.textContent=t("calendarConnected");
+  }else{
+    iconEl.style.background="var(--red)";iconEl.style.color="#fff";
+    subEl.textContent=t("calendarError");
+  }
+}
 async function checkCalendarStatus(){
   const iconEl=document.getElementById("calendarStatusIcon"),subEl=document.getElementById("calendarStatusSub");
   iconEl.innerHTML=CALENDAR_SVG;
@@ -2449,21 +2493,27 @@ async function checkCalendarStatus(){
     subEl.textContent=t("calendarNotSignedIn");
     return;
   }
-  iconEl.style.background="var(--cardHi)";iconEl.style.color="var(--muted)";
-  subEl.textContent=t("calendarChecking");
+  // Show the last known result instantly (no visible wait) while quietly
+  // re-checking in the background — the round-trip to verify with Google
+  // takes a moment, but the status rarely changes between visits, so there's
+  // no reason to make every Settings open feel like a fresh network wait.
+  const cached=load("lastCalendarStatus",null);
+  if(cached){
+    applyCalendarStatusUI(cached.connected);
+  }else{
+    iconEl.style.background="var(--cardHi)";iconEl.style.color="var(--muted)";
+    subEl.textContent=t("calendarChecking");
+  }
   try{
     const res=await apiFetch("/calendar-status");
     const data=await res.json();
-    if(data.connected){
-      iconEl.style.background="var(--green)";iconEl.style.color="#fff";
-      subEl.textContent=t("calendarConnected");
-    }else{
-      iconEl.style.background="var(--red)";iconEl.style.color="#fff";
-      subEl.textContent=t("calendarError");
-    }
+    save("lastCalendarStatus",{connected:!!data.connected});
+    applyCalendarStatusUI(!!data.connected);
   }catch(e){
-    iconEl.style.background="var(--cardHi)";iconEl.style.color="var(--muted)";
-    subEl.textContent=t("calendarUnknown");
+    if(!cached){
+      iconEl.style.background="var(--cardHi)";iconEl.style.color="var(--muted)";
+      subEl.textContent=t("calendarUnknown");
+    }
   }
 }
 document.getElementById("bizBtn").onclick=logBiz;
