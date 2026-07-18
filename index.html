@@ -791,6 +791,7 @@ const STRINGS = {
       {id:"ecomAfternoon",label:"🛒 E-com — bloc après-midi",period:"day",category:"business"},
       {id:"shake",label:"🥤 Shake + créatine",period:"day",category:"dev"},
       {id:"supps",label:"💊 Compléments (matin + soir)",period:"day",category:"dev"},
+      {id:"minoxidil",label:"💊 Minoxidil (matin + soir)",period:"day",category:"dev"},
       {id:"meals",label:"🍽️ 3 repas complets",period:"day",category:"dev"},
       {id:"read",label:"📖 Lire 1 chapitre",period:"evening",category:"dev"},
       {id:"screens",label:"🌙 Écrans coupés à 21h30",period:"evening",category:"dev"},
@@ -939,6 +940,7 @@ const STRINGS = {
       {id:"ecomAfternoon",label:"🛒 E-com — afternoon block",period:"day",category:"business"},
       {id:"shake",label:"🥤 Shake + creatine",period:"day",category:"dev"},
       {id:"supps",label:"💊 Supplements (morning + evening)",period:"day",category:"dev"},
+      {id:"minoxidil",label:"💊 Minoxidil (morning + evening)",period:"day",category:"dev"},
       {id:"meals",label:"🍽️ 3 full meals",period:"day",category:"dev"},
       {id:"read",label:"📖 Read 1 chapter",period:"evening",category:"dev"},
       {id:"screens",label:"🌙 Screens off at 9:30pm",period:"evening",category:"dev"},
@@ -1024,6 +1026,7 @@ function categoryLabel(cat){
 const TASK_MIGRATIONS=[
   {version:1,ids:["ecom"]},
   {version:2,ids:["ecomAfternoon"]},
+  {version:3,ids:["minoxidil"]},
 ];
 let taskMigVersion=load("tracker:taskMigVersion",0);
 TASK_MIGRATIONS.forEach(m=>{
