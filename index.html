@@ -609,6 +609,11 @@
     <div class="hidden" id="ecomSprintSection" style="margin-bottom:16px">
       <div class="food-log-add-btn" id="ecomSprintAdvanceBtn" style="background:var(--green);color:#fff"></div>
     </div>
+    <div class="hidden" id="taskPhotoSection" style="margin-bottom:16px">
+      <div class="photo-gallery" id="taskPhotoGallery"></div>
+      <div class="sub hidden" id="taskPhotoGalleryEmpty" style="margin:0 0 10px"></div>
+      <div class="food-log-add-btn" id="taskPhotoAddBtn"></div>
+    </div>
     <div class="task-detail-actions">
       <button class="btn btn-ghost" id="taskDetailDeleteBtn" style="flex:1"></button>
       <button class="btn btn-green" id="taskDetailCloseBtn" style="flex:1"></button>
@@ -625,7 +630,14 @@
       <button type="button" class="period-opt active" data-period="day"><span id="periodDayBtn"></span></button>
       <button type="button" class="period-opt" data-period="evening"><span id="periodEveningBtn"></span></button>
     </div>
-    <div class="period-picker category-picker-scroll" id="categoryPicker" style="margin-bottom:20px"></div>
+    <div class="period-picker category-picker-scroll" id="categoryPicker" style="margin-bottom:14px"></div>
+    <div class="toggle-row" style="margin-bottom:20px">
+      <div class="toggle-icon" id="addTaskPhotoIcon"></div>
+      <div class="toggle-info">
+        <b id="addTaskPhotoLbl"></b>
+      </div>
+      <button class="switch" id="addTaskPhotoSwitch" type="button" role="switch" aria-checked="false"><span class="switch-knob"></span></button>
+    </div>
     <div class="task-detail-actions">
       <button class="btn btn-ghost" id="addTaskCancelBtn" style="flex:1"></button>
       <button class="btn btn-amber" id="addBtn" style="flex:1"></button>
@@ -643,6 +655,8 @@
     </div>
   </div>
 </div>
+
+<input type="file" accept="image/*" capture="environment" class="hidden" id="taskPhotoInput">
 
 <script>
 // Capture the session token from a Google sign-in redirect (#session=...&email=...)
@@ -664,6 +678,7 @@ const STRINGS = {
     tasksTitle:"Tâches du jour", editBtn:"Modifier", editBtnDone:"Terminé",
     newTaskPlaceholder:"Nouvelle tâche…", addTaskTitle:"Nouvelle tâche", addTaskCancelBtn:"Annuler", addTaskConfirmBtn:"Ajouter",
     addCategoryTitle:"Nouvelle catégorie", newCategoryPlaceholder:"Nom (ex : Sport, Études)…", addCategoryCancelBtn:"Annuler", addCategoryConfirmBtn:"Ajouter",
+    addTaskPhotoLbl:"Avec photo à chaque fois", taskPhotoAddBtn:"Ajouter une photo", taskPhotoGalleryEmpty:"Aucune photo pour l'instant.",
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
     streakCardTitle:"Consistance", weeklyProgressTitle:"Détail par catégorie (cette semaine)", periodStatsTitle:"Semaine · mois", periodStatsSub:"% des tâches du jour cochées, tout confondu.", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série", daysUnit:"jours",
     streakHint:"Une série se construit avec des journées à 100% (toutes les tâches cochées). Coche tout en une journée pour la démarrer.",
@@ -822,6 +837,7 @@ const STRINGS = {
     tasksTitle:"Today's tasks", editBtn:"Edit", editBtnDone:"Done",
     newTaskPlaceholder:"New task…", addTaskTitle:"New task", addTaskCancelBtn:"Cancel", addTaskConfirmBtn:"Add",
     addCategoryTitle:"New category", newCategoryPlaceholder:"Name (e.g. Sport, Studies)…", addCategoryCancelBtn:"Cancel", addCategoryConfirmBtn:"Add",
+    addTaskPhotoLbl:"With a photo each time", taskPhotoAddBtn:"Add a photo", taskPhotoGalleryEmpty:"No photos yet.",
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
     streakCardTitle:"Consistency", weeklyProgressTitle:"Breakdown by category (this week)", periodStatsTitle:"Week · month", periodStatsSub:"% of today's tasks checked, all combined.", streakCurLbl:"current streak", streakBestLbl:"best streak", daysUnit:"days",
     streakHint:"A streak is built from 100% days (every task checked). Complete a full day to start one.",
@@ -1084,6 +1100,7 @@ let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
 let calorieGoal=load("tracker:calorieGoal",{value:null,auto:true});
 let progressPhotos=load("tracker:progressPhotos",[]);
+let taskPhotos=load("tracker:taskPhotos",{});
 let ecomSprintDay=load("tracker:ecomSprintDay",1);
 let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null,author:null});
 let booksArchive=load("tracker:booksArchive",[]);
@@ -1195,6 +1212,8 @@ function applyStaticI18n(){
   document.getElementById("newCategoryInput").placeholder=t("newCategoryPlaceholder");
   document.getElementById("addCategoryCancelBtn").textContent=t("addCategoryCancelBtn");
   document.getElementById("addCategoryConfirmBtn").textContent=t("addCategoryConfirmBtn");
+  document.getElementById("addTaskPhotoLbl").textContent=t("addTaskPhotoLbl");
+  document.getElementById("addTaskPhotoIcon").innerHTML=CAMERA_SVG;
   document.getElementById("periodStatsTitle").textContent=t("periodStatsTitle");
   document.getElementById("periodStatsSub").textContent=t("periodStatsSub");
   document.getElementById("streakCardTitle").textContent=t("streakCardTitle");
@@ -1284,7 +1303,7 @@ function renderTaskRow(tk){
     d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==tk.id);save("tracker:template",tasks);renderTasks();renderScore();};
   }else{
     const missed=!viewedDone[tk.id]&&wasTaskMissedRecently(tk);
-    const cameraBtn=tk.id==="meals"?`<button class="task-camera" type="button" title="${t("foodLogAddBtn")}">${CAMERA_SVG}</button>`:"";
+    const cameraBtn=(tk.id==="meals"||tk.hasPhoto)?`<button class="task-camera" type="button" title="${t("foodLogAddBtn")}">${CAMERA_SVG}</button>`:"";
     d.innerHTML=`<div class="check${missed?" missed":""}">${CHECK_SVG}</div><span class="task-label">${taskDisplayLabel(tk)}${missed?`<span class="missed-hint">${t("missedHint")}</span>`:""}</span>${cameraBtn}<button class="task-menu" type="button">⋮</button>`;
     d.querySelector(".task-menu").onclick=(e)=>{e.stopPropagation();openTaskDetail(tk);};
     if(tk.id==="meals"){
@@ -1292,6 +1311,11 @@ function renderTaskRow(tk){
         e.stopPropagation();
         openTaskDetail(tk);
         document.getElementById("foodLogInput").click();
+      };
+    }else if(tk.hasPhoto){
+      d.querySelector(".task-camera").onclick=(e)=>{
+        e.stopPropagation();
+        captureTaskPhoto(tk.id);
       };
     }
     d.onclick=()=>{
@@ -1663,18 +1687,23 @@ function renderProgressPhotos(){
   }
   document.getElementById("photoAddBtn").innerHTML=CAMERA_SVG+`<span>${t("photoAddBtn")}</span>`;
 }
-function openPhotoView(idx){
-  const p=progressPhotos[idx];
+function openPhotoView(idx,photos,onDelete){
+  photos=photos||progressPhotos;
+  const p=photos[idx];
   document.getElementById("photoViewImg").src=p.photo;
   document.getElementById("photoViewDate").textContent=new Date(p.date).toLocaleDateString(t("dateLocale"),{day:"numeric",month:"long",year:"numeric"});
   const delBtn=document.getElementById("photoDeleteBtn");
   delBtn.textContent=t("photoDeleteBtn");
   delBtn.onclick=()=>{
     if(!confirm(t("photoDeleteConfirm")))return;
-    progressPhotos=progressPhotos.filter((_,i)=>i!==idx);
-    save("tracker:progressPhotos",progressPhotos);
+    if(onDelete){
+      onDelete(idx);
+    }else{
+      progressPhotos=progressPhotos.filter((_,i)=>i!==idx);
+      save("tracker:progressPhotos",progressPhotos);
+      renderProgressPhotos();
+    }
     closePhotoView();
-    renderProgressPhotos();
   };
   document.getElementById("photoViewCloseBtn").textContent=t("sheetClose");
   showSheet("photoViewSheet");
@@ -2087,6 +2116,7 @@ function openTaskDetail(tk){
   }else{
     sprintSection.classList.add("hidden");
   }
+  renderTaskPhotoGallery(tk);
   const delBtn=document.getElementById("taskDetailDeleteBtn");
   delBtn.textContent=t("taskDetailDelete");
   delBtn.onclick=()=>{
@@ -2214,11 +2244,18 @@ function toggleEditMode(){
   document.getElementById("editBtn").textContent=editMode?t("editBtnDone"):t("editBtn");
   renderTasks();
 }
+let newTaskHasPhoto=false;
+function setNewTaskHasPhoto(v){
+  newTaskHasPhoto=v;
+  document.getElementById("addTaskPhotoSwitch").setAttribute("aria-checked",v?"true":"false");
+}
 function openAddTask(){
   document.getElementById("newTask").value="";
+  setNewTaskHasPhoto(false);
   showSheet("addTaskSheet");
 }
 function closeAddTask(){hideSheet("addTaskSheet");}
+document.getElementById("addTaskPhotoSwitch").onclick=()=>setNewTaskHasPhoto(!newTaskHasPhoto);
 document.getElementById("editBtn").onclick=toggleEditMode;
 document.getElementById("fabAdd").onclick=openAddTask;
 document.getElementById("backToTodayBtn").onclick=()=>switchViewedDate(today());
@@ -2238,7 +2275,7 @@ function setNewTaskCategory(cat){
   newTaskCategory=cat;
   document.querySelectorAll("#categoryPicker .period-opt").forEach(b=>b.classList.toggle("active",b.dataset.category===cat));
 }
-function addTask(){const i=document.getElementById("newTask");const v=i.value.trim();if(!v)return;tasks.push({id:"t"+Date.now(),label:v,period:newTaskPeriod,category:newTaskCategory});save("tracker:template",tasks);i.value="";renderTasks();renderScore();closeAddTask();}
+function addTask(){const i=document.getElementById("newTask");const v=i.value.trim();if(!v)return;const newTk={id:"t"+Date.now(),label:v,period:newTaskPeriod,category:newTaskCategory};if(newTaskHasPhoto)newTk.hasPhoto=true;tasks.push(newTk);save("tracker:template",tasks);i.value="";renderTasks();renderScore();closeAddTask();}
 
 const taskSlider=document.getElementById("taskSlider");
 const taskSliderViewport=document.getElementById("taskSliderViewport");
@@ -2550,6 +2587,68 @@ document.getElementById("archiveAddInput").addEventListener("change",e=>{
   reader.readAsDataURL(file);
   e.target.value="";
 });
+let pendingTaskPhotoId=null;
+function captureTaskPhoto(taskId){
+  pendingTaskPhotoId=taskId;
+  document.getElementById("taskPhotoInput").click();
+}
+document.getElementById("taskPhotoInput").addEventListener("change",e=>{
+  const file=e.target.files[0];if(!file){pendingTaskPhotoId=null;return;}
+  const taskId=pendingTaskPhotoId;pendingTaskPhotoId=null;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const photo=resizeToDataUrl(img,480,0.8);
+      if(!taskPhotos[taskId])taskPhotos[taskId]=[];
+      taskPhotos[taskId].push({date:today(),photo});
+      save("tracker:taskPhotos",taskPhotos);
+      done[taskId]=true;
+      save("tracker:day:"+today(),done);
+      renderTasks();renderScore();
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value="";
+});
+function renderTaskPhotoGallery(tk){
+  const section=document.getElementById("taskPhotoSection");
+  if(!tk.hasPhoto){section.classList.add("hidden");return;}
+  section.classList.remove("hidden");
+  const photos=taskPhotos[tk.id]||[];
+  const addBtn=document.getElementById("taskPhotoAddBtn");
+  addBtn.innerHTML=CAMERA_SVG+`<span>${t("taskPhotoAddBtn")}</span>`;
+  addBtn.onclick=()=>captureTaskPhoto(tk.id);
+  const gallery=document.getElementById("taskPhotoGallery");
+  const emptyEl=document.getElementById("taskPhotoGalleryEmpty");
+  gallery.innerHTML="";
+  if(!photos.length){
+    emptyEl.textContent=t("taskPhotoGalleryEmpty");
+    emptyEl.classList.remove("hidden");
+  }else{
+    emptyEl.classList.add("hidden");
+    photos.slice().reverse().forEach((p,i)=>{
+      const origIdx=photos.length-1-i;
+      const wrap=document.createElement("div");
+      wrap.className="photo-thumb-wrap";
+      const d=new Date(p.date);
+      const img=document.createElement("img");
+      img.className="photo-thumb";
+      img.src=p.photo;
+      img.onclick=()=>openPhotoView(origIdx,photos,(idx)=>{
+        taskPhotos[tk.id]=taskPhotos[tk.id].filter((_,i)=>i!==idx);
+        save("tracker:taskPhotos",taskPhotos);
+        renderTaskPhotoGallery(tk);
+      });
+      const dateEl=document.createElement("span");
+      dateEl.className="photo-thumb-date";
+      dateEl.textContent=d.toLocaleDateString(t("dateLocale"),{day:"numeric",month:"short"});
+      wrap.appendChild(img);wrap.appendChild(dateEl);
+      gallery.appendChild(wrap);
+    });
+  }
+}
 function popChapterPill(){
   const el=document.getElementById("chapCount");
   el.classList.remove("pop");
