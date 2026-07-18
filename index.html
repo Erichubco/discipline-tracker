@@ -1104,11 +1104,11 @@ function categoryLabel(cat){
   return cat.label;
 }
 const TASK_MIGRATIONS=[
-  {version:1,ids:["ecom"]},
-  {version:2,ids:["ecomAfternoon"]},
-  {version:3,ids:["minoxidil"]},
-  {version:4,ids:["weighIn"]},
-  {version:5,ids:["faceCareMorning","faceCareEvening","suppsMorning","suppsEvening","minoxidilMorning","minoxidilEvening"]},
+  {version:1,ids:["ecom"],date:"2026-07-13"},
+  {version:2,ids:["ecomAfternoon"],date:"2026-07-13"},
+  {version:3,ids:["minoxidil"],date:"2026-07-18"},
+  {version:4,ids:["weighIn"],date:"2026-07-18"},
+  {version:5,ids:["faceCareMorning","faceCareEvening","suppsMorning","suppsEvening","minoxidilMorning","minoxidilEvening"],date:"2026-07-18"},
 ];
 let taskMigVersion=load("tracker:taskMigVersion",0);
 TASK_MIGRATIONS.forEach(m=>{
@@ -1117,12 +1117,33 @@ TASK_MIGRATIONS.forEach(m=>{
     m.ids.forEach(id=>{
       if(!existingIds.has(id)){
         const def=STRINGS.fr.defaultTasks.find(tk=>tk.id===id);
-        if(def)tasks.push(def);
+        if(def)tasks.push({...def,addedDate:m.date});
       }
     });
   }
 });
 taskMigVersion=Math.max(taskMigVersion,...TASK_MIGRATIONS.map(m=>m.version));
+// Historical stats (heatmap/streak/ring) need to know a task wasn't part of
+// the day's total before it existed — tasks added via a migration before
+// this addedDate tracking was introduced are missing the stamp, so backfill
+// it from the migration's known ship date rather than leaving past days'
+// completion ratios computed against today's full task count.
+if(!load("tracker:addedDateBackfilled",false)){
+  const migrationDateById={};
+  TASK_MIGRATIONS.forEach(m=>m.ids.forEach(id=>{migrationDateById[id]=m.date;}));
+  tasks.forEach(tk=>{if(!tk.addedDate&&migrationDateById[tk.id])tk.addedDate=migrationDateById[tk.id];});
+  save("tracker:addedDateBackfilled",true);
+}
+// One-off: an earlier version of the "Soin visage" (face care) routine may
+// have been added as a single custom matin+soir task before the AM/PM split
+// existed as a concept — it wasn't covered by the ampmSplitPatched removal
+// below (that one only knew about "supps"/"minoxidil"), so it could still be
+// sitting alongside the new faceCareMorning/faceCareEvening tasks, showing
+// as a duplicate.
+if(!load("tracker:faceCareDedupPatched",false)){
+  tasks=tasks.filter(tk=>!(tk.id!=="faceCareMorning"&&tk.id!=="faceCareEvening"&&/visage|face\s*care/i.test(tk.label||"")));
+  save("tracker:faceCareDedupPatched",true);
+}
 // One-off patch (not an ID-add migration): restrict the existing "gym" task
 // to weekdays so it stops showing up as a to-do on rest days, when it was
 // already in the list before this restriction existed.
@@ -1210,7 +1231,7 @@ function switchViewedDate(key){
   document.getElementById("editBtn").classList.toggle("hidden",!isViewingToday());
 }
 function motivationalSub(){
-  const dayTasks=tasksForDow(dowOf(new Date()));
+  const dayTasks=tasksForDate(new Date());
   if(!dayTasks.length)return t("greetingSub");
   const comp=dayTasks.filter(tk=>done[tk.id]).length,total=dayTasks.length;
   if(comp>=total)return t("motivFull");
@@ -1324,7 +1345,7 @@ function applyStaticI18n(){
 
 function renderScore(){
   const viewedDone=getViewedDone();
-  const dayTasks=tasksForDow(dowOf(dateFromKey(viewedDate)));
+  const dayTasks=tasksForDate(dateFromKey(viewedDate));
   const total=dayTasks.length, comp=dayTasks.filter(tk=>viewedDone[tk.id]).length, pct=total?comp/total:0;
   document.getElementById("doneCount").textContent=comp;
   document.getElementById("totalCount").textContent=total;
@@ -1408,8 +1429,8 @@ function renderTaskRow(tk){
 function renderTaskPanel(containerId,category){
   const el=document.getElementById(containerId);el.innerHTML="";
   const groups={morning:[],day:[],evening:[]};
-  const dow=dowOf(dateFromKey(viewedDate));
-  tasksForDow(dow).filter(tk=>tk.category===category).forEach(tk=>groups[tk.period||"day"].push(tk));
+  const viewDate=dateFromKey(viewedDate);
+  tasksForDate(viewDate).filter(tk=>tk.category===category).forEach(tk=>groups[tk.period||"day"].push(tk));
   let any=false;
   ["morning","day","evening"].forEach(period=>{
     const list=groups[period];
@@ -1451,7 +1472,7 @@ function renderHeatmap(){
       if(dt<=now){
         const k=keyFor(dt);
         const dd=k===today()?done:load("tracker:day:"+k,{});
-        const dayTasks=tasksForDow(dowOf(dt));
+        const dayTasks=tasksForDate(dt);
         const dc=dayTasks.filter(tk=>dd[tk.id]).length;
         const ratio=dayTasks.length?dc/dayTasks.length:0;
         const color=heatColor(ratio);
@@ -1902,12 +1923,17 @@ function getAllDoneRecords(){
   return out;
 }
 function dowOf(d){return (d.getDay()+6)%7;}
-function tasksForDow(dow){return tasks.filter(tk=>!tk.days||tk.days.includes(dow));}
+function tasksForDate(date){
+  const dow=dowOf(date),key=keyFor(date);
+  return tasks.filter(tk=>(!tk.days||tk.days.includes(dow))&&(!tk.addedDate||tk.addedDate<=key));
+}
 function mostRecentScheduledDayBefore(tk,beforeDateKey){
   const before=dateFromKey(beforeDateKey);
   for(let i=1;i<=14;i++){
     const d=new Date(before);d.setDate(d.getDate()-i);
-    if(!tk.days||tk.days.includes(dowOf(d)))return keyFor(d);
+    const k=keyFor(d);
+    if(tk.addedDate&&k<tk.addedDate)return null;
+    if(!tk.days||tk.days.includes(dowOf(d)))return k;
   }
   return null;
 }
@@ -1918,13 +1944,13 @@ function wasTaskMissedRecently(tk){
   const prevDone=load("tracker:day:"+prevKey,{});
   return !prevDone[tk.id];
 }
-function dayRatio(doneObj,dow){const dayTasks=tasksForDow(dow);if(!dayTasks.length)return 0;return dayTasks.filter(tk=>doneObj[tk.id]).length/dayTasks.length;}
-function isPerfectDay(doneObj,dow){const dayTasks=tasksForDow(dow);return dayTasks.length>0&&dayTasks.every(tk=>doneObj[tk.id]);}
+function dayRatio(doneObj,date){const dayTasks=tasksForDate(date);if(!dayTasks.length)return 0;return dayTasks.filter(tk=>doneObj[tk.id]).length/dayTasks.length;}
+function isPerfectDay(doneObj,date){const dayTasks=tasksForDate(date);return dayTasks.length>0&&dayTasks.every(tk=>doneObj[tk.id]);}
 function periodAvg(startDate,records){
   const now=new Date();now.setHours(0,0,0,0);
   let sum=0,count=0;
   for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1)){
-    sum+=dayRatio(records[keyFor(d)]||{},dowOf(d));count++;
+    sum+=dayRatio(records[keyFor(d)]||{},d);count++;
   }
   return count?sum/count:0;
 }
@@ -1934,7 +1960,7 @@ function periodAvgForCategory(startDate,records,category){
   let sum=0,count=0;
   for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1)){
     const doneObj=records[keyFor(d)]||{};
-    const catDayTasks=tasksForDow(dowOf(d)).filter(tk=>tk.category===category);
+    const catDayTasks=tasksForDate(d).filter(tk=>tk.category===category);
     if(catDayTasks.length){sum+=catDayTasks.filter(tk=>doneObj[tk.id]).length/catDayTasks.length;count++;}
   }
   return count?sum/count:0;
@@ -1942,9 +1968,9 @@ function periodAvgForCategory(startDate,records,category){
 function computeStreaks(records){
   let cur=0;
   let d=new Date();d.setHours(0,0,0,0);
-  if(!isPerfectDay(records[keyFor(d)]||{},dowOf(d)))d.setDate(d.getDate()-1);
-  while(isPerfectDay(records[keyFor(d)]||{},dowOf(d))){cur++;d.setDate(d.getDate()-1);}
-  const perfectDates=Object.keys(records).filter(k=>isPerfectDay(records[k],dowOf(dateFromKey(k)))).sort();
+  if(!isPerfectDay(records[keyFor(d)]||{},d))d.setDate(d.getDate()-1);
+  while(isPerfectDay(records[keyFor(d)]||{},d)){cur++;d.setDate(d.getDate()-1);}
+  const perfectDates=Object.keys(records).filter(k=>isPerfectDay(records[k],dateFromKey(k))).sort();
   let best=0,run=0,prev=null;
   for(const k of perfectDates){
     const dt=dateFromKey(k);
