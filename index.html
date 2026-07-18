@@ -528,9 +528,9 @@
         </div>
         <button class="switch" id="reminderBtn" type="button" role="switch" aria-checked="false"><span class="switch-knob"></span></button>
       </div>
-      <div class="goal-row hidden" id="reminderHourRow" style="margin-top:10px">
-        <span id="reminderHourLbl">Heure</span>
-        <select id="reminderHourSelect" style="flex:1;width:auto"></select>
+      <div class="hidden" id="reminderHourRow" style="margin-top:14px">
+        <span class="stat-lbl" id="reminderHourLbl">Heure</span>
+        <div class="period-picker category-picker-scroll" id="reminderHourPicker" style="margin-top:8px"></div>
       </div>
 
       <div class="settings-bento">
@@ -2184,16 +2184,28 @@ function setReminderBtnState(on){
 }
 let pushSubscribed=false;
 let reminderHour=load("tracker:reminderHour",21);
+function setReminderHour(h){
+  reminderHour=h;
+  document.querySelectorAll("#reminderHourPicker .period-opt").forEach(b=>b.classList.toggle("active",+b.dataset.hour===h));
+}
+async function pickReminderHour(h){
+  setReminderHour(h);
+  save("tracker:reminderHour",h);
+  const reg=await navigator.serviceWorker.ready;
+  const current=await reg.pushManager.getSubscription();
+  if(current)apiFetch("/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:subscribePayload(current)}).catch(()=>{});
+}
 function populateReminderHourSelect(){
-  const sel=document.getElementById("reminderHourSelect");
-  sel.innerHTML="";
+  const picker=document.getElementById("reminderHourPicker");
+  picker.innerHTML="";
   for(let h=17;h<=23;h++){
-    const opt=document.createElement("option");
-    opt.value=h;
-    opt.textContent=`${h}h00`;
-    sel.appendChild(opt);
+    const btn=document.createElement("button");
+    btn.type="button";btn.className="period-opt";btn.dataset.hour=h;
+    btn.textContent=`${h}h`;
+    btn.onclick=()=>pickReminderHour(h);
+    picker.appendChild(btn);
   }
-  sel.value=reminderHour;
+  setReminderHour(reminderHour);
 }
 function subscribePayload(sub){
   const json=sub.toJSON?sub.toJSON():sub;
@@ -2240,13 +2252,6 @@ async function initReminder(){
     pushSubscribed=true;
     setReminderBtnState(true);
     hourRow.classList.remove("hidden");
-  };
-  document.getElementById("reminderHourSelect").onchange=async(e)=>{
-    reminderHour=parseInt(e.target.value);
-    save("tracker:reminderHour",reminderHour);
-    const reg2=await navigator.serviceWorker.ready;
-    const current=await reg2.pushManager.getSubscription();
-    if(current)apiFetch("/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:subscribePayload(current)}).catch(()=>{});
   };
 }
 
