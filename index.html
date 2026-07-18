@@ -1257,6 +1257,11 @@ function switchViewedDate(key){
   renderDayStrip();renderGreeting();renderScore();renderTasks();
   document.getElementById("fabAdd").classList.toggle("hidden",!isViewingToday());
   document.getElementById("editBtn").classList.toggle("hidden",!isViewingToday());
+  // Switching days changes the page's height (the past-day banner appears/
+  // disappears, the task count differs per day), which shoves everything
+  // below around under the reader's finger. Scroll to the top so the jump
+  // reads as "new day view" instead of the page randomly shifting.
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 function motivationalSub(){
   const dayTasks=tasksForDate(new Date());
