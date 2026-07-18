@@ -460,6 +460,7 @@
           <div class="weight-status hidden" id="weightStatus"></div>
         </div>
       </div>
+      <div class="sub hidden" id="weight7DayAvgLine" style="margin-top:2px;margin-bottom:0"></div>
       <svg class="weight-chart hidden" id="weightChart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
       <div class="sub hidden" id="weightPaceInfo" style="margin:10px 0 0"></div>
       <div class="goal-row" style="margin-top:14px">
@@ -672,7 +673,7 @@ const STRINGS = {
     reminderSubNeedsInstall:"Ajoute d'abord l'app à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis reviens ici pour activer les rappels.",
     reminderSubDenied:"Notifications refusées — active-les dans Réglages iOS > Notifications > Discipline.",
     reminderBtnOn:"Activer les rappels", reminderBtnOff:"Rappels activés ✓ (touche pour désactiver)",
-    weightTitle:"Poids", weightSub:"Pèse-toi 1×/semaine, le matin. Pas tous les jours.",
+    weightTitle:"Poids", weightSub:"Pèse-toi chaque matin. On calcule une moyenne sur 7 jours pour lisser les variations normales (eau, sel, digestion) — c'est elle qui compte, pas le chiffre du jour.",
     weightGoalLbl:"Objectif",
     weightCurrent:"actuel", weightGoal:"objectif", weightRemaining:"reste à faire", weightRate:"kg/semaine", weightSinceStart:"depuis le début",
     weightPlaceholder:"Ton poids (kg)", weightSave:"Enregistrer",
@@ -686,6 +687,7 @@ const STRINGS = {
     weightNotEnoughData:"Pas encore assez de données (pèse-toi encore 2-3 fois)",
     weightPaceInfo:(rate,date)=>`${rate} kg/semaine · objectif estimé le ${date}`,
     weightSetGoalHint:"Entre ton objectif pour suivre ta progression.",
+    weight7DayAvg:(kg,n)=>`Moyenne 7 jours : ${kg}kg${n<7?` (${n} pesée${n>1?"s":""})`:""}`,
     progressionTitle:"Progression", progressionSub:"Ta progression, jour après jour.",
     bizTitle:"Chiffre d'affaires mensuel", bizEyebrow:"Objectif business", bizGoalLbl:"Objectif CA", bizPlaceholder:"CA actuel (€)",
     bizPctCompleted:pct=>`${pct}% complété`, bizRemainingAmt:amt=>`${amt} restant`,
@@ -797,6 +799,7 @@ const STRINGS = {
     defaultTasks:[
       {id:"wake",label:"🌞 Réveil sans téléphone + marche",period:"morning",category:"dev"},
       {id:"gym",label:"💪 Muscu",period:"day",category:"dev"},
+      {id:"weighIn",label:"⚖️ Se peser",period:"morning",category:"dev"},
       {id:"ecom",label:"💻 Tâche e-com du jour",period:"day",category:"business"},
       {id:"ecomAfternoon",label:"🛒 E-com — bloc après-midi",period:"day",category:"business"},
       {id:"shake",label:"🥤 Shake + créatine",period:"day",category:"dev"},
@@ -822,7 +825,7 @@ const STRINGS = {
     reminderSubNeedsInstall:"Add the app to your home screen first (Share → Add to Home Screen), then come back here to enable reminders.",
     reminderSubDenied:"Notifications denied — enable them in iOS Settings > Notifications > Discipline.",
     reminderBtnOn:"Enable reminders", reminderBtnOff:"Reminders on ✓ (tap to disable)",
-    weightTitle:"Weight", weightSub:"Weigh yourself 1×/week, in the morning. Not every day.",
+    weightTitle:"Weight", weightSub:"Weigh yourself every morning. We compute a 7-day average to smooth out normal swings (water, salt, digestion) — that's what matters, not the day's raw number.",
     weightGoalLbl:"Goal",
     weightCurrent:"current", weightGoal:"goal", weightRemaining:"remaining", weightRate:"kg/week", weightSinceStart:"since start",
     weightPlaceholder:"Your weight (kg)", weightSave:"Save",
@@ -836,6 +839,7 @@ const STRINGS = {
     weightNotEnoughData:"Not enough data yet (weigh in 2-3 more times)",
     weightPaceInfo:(rate,date)=>`${rate} kg/week · goal estimated ${date}`,
     weightSetGoalHint:"Enter your goal to track progress.",
+    weight7DayAvg:(kg,n)=>`7-day average: ${kg}kg${n<7?` (${n} weigh-in${n>1?"s":""})`:""}`,
     progressionTitle:"Progress", progressionSub:"Your progress, day by day.",
     bizTitle:"Monthly revenue", bizEyebrow:"Business goal", bizGoalLbl:"Revenue goal", bizPlaceholder:"Current revenue (€)",
     bizPctCompleted:pct=>`${pct}% completed`, bizRemainingAmt:amt=>`${amt} remaining`,
@@ -947,6 +951,7 @@ const STRINGS = {
     defaultTasks:[
       {id:"wake",label:"🌞 Wake up phone-free + walk",period:"morning",category:"dev"},
       {id:"gym",label:"💪 Workout",period:"day",category:"dev"},
+      {id:"weighIn",label:"⚖️ Weigh yourself",period:"morning",category:"dev"},
       {id:"ecom",label:"💻 Today's e-com task",period:"day",category:"business"},
       {id:"ecomAfternoon",label:"🛒 E-com — afternoon block",period:"day",category:"business"},
       {id:"shake",label:"🥤 Shake + creatine",period:"day",category:"dev"},
@@ -1038,6 +1043,7 @@ const TASK_MIGRATIONS=[
   {version:1,ids:["ecom"]},
   {version:2,ids:["ecomAfternoon"]},
   {version:3,ids:["minoxidil"]},
+  {version:4,ids:["weighIn"]},
 ];
 let taskMigVersion=load("tracker:taskMigVersion",0);
 TASK_MIGRATIONS.forEach(m=>{
@@ -1452,22 +1458,42 @@ function weightRateKgPerWeek(){
   const weeks=Math.max((new Date(last.date)-new Date(first.date))/(1000*60*60*24*7),1/7);
   return (last.kg-first.kg)/weeks;
 }
+// Daily weigh-ins swing with water/salt/digestion — a 7-day average is what
+// actually reflects real progress, so it's what drives the goal/status math
+// below. The raw "Actuel" figure is kept purely as today's literal entry.
+function weight7DayAvg(){
+  if(!weights.length)return null;
+  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-6);cutoff.setHours(0,0,0,0);
+  const recent=weights.filter(w=>new Date(w.date)>=cutoff);
+  if(!recent.length)return null;
+  return {kg:recent.reduce((s,w)=>s+w.kg,0)/recent.length,count:recent.length};
+}
 function renderWeight(){
   document.getElementById("weightGoalInput").value=weightGoal??"";
   const last=weights[weights.length-1];
   const rate=weightRateKgPerWeek();
   const firstDaysAgo=weights.length>1?Math.round((new Date(last.date)-new Date(weights[0].date))/DAY_MS):0;
   const reliableRate=firstDaysAgo>=3;
+  const avg7=weight7DayAvg();
+  const trackedKg=avg7?avg7.kg:(last?last.kg:null);
 
   document.getElementById("weightCurrentTarget").innerHTML=
     `${t("weightCurrent")} : <b>${last?last.kg.toFixed(1)+"kg":"—"}</b> · ${t("weightGoal")} : <b>${weightGoal!=null?weightGoal.toFixed(1)+"kg":"—"}</b>`;
+
+  const avgLineEl=document.getElementById("weight7DayAvgLine");
+  if(avg7){
+    avgLineEl.textContent=t("weight7DayAvg",avg7.kg.toFixed(1),avg7.count);
+    avgLineEl.classList.remove("hidden");
+  }else{
+    avgLineEl.classList.add("hidden");
+  }
 
   const remainingBlock=document.getElementById("weightRemainingBlock");
   const remainingNumEl=document.getElementById("weightRemainingNum");
   const statusEl=document.getElementById("weightStatus");
   const paceEl=document.getElementById("weightPaceInfo");
-  if(weightGoal!=null&&last){
-    const remaining=weightGoal-last.kg;
+  if(weightGoal!=null&&trackedKg!=null){
+    const remaining=weightGoal-trackedKg;
     remainingBlock.classList.remove("hidden");
     if(Math.abs(remaining)<=0.3){
       remainingNumEl.textContent=t("weightGoalReached");
