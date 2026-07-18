@@ -440,6 +440,15 @@
       <div class="book-archive" id="bookArchive"></div>
     </div>
 
+    <!-- Quick-add books already read (photo of the cover, no live tracking needed) -->
+    <div class="card">
+      <div class="card-h"><span class="dot" style="background:var(--green)"></span><span id="archiveAddTitle"></span></div>
+      <div class="sub" id="archiveAddSub"></div>
+      <div class="food-log-add-btn" id="archiveAddBtn"></div>
+      <input type="file" accept="image/*" capture="environment" class="hidden" id="archiveAddInput">
+      <div class="sub hidden" id="archiveAddStatus" style="margin-top:10px;margin-bottom:0"></div>
+    </div>
+
     <!-- Weight -->
     <div class="card">
       <div class="card-h" style="margin-bottom:6px"><span class="dot" style="background:var(--green)"></span><span id="weightTitle">Poids</span></div>
@@ -695,6 +704,7 @@ const STRINGS = {
     bookNotIdentified:"Livre non identifié — tape le titre toi-même.",
     pageCountBadge:n=>`📄 ${n} pages (Open Library)`,
     foodLogAddBtn:"Ajouter une photo", foodLogLoading:"🔍 Estimation en cours…",
+    archiveAddTitle:"Livres déjà lus cette année", archiveAddSub:"Prends une photo de la couverture, un par un — pas besoin de suivre leur progression.", archiveAddBtn:"Ajouter un livre", archiveAddLoading:"🔍 Identification…", archiveAddUnidentified:"Livre (non identifié)",
     foodLogLiquidQuestion:label=>`Quelle quantité de ${label} (en ml) ? Ex : 200-300ml.`, foodLogLiquidConfirmBtn:"Valider",
     foodLogNotFood:"Photo non reconnue comme un repas — réessaie avec une photo plus claire.",
     foodLogTotal:(n,goal)=>goal?`≈ ${n} / ${goal} kcal aujourd'hui`:`≈ ${n} kcal aujourd'hui`,
@@ -844,6 +854,7 @@ const STRINGS = {
     bookNotIdentified:"Book not identified — type the title yourself.",
     pageCountBadge:n=>`📄 ${n} pages (Open Library)`,
     foodLogAddBtn:"Add a photo", foodLogLoading:"🔍 Estimating…",
+    archiveAddTitle:"Books already read this year", archiveAddSub:"Take a photo of the cover, one at a time — no need to track their progress.", archiveAddBtn:"Add a book", archiveAddLoading:"🔍 Identifying…", archiveAddUnidentified:"Book (not identified)",
     foodLogLiquidQuestion:label=>`How much ${label} (in ml)? E.g. 200-300ml.`, foodLogLiquidConfirmBtn:"Confirm",
     foodLogNotFood:"Photo not recognized as a meal — try again with a clearer photo.",
     foodLogTotal:(n,goal)=>goal?`≈ ${n} / ${goal} kcal today`:`≈ ${n} kcal today`,
@@ -1186,6 +1197,9 @@ function applyStaticI18n(){
   document.getElementById("wInput").placeholder=t("weightPlaceholder");
   document.getElementById("wBtn").textContent=t("weightSave");
   document.getElementById("readingTitle").textContent=t("readingTitle");
+  document.getElementById("archiveAddTitle").textContent=t("archiveAddTitle");
+  document.getElementById("archiveAddSub").textContent=t("archiveAddSub");
+  document.getElementById("archiveAddBtn").innerHTML=CAMERA_SVG+`<span>${t("archiveAddBtn")}</span>`;
   document.getElementById("bookInput").placeholder=t("bookPlaceholder");
   document.getElementById("totalChapInput").placeholder=t("totalChapPlaceholder");
   document.getElementById("currentlyReadingLbl").textContent=t("currentlyReadingLbl");
@@ -2455,6 +2469,38 @@ document.getElementById("coverInput").addEventListener("change",e=>{
     img.src=ev.target.result;
   };
   reader.readAsDataURL(file);
+});
+async function quickAddPastBook(smallCoverUrl,bigCoverUrl){
+  const statusEl=document.getElementById("archiveAddStatus");
+  statusEl.textContent=t("archiveAddLoading");
+  statusEl.classList.remove("hidden");
+  document.getElementById("archiveAddBtn").classList.add("hidden");
+  let title=t("archiveAddUnidentified"),author=null,pageCount=null,totalChapters=null;
+  try{
+    const res=await apiFetch("/book-lookup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:bigCoverUrl})});
+    const data=await res.json();
+    if(data.title){title=data.title;author=data.author||null;pageCount=data.pageCount||null;totalChapters=data.chapters||null;}
+  }catch(e){}
+  booksArchive.push({title,author,coverPhoto:smallCoverUrl,chapters:null,totalChapters,pageCount,finishedDate:today()});
+  save("tracker:booksArchive",booksArchive);
+  archiveExpanded=true;
+  statusEl.classList.add("hidden");
+  document.getElementById("archiveAddBtn").classList.remove("hidden");
+  renderReading();
+}
+document.getElementById("archiveAddBtn").onclick=()=>document.getElementById("archiveAddInput").click();
+document.getElementById("archiveAddInput").addEventListener("change",e=>{
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      quickAddPastBook(resizeToDataUrl(img,240,0.75),resizeToDataUrl(img,800,0.85));
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value="";
 });
 function popChapterPill(){
   const el=document.getElementById("chapCount");
