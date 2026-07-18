@@ -688,7 +688,7 @@ const STRINGS = {
     streakHint:"Une série se construit avec des journées à 100% (toutes les tâches cochées). Coche tout en une journée pour la démarrer.",
     thisWeekLbl:d=>`Cette semaine (jour ${d}/7)`, thisMonthLbl:(d,total)=>`Ce mois (jour ${d}/${total})`,
     reminderTitle:"Rappel du soir",
-    reminderSubDefault:"Une notification à 21h pour cocher tes tâches avant la coupure d'écran.",
+    reminderSubDefault:h=>`Une notification à ${h}h pour cocher tes tâches avant la coupure d'écran.`,
     reminderSubNeedsInstall:"Ajoute d'abord l'app à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis reviens ici pour activer les rappels.",
     reminderSubDenied:"Notifications refusées — active-les dans Réglages iOS > Notifications > Discipline.",
     reminderBtnOn:"Activer les rappels", reminderBtnOff:"Rappels activés ✓ (touche pour désactiver)", reminderHourLbl:"Heure",
@@ -806,8 +806,12 @@ const STRINGS = {
     shakeDetail:"🥤 Collation de l'après-midi, tous les jours :\n\n• Whey ISO100\n• Lait (ou lait fermenté)\n• + ta créatine dedans (dose du pot)\n\nBien après le déjeuner = léger, pas lourd. Parfait pour étaler tes calories et garantir tes protéines même les jours sans faim, sans te couper l'appétit du dîner.",
     wakeDetail:"Lève-toi, grand verre d'eau.\n\n🌞 Sors prendre la lumière du soleil + marche 30-45 min (≈3,5-5 km).\nC'est le meilleur anti-stress naturel : ça règle ton horloge interne, ton énergie et ton humeur pour toute la journée.\n\n📵 Toujours pas de téléphone — il reste dans l'autre pièce.",
     weighInDetail:"⚖️ Pèse-toi le matin, si possible à jeun, toujours dans les mêmes conditions.\n\nUne seule pesée ne veut rien dire — le poids varie ±1kg selon l'eau, le sel, la digestion. C'est la moyenne sur 7 jours (visible dans Progression) qui indique ta vraie tendance.",
-    suppsDetail:"💊 Matin : Fénugrec ×3 + Magnésium ×1\n💊 Soir : Fénugrec ×3 + Magnésium ×1\n\nAvec un repas, pas à jeun.",
-    minoxidilDetail:"💊 Minoxidil 5% — 1ml, cuir chevelu SEC (pas mouillé).\n\n1. Pulvérise 1ml — vise la PEAU, pas les cheveux\n2. Concentre-toi sur les golfes temporaux\n3. Lave-toi les mains juste après\n4. Laisse sécher 2-4h avant de dormir ou laver les cheveux\n\nFlacon 60ml = 30 jours. Matin + soir, tous les jours, 6 mois — pas de jour sauté.",
+    faceCareMorningDetail:"🧼 Nettoie avec ton savon riz/algues.\n💧 Hydratation légère « jour » : jojoba ou squalane (non gras), ou un peu de gel d'aloe vera.\n\nRapide, peau fraîche pour la journée.",
+    faceCareEveningDetail:"🧼 Nettoie avec ton savon riz/sea moss.\n🌙 Crème de nuit anti-rides.\n💧 + quelques gouttes d'huile de sea moss ou de rose musquée (rosehip) si tu veux booster l'effet anti-âge.\n\nC'est le soir que la peau se régénère le mieux.",
+    suppsMorningDetail:"💊 Fénugrec ×3 + Magnésium ×1\n\nAvec un repas, pas à jeun.",
+    suppsEveningDetail:"💊 Fénugrec ×3 + Magnésium ×1\n\nAvec un repas, pas à jeun.",
+    minoxidilMorningDetail:"💊 Minoxidil 5% — 1ml, cuir chevelu SEC (pas mouillé).\n\n1. Pulvérise 1ml — vise la PEAU, pas les cheveux\n2. Concentre-toi sur les golfes temporaux\n3. Lave-toi les mains juste après\n4. Laisse sécher 2-4h avant de doucher ou de trop transpirer si possible\n\nFlacon 60ml = 30 jours (1ml × 2/jour). Tous les jours, 6 mois — pas de jour sauté.",
+    minoxidilEveningDetail:"💊 Minoxidil 5% — 1ml, cuir chevelu SEC (pas mouillé).\n\n1. Pulvérise 1ml — vise la PEAU, pas les cheveux\n2. Concentre-toi sur les golfes temporaux\n3. Lave-toi les mains juste après\n4. Laisse sécher 2-4h avant de dormir ou laver les cheveux (sinon ça part dans l'oreiller)\n\nFlacon 60ml = 30 jours (1ml × 2/jour). Tous les jours, 6 mois — pas de jour sauté.",
     readDetail:"📖 Bible, puis 10-15 pages de ton livre.\n\n📵 Pas de téléphone. Cerveau frais et calme avant de dormir.",
     screensDetail:"🌙 Coupe les écrans à 21h30.\n\nLis, étire-toi ou détends-toi à la place — ça prépare le sommeil et ferme la journée proprement.",
     greetMorning:"Bonjour", greetAfternoon:"Bon après-midi", greetEvening:"Bonsoir",
@@ -828,8 +832,12 @@ const STRINGS = {
       {id:"ecom",label:"💻 Tâche e-com du jour",period:"day",category:"business"},
       {id:"ecomAfternoon",label:"🛒 E-com — bloc après-midi",period:"day",category:"business"},
       {id:"shake",label:"🥤 Shake + créatine",period:"day",category:"dev"},
-      {id:"supps",label:"💊 Compléments (matin + soir)",period:"day",category:"dev"},
-      {id:"minoxidil",label:"💊 Minoxidil (matin + soir)",period:"day",category:"dev"},
+      {id:"faceCareMorning",label:"🧴 Soin visage matin",period:"morning",category:"dev"},
+      {id:"faceCareEvening",label:"🧴 Soin visage soir",period:"evening",category:"dev"},
+      {id:"suppsMorning",label:"💊 Compléments matin",period:"morning",category:"dev"},
+      {id:"suppsEvening",label:"💊 Compléments soir",period:"evening",category:"dev"},
+      {id:"minoxidilMorning",label:"💊 Minoxidil matin",period:"morning",category:"dev"},
+      {id:"minoxidilEvening",label:"💊 Minoxidil soir",period:"evening",category:"dev"},
       {id:"meals",label:"🍽️ 3 repas complets",period:"day",category:"dev"},
       {id:"read",label:"📖 Lire 1 chapitre",period:"evening",category:"dev"},
       {id:"screens",label:"🌙 Écrans coupés à 21h30",period:"evening",category:"dev"},
@@ -847,7 +855,7 @@ const STRINGS = {
     streakHint:"A streak is built from 100% days (every task checked). Complete a full day to start one.",
     thisWeekLbl:d=>`This week (day ${d}/7)`, thisMonthLbl:(d,total)=>`This month (day ${d}/${total})`,
     reminderTitle:"Evening reminder",
-    reminderSubDefault:"A notification at 9pm to check off your tasks before screens go off.",
+    reminderSubDefault:h=>`A notification at ${h}h to check off your tasks before screens go off.`,
     reminderSubNeedsInstall:"Add the app to your home screen first (Share → Add to Home Screen), then come back here to enable reminders.",
     reminderSubDenied:"Notifications denied — enable them in iOS Settings > Notifications > Discipline.",
     reminderBtnOn:"Enable reminders", reminderBtnOff:"Reminders on ✓ (tap to disable)", reminderHourLbl:"Time",
@@ -965,8 +973,12 @@ const STRINGS = {
     shakeDetail:"🥤 Afternoon snack, every day:\n\n• Whey ISO100\n• Milk (or fermented milk)\n• + your creatine mixed in (scoop from the tub)\n\nWell after lunch = light, not heavy. Perfect for spreading out your calories and guaranteeing your protein even on low-appetite days, without killing your dinner appetite.",
     wakeDetail:"Get up, big glass of water.\n\n🌞 Go get sunlight + walk 30-45 min (≈3.5-5 km).\nThe best natural anti-stress: it sets your internal clock, energy and mood for the whole day.\n\n📵 Still no phone — it stays in the other room.",
     weighInDetail:"⚖️ Weigh yourself in the morning, ideally fasted, always under the same conditions.\n\nA single weigh-in doesn't mean much — weight swings ±1kg with water, salt, digestion. The 7-day average (visible in Progress) is what shows your real trend.",
-    suppsDetail:"💊 Morning: Fenugreek ×3 + Magnesium ×1\n💊 Evening: Fenugreek ×3 + Magnesium ×1\n\nWith a meal, not on an empty stomach.",
-    minoxidilDetail:"💊 Minoxidil 5% — 1ml, DRY scalp (not wet).\n\n1. Spray 1ml — target the SKIN, not the hair\n2. Focus on the temple areas\n3. Wash your hands right after\n4. Let dry 2-4h before sleeping or washing your hair\n\n60ml bottle = 30 days. Morning + evening, every day, 6 months — no skipped day.",
+    faceCareMorningDetail:"🧼 Cleanse with your rice/seaweed soap.\n💧 Light \"day\" hydration: jojoba or squalane (non-greasy), or a bit of aloe vera gel.\n\nQuick, fresh skin for the day.",
+    faceCareEveningDetail:"🧼 Cleanse with your rice/sea moss soap.\n🌙 Anti-wrinkle night cream.\n💧 + a few drops of sea moss oil or rosehip oil if you want to boost the anti-aging effect.\n\nSkin regenerates best at night.",
+    suppsMorningDetail:"💊 Fenugreek ×3 + Magnesium ×1\n\nWith a meal, not on an empty stomach.",
+    suppsEveningDetail:"💊 Fenugreek ×3 + Magnesium ×1\n\nWith a meal, not on an empty stomach.",
+    minoxidilMorningDetail:"💊 Minoxidil 5% — 1ml, DRY scalp (not wet).\n\n1. Spray 1ml — target the SKIN, not the hair\n2. Focus on the temple areas\n3. Wash your hands right after\n4. Let dry 2-4h before showering or sweating heavily if possible\n\n60ml bottle = 30 days (1ml × 2/day). Every day, 6 months — no skipped day.",
+    minoxidilEveningDetail:"💊 Minoxidil 5% — 1ml, DRY scalp (not wet).\n\n1. Spray 1ml — target the SKIN, not the hair\n2. Focus on the temple areas\n3. Wash your hands right after\n4. Let dry 2-4h before sleeping or washing your hair (otherwise it'll rub off on your pillow)\n\n60ml bottle = 30 days (1ml × 2/day). Every day, 6 months — no skipped day.",
     readDetail:"📖 Bible, then 10-15 pages of your book.\n\n📵 No phone. Fresh, calm mind before sleep.",
     screensDetail:"🌙 Screens off at 9:30pm.\n\nRead, stretch or unwind instead — it sets up sleep and closes out the day properly.",
     greetMorning:"Good morning", greetAfternoon:"Good afternoon", greetEvening:"Good evening",
@@ -987,8 +999,12 @@ const STRINGS = {
       {id:"ecom",label:"💻 Today's e-com task",period:"day",category:"business"},
       {id:"ecomAfternoon",label:"🛒 E-com — afternoon block",period:"day",category:"business"},
       {id:"shake",label:"🥤 Shake + creatine",period:"day",category:"dev"},
-      {id:"supps",label:"💊 Supplements (morning + evening)",period:"day",category:"dev"},
-      {id:"minoxidil",label:"💊 Minoxidil (morning + evening)",period:"day",category:"dev"},
+      {id:"faceCareMorning",label:"🧴 Face care — morning",period:"morning",category:"dev"},
+      {id:"faceCareEvening",label:"🧴 Face care — evening",period:"evening",category:"dev"},
+      {id:"suppsMorning",label:"💊 Supplements — morning",period:"morning",category:"dev"},
+      {id:"suppsEvening",label:"💊 Supplements — evening",period:"evening",category:"dev"},
+      {id:"minoxidilMorning",label:"💊 Minoxidil — morning",period:"morning",category:"dev"},
+      {id:"minoxidilEvening",label:"💊 Minoxidil — evening",period:"evening",category:"dev"},
       {id:"meals",label:"🍽️ 3 full meals",period:"day",category:"dev"},
       {id:"read",label:"📖 Read 1 chapter",period:"evening",category:"dev"},
       {id:"screens",label:"🌙 Screens off at 9:30pm",period:"evening",category:"dev"},
@@ -1076,6 +1092,7 @@ const TASK_MIGRATIONS=[
   {version:2,ids:["ecomAfternoon"]},
   {version:3,ids:["minoxidil"]},
   {version:4,ids:["weighIn"]},
+  {version:5,ids:["faceCareMorning","faceCareEvening","suppsMorning","suppsEvening","minoxidilMorning","minoxidilEvening"]},
 ];
 let taskMigVersion=load("tracker:taskMigVersion",0);
 TASK_MIGRATIONS.forEach(m=>{
@@ -1097,6 +1114,14 @@ if(!load("tracker:gymDaysPatched",false)){
   const gymTk=tasks.find(tk=>tk.id==="gym");
   if(gymTk&&!gymTk.days)gymTk.days=[0,1,2,3,4];
   save("tracker:gymDaysPatched",true);
+}
+// Another one-off: "supps" and "minoxidil" were single matin+soir checkboxes;
+// version 5 replaced them with separate morning/evening tasks. Drop the old
+// combined ones for anyone who already had them, now that the split tasks
+// have been added above.
+if(!load("tracker:ampmSplitPatched",false)){
+  tasks=tasks.filter(tk=>tk.id!=="supps"&&tk.id!=="minoxidil");
+  save("tracker:ampmSplitPatched",true);
 }
 save("tracker:taskMigVersion",taskMigVersion);
 save("tracker:template",tasks);
@@ -1133,7 +1158,7 @@ function taskDisplayLabel(tk){
   if(tk.id==="meals")return `${tk.label} — ${t("mealsMomentPreview")[dowOf(new Date())][mealMomentIdx()]}`;
   return tk.label;
 }
-const SIMPLE_TASK_DETAIL_KEYS={wake:"wakeDetail",weighIn:"weighInDetail",supps:"suppsDetail",minoxidil:"minoxidilDetail",read:"readDetail",screens:"screensDetail"};
+const SIMPLE_TASK_DETAIL_KEYS={wake:"wakeDetail",weighIn:"weighInDetail",faceCareMorning:"faceCareMorningDetail",faceCareEvening:"faceCareEveningDetail",suppsMorning:"suppsMorningDetail",suppsEvening:"suppsEveningDetail",minoxidilMorning:"minoxidilMorningDetail",minoxidilEvening:"minoxidilEveningDetail",read:"readDetail",screens:"screensDetail"};
 function taskDetailText(tk){
   if(tk.id==="ecom")return ecomSprintDay>4?t("ecomSprintDoneMsg"):t("ecomSprintDetail")[ecomSprintDay-1];
   if(tk.id==="gym")return t("gymDetail")[dowOf(new Date())];
@@ -2187,10 +2212,12 @@ let reminderHour=load("tracker:reminderHour",21);
 function setReminderHour(h){
   reminderHour=h;
   document.querySelectorAll("#reminderHourPicker .period-opt").forEach(b=>b.classList.toggle("active",+b.dataset.hour===h));
+  if(pushSubscribed)document.getElementById("reminderSub").textContent=t("reminderSubDefault",h);
 }
 async function pickReminderHour(h){
   setReminderHour(h);
   save("tracker:reminderHour",h);
+  flashSaved(document.querySelector(`#reminderHourPicker .period-opt[data-hour="${h}"]`));
   const reg=await navigator.serviceWorker.ready;
   const current=await reg.pushManager.getSubscription();
   if(current)apiFetch("/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:subscribePayload(current)}).catch(()=>{});
@@ -2225,7 +2252,7 @@ async function initReminder(){
     hourRow.classList.add("hidden");
     return;
   }
-  sub.textContent=t("reminderSubDefault");
+  sub.textContent=t("reminderSubDefault",reminderHour);
   const reg=await navigator.serviceWorker.ready;
   const existing=await reg.pushManager.getSubscription();
   if(existing){
