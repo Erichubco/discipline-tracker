@@ -497,6 +497,11 @@
       <div class="card-h"><span class="dot" style="background:var(--green)"></span><span id="photoTitle">Progression physique</span></div>
       <div class="sub" id="photoSub" style="margin-top:4px"></div>
       <div class="photo-gallery hidden" id="photoGallery"></div>
+      <div class="sub hidden" id="bodyAnalysisLoading" style="margin-top:10px"></div>
+      <div class="hidden" id="bodyAnalysisCard" style="margin-top:10px">
+        <div class="stat-lbl" id="bodyAnalysisLabel"></div>
+        <div class="sub" id="bodyAnalysisText" style="margin-top:4px;white-space:pre-line"></div>
+      </div>
       <div class="food-log-add-btn" id="photoAddBtn" style="margin-top:12px"></div>
       <input type="file" accept="image/*" capture="environment" class="hidden" id="photoInput">
     </div>
@@ -756,6 +761,9 @@ const STRINGS = {
     calorieStatusLine:(n,goal)=>goal?`Aujourd'hui : ${n} / ${goal} kcal`:`Aujourd'hui : ${n} kcal`,
     photoTitle:"Progression physique", photoSub:"Une photo par mois pour voir ta vraie évolution — à croiser avec le poids, pas juste la balance.",
     photoAddBtn:"Ajouter une photo", photoDeleteBtn:"Supprimer", photoDeleteConfirm:"Supprimer cette photo ?",
+    progressPhotoMonthlyConfirm:date=>`Tu as déjà une photo de progression ce mois-ci (${date}). La remplacer par une nouvelle ?`,
+    bodyAnalysisLoading:"🔍 Analyse de ta progression physique…", bodyAnalysisTitle:"Analyse IA",
+    gymFocusAdditionLbl:"Ajout du mois (focus IA)",
     archiveToggleLbl:n=>`${n} livre${n>1?"s":""} lu${n>1?"s":""}`,
     catDevLbl:"Perso", catBusinessLbl:"Business",
     noTasksInPanel:"Aucune tâche ici pour l'instant. Ajoute-en une avec Modifier.",
@@ -924,6 +932,9 @@ const STRINGS = {
     calorieStatusLine:(n,goal)=>goal?`Today: ${n} / ${goal} kcal`:`Today: ${n} kcal`,
     photoTitle:"Physical progress", photoSub:"One photo a month to see your real progress — cross-reference it with your weight, not just the scale.",
     photoAddBtn:"Add a photo", photoDeleteBtn:"Delete", photoDeleteConfirm:"Delete this photo?",
+    progressPhotoMonthlyConfirm:date=>`You already have a progress photo this month (${date}). Replace it with a new one?`,
+    bodyAnalysisLoading:"🔍 Analyzing your physical progress…", bodyAnalysisTitle:"AI Analysis",
+    gymFocusAdditionLbl:"This month's addition (AI focus)",
     archiveToggleLbl:n=>`${n} book${n>1?"s":""} read`,
     catDevLbl:"Personal", catBusinessLbl:"Business",
     noTasksInPanel:"No tasks here yet. Add one with Edit.",
@@ -1198,6 +1209,7 @@ let done=load("tracker:day:"+today(),{});
 let weights=load("tracker:weights",[]);
 let calorieGoal=load("tracker:calorieGoal",{value:null,auto:true});
 let progressPhotos=load("tracker:progressPhotos",[]);
+let bodyAnalysis=load("tracker:bodyAnalysis",null);
 let taskPhotos=load("tracker:taskPhotos",{});
 let ecomSprintDay=load("tracker:ecomSprintDay",1);
 let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null,author:null});
@@ -1230,7 +1242,12 @@ function taskDisplayLabel(tk){
 const SIMPLE_TASK_DETAIL_KEYS={wake:"wakeDetail",weighIn:"weighInDetail",faceCareMorning:"faceCareMorningDetail",faceCareEvening:"faceCareEveningDetail",suppsMorning:"suppsMorningDetail",suppsEvening:"suppsEveningDetail",minoxidilMorning:"minoxidilMorningDetail",minoxidilEvening:"minoxidilEveningDetail",read:"readDetail",screens:"screensDetail"};
 function taskDetailText(tk){
   if(tk.id==="ecom")return ecomSprintDay>4?t("ecomSprintDoneMsg"):t("ecomSprintDetail")[ecomSprintDay-1];
-  if(tk.id==="gym")return t("gymDetail")[dowOf(new Date())];
+  if(tk.id==="gym"){
+    const dow=dowOf(new Date());
+    const base=t("gymDetail")[dow];
+    const addition=bodyAnalysis&&bodyAnalysis.exerciseAdditions&&bodyAnalysis.exerciseAdditions[dow];
+    return addition?`${base}\n\n🎯 ${t("gymFocusAdditionLbl")} :\n${addition}`:base;
+  }
   if(tk.id==="meals")return t("mealsDetail")[dowOf(new Date())];
   if(tk.id==="shake")return t("shakeDetail");
   if(SIMPLE_TASK_DETAIL_KEYS[tk.id])return t(SIMPLE_TASK_DETAIL_KEYS[tk.id]);
@@ -1845,6 +1862,30 @@ function renderProgressPhotos(){
   }
   document.getElementById("photoAddBtn").innerHTML=CAMERA_SVG+`<span>${t("photoAddBtn")}</span>`;
 }
+function renderBodyAnalysis(){
+  const cardEl=document.getElementById("bodyAnalysisCard");
+  if(!bodyAnalysis||!bodyAnalysis.summary){cardEl.classList.add("hidden");return;}
+  document.getElementById("bodyAnalysisLabel").textContent=`${t("bodyAnalysisTitle")} · ${new Date(bodyAnalysis.date).toLocaleDateString(t("dateLocale"),{day:"numeric",month:"long"})}`;
+  document.getElementById("bodyAnalysisText").textContent=bodyAnalysis.summary;
+  cardEl.classList.remove("hidden");
+}
+async function runBodyAnalysis(photoDataUrl,prevPhotoDataUrl){
+  const loadingEl=document.getElementById("bodyAnalysisLoading");
+  document.getElementById("bodyAnalysisCard").classList.add("hidden");
+  loadingEl.textContent=t("bodyAnalysisLoading");
+  loadingEl.classList.remove("hidden");
+  try{
+    const res=await apiFetch("/body-analysis",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:photoDataUrl,previousImage:prevPhotoDataUrl,lang})});
+    const data=await res.json();
+    if(data.summary){
+      bodyAnalysis={date:today(),summary:data.summary,exerciseAdditions:data.exerciseAdditions||{}};
+      save("tracker:bodyAnalysis",bodyAnalysis);
+      renderBodyAnalysis();
+      renderTasks();
+    }
+  }catch(e){}
+  loadingEl.classList.add("hidden");
+}
 function openPhotoView(idx,photos,onDelete){
   photos=photos||progressPhotos;
   const p=photos[idx];
@@ -1869,7 +1910,15 @@ function openPhotoView(idx,photos,onDelete){
 function closePhotoView(){hideSheet("photoViewSheet");}
 document.getElementById("photoViewCloseBtn").onclick=closePhotoView;
 document.getElementById("photoViewSheet").addEventListener("click",e=>{if(e.target.id==="photoViewSheet")closePhotoView();});
-document.getElementById("photoAddBtn").onclick=()=>document.getElementById("photoInput").click();
+document.getElementById("photoAddBtn").onclick=()=>{
+  // One photo per calendar month — this is meant to track real month-over-
+  // month change, not become a daily gallery. An existing same-month entry
+  // can still be replaced (mistakes/retakes happen), just not stacked.
+  const thisMonth=today().slice(0,7);
+  const existing=progressPhotos.find(p=>p.date.slice(0,7)===thisMonth);
+  if(existing&&!confirm(t("progressPhotoMonthlyConfirm",new Date(existing.date).toLocaleDateString(t("dateLocale"),{day:"numeric",month:"long"}))))return;
+  document.getElementById("photoInput").click();
+};
 document.getElementById("photoInput").addEventListener("change",e=>{
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
@@ -1877,9 +1926,13 @@ document.getElementById("photoInput").addEventListener("change",e=>{
     const img=new Image();
     img.onload=()=>{
       const dataUrl=resizeToDataUrl(img,700,0.8);
+      const thisMonth=today().slice(0,7);
+      const prevPhoto=[...progressPhotos].reverse().find(p=>p.date.slice(0,7)!==thisMonth);
+      progressPhotos=progressPhotos.filter(p=>p.date.slice(0,7)!==thisMonth);
       progressPhotos.push({date:today(),photo:dataUrl});
       save("tracker:progressPhotos",progressPhotos);
       renderProgressPhotos();
+      runBodyAnalysis(dataUrl,prevPhoto?prevPhoto.photo:null);
     };
     img.src=ev.target.result;
   };
@@ -2438,7 +2491,7 @@ function setLang(l){
   lang=l;
   save("tracker:lang",lang);
   applyStaticI18n();
-  renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderReading();renderPeriodStats();renderBiz();
+  renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderBodyAnalysis();renderReading();renderPeriodStats();renderBiz();
   if(document.getElementById("reminderCard")){
     setReminderBtnState(pushSubscribed);
     if(!(window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true)){
@@ -2952,7 +3005,7 @@ document.getElementById("finishBtn").onclick=()=>{
 
 applyStaticI18n();
 maybeUpdateCalorieGoal();
-renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderReading();renderPeriodStats();renderBiz();
+renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderBodyAnalysis();renderReading();renderPeriodStats();renderBiz();
 
 async function loadHealthToday(){
   try{
