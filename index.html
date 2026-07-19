@@ -155,7 +155,10 @@
   .book-archive-title{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .reading-card{border-left:4px solid var(--amber)}
   .reading-hero{display:flex;gap:14px;margin-bottom:14px}
-  .book-cover-lg{width:108px;height:148px;border-radius:12px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:26px;box-shadow:var(--shadow)}
+  .book-cover-lg{position:relative;width:108px;height:148px;border-radius:12px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:26px;box-shadow:0 10px 24px rgba(83,65,205,.18),0 2px 6px rgba(83,65,205,.12);transition:transform .1s ease}
+  .book-cover-lg:active{transform:scale(.96)}
+  .book-cover-lg.has-cover{border-color:transparent}
+  .cover-page-badge{position:absolute;left:6px;right:6px;bottom:6px;background:rgba(22,29,31,.68);color:#fff;font-size:10px;font-weight:700;padding:4px 6px;border-radius:7px;text-align:center;font-family:'Plus Jakarta Sans',sans-serif;backdrop-filter:blur(3px)}
   .book-cover-lg img{width:100%;height:100%;object-fit:cover}
   .reading-hero-info{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
   .book-title-input{border:none;background:transparent;font-family:'Quicksand',sans-serif;font-size:13px;font-weight:700;color:var(--text);padding:0;width:100%;letter-spacing:-.01em}
@@ -398,6 +401,7 @@
         <button class="book-cover-lg" id="coverBtn" type="button">
           <img id="coverImg" class="hidden" />
           <span id="coverPlaceholder"></span>
+          <div class="cover-page-badge hidden" id="coverPageBadge"></div>
         </button>
         <input type="file" accept="image/*" capture="environment" id="coverInput" class="hidden" />
         <div class="reading-hero-info">
@@ -731,7 +735,7 @@ const STRINGS = {
     booksThisYear:n=>`${n} livre${n>1?"s":""} terminé${n>1?"s":""} cette année`,
     bookPlaceholder:"Titre du livre…", totalChapPlaceholder:"Nb de chapitres total (optionnel)",
     currentlyReadingLbl:"En cours de lecture", byAuthor:a=>`de ${a}`, totalChapLbl:"Total", currentPageLbl:"Page actuelle (optionnel)",
-    currentPagePlaceholder:"ex: 120", currentPageEstimatePlaceholder:n=>`≈ ${n} (estimé)`,
+    currentPagePlaceholder:"ex: 120", currentPageEstimatePlaceholder:n=>`≈ ${n} (estimé)`, coverPageBadge:n=>`📄 page ≈ ${n}`,
     pagesRemaining:n=>`≈ ${n} pages restantes`,
     chaptersLbl:"chapitres lus", chaptersRemaining:n=>`${n} restants`, addChapter:"+", finishBook:"Livre terminé ✓",
     paceAllDone:"Tu as fini tous les chapitres — tape Terminé ✓ !",
@@ -899,7 +903,7 @@ const STRINGS = {
     booksThisYear:n=>`${n} book${n>1?"s":""} finished this year`,
     bookPlaceholder:"Book title…", totalChapPlaceholder:"Total chapters (optional)",
     currentlyReadingLbl:"Currently reading", byAuthor:a=>`by ${a}`, totalChapLbl:"Total", currentPageLbl:"Current page (optional)",
-    currentPagePlaceholder:"e.g. 120", currentPageEstimatePlaceholder:n=>`≈ ${n} (estimated)`,
+    currentPagePlaceholder:"e.g. 120", currentPageEstimatePlaceholder:n=>`≈ ${n} (estimated)`, coverPageBadge:n=>`📄 page ≈ ${n}`,
     pagesRemaining:n=>`≈ ${n} pages left`,
     chaptersLbl:"chapters read", chaptersRemaining:n=>`${n} left`, addChapter:"+", finishBook:"Book finished ✓",
     paceAllDone:"You've finished all the chapters — tap Done ✓!",
@@ -1562,24 +1566,16 @@ function renderBiz(){
   const paceEl=document.getElementById("bizPaceInfo");
   if(bizRevenue.length>1){
     const slice=bizRevenue.slice(-12);
-    const allVals=[...slice.map(r=>r.amount),...(bizGoal!=null?[bizGoal]:[])];
-    const min=Math.min(0,...allVals),max=Math.max(...allVals,1)*1.05;
-    const W=300,H=90,PAD=8;
-    const x=i=>slice.length>1?PAD+(i/(slice.length-1))*(W-2*PAD):W/2;
-    const y=v=>max>min?H-PAD-((v-min)/(max-min))*(H-2*PAD):H/2;
-    const pts=slice.map((r,i)=>`${x(i)},${y(r.amount)}`).join(" ");
-    const goalLine=bizGoal!=null?`<line x1="${PAD}" y1="${y(bizGoal)}" x2="${W-PAD}" y2="${y(bizGoal)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3"/>`:"";
-    const dots=slice.map((r,i)=>`<circle data-idx="${i}" cx="${x(i)}" cy="${y(r.amount)}" r="7" fill="transparent" style="cursor:pointer"/><circle cx="${x(i)}" cy="${y(r.amount)}" r="2" fill="var(--amber)" style="pointer-events:none"/>`).join("");
-    bizChartEl.innerHTML=`${goalLine}<polyline points="${pts}" fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${dots}`;
-    bizChartEl.querySelectorAll("circle[data-idx]").forEach(c=>{
-      c.onclick=()=>{
-        const r=slice[+c.dataset.idx];
+    buildTrendChartSVG(bizChartEl,slice,r=>r.amount,{
+      color:"var(--amber)",
+      goalValue:bizGoal!=null?bizGoal:null,
+      minFloor:0,
+      onDotClick:r=>{
         if(confirm(t("bizDeleteConfirm",r.amount,new Date(r.date).toLocaleDateString(t("dateLocale"))))){
           bizRevenue=bizRevenue.filter(x=>x!==r);save("tracker:bizRevenue",bizRevenue);renderBiz();
         }
-      };
+      },
     });
-    bizChartEl.classList.remove("hidden");
 
     const first=bizRevenue[0];
     const daysSpan=Math.round((new Date(last.date)-new Date(first.date))/DAY_MS);
@@ -1616,6 +1612,71 @@ function weight7DayAvg(){
   const recent=weights.filter(w=>new Date(w.date)>=cutoff);
   if(!recent.length)return null;
   return {kg:recent.reduce((s,w)=>s+w.kg,0)/recent.length,count:recent.length};
+}
+// Smooth a polyline into a curved path by quadratic-bezier-ing through the
+// midpoint of each pair of points — a plain connect-the-dots line reads as
+// noisy/static, this reads as an actual trend without pulling in a charting
+// library for a handful of points.
+function smoothPathD(pts){
+  if(pts.length<2)return "";
+  if(pts.length===2)return `M${pts[0].x},${pts[0].y} L${pts[1].x},${pts[1].y}`;
+  let d=`M${pts[0].x},${pts[0].y}`;
+  for(let i=1;i<pts.length-1;i++){
+    const midX=(pts[i].x+pts[i+1].x)/2,midY=(pts[i].y+pts[i+1].y)/2;
+    d+=` Q${pts[i].x},${pts[i].y} ${midX},${midY}`;
+  }
+  d+=` L${pts[pts.length-1].x},${pts[pts.length-1].y}`;
+  return d;
+}
+let trendChartGradientSeq=0;
+// Shared renderer for the weight/business trend line charts: smooth curve,
+// a gradient area fill under it, and an animated draw-in so the chart
+// actually has some motion on render instead of just appearing static.
+function buildTrendChartSVG(svgEl,slice,getValue,{color,H=90,PAD=8,goalValue,goalLabel,onDotClick,minFloor,padFactor=0.1}){
+  if(slice.length<2){svgEl.innerHTML="";svgEl.classList.add("hidden");return;}
+  const W=300;
+  const allVals=[...slice.map(getValue),...(goalValue!=null?[goalValue]:[])];
+  const min=Math.min(...allVals),max=Math.max(...allVals);
+  const pad=(max-min)*padFactor||0.4;
+  const lo=minFloor!=null?Math.min(minFloor,min-pad):min-pad,hi=max+pad;
+  const x=i=>slice.length>1?PAD+(i/(slice.length-1))*(W-2*PAD):W/2;
+  const y=v=>hi>lo?H-PAD-((v-lo)/(hi-lo))*(H-2*PAD):H/2;
+  const pts=slice.map((d,i)=>({x:x(i),y:y(getValue(d,i))}));
+  const lineD=smoothPathD(pts);
+  const areaD=`${lineD} L${pts[pts.length-1].x},${H-PAD} L${pts[0].x},${H-PAD} Z`;
+  const gradId=`trendGrad${trendChartGradientSeq++}`;
+  const goalLine=goalValue!=null?`<line x1="${PAD}" y1="${y(goalValue)}" x2="${W-PAD}" y2="${y(goalValue)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3"/>${goalLabel?`<text x="${W-PAD}" y="${y(goalValue)-4}" text-anchor="end" font-size="8" fill="var(--muted)" font-family="'Plus Jakarta Sans',sans-serif">${goalLabel}</text>`:""}`:"";
+  const dots=slice.map((d,i)=>`<circle data-idx="${i}" cx="${pts[i].x}" cy="${pts[i].y}" r="7" fill="transparent" style="cursor:pointer"/><circle class="chart-dot" cx="${pts[i].x}" cy="${pts[i].y}" r="2" fill="${color}" style="pointer-events:none;transition-delay:${.4+i*.03}s"/>`).join("");
+  svgEl.innerHTML=`
+    <defs><linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" style="stop-color:${color};stop-opacity:.32"/>
+      <stop offset="100%" style="stop-color:${color};stop-opacity:0"/>
+    </linearGradient></defs>
+    ${goalLine}
+    <path class="chart-area" d="${areaD}" fill="url(#${gradId})"/>
+    <path class="chart-line" d="${lineD}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+  `;
+  if(onDotClick)svgEl.querySelectorAll("circle[data-idx]").forEach(c=>{c.onclick=()=>onDotClick(slice[+c.dataset.idx]);});
+  svgEl.classList.remove("hidden");
+  // Animate the line drawing in and the area/dots fading in — set the
+  // "hidden" starting state, force a reflow, then transition to the real
+  // state so the browser actually animates instead of jumping straight there.
+  const lineEl=svgEl.querySelector(".chart-line"),areaEl=svgEl.querySelector(".chart-area");
+  const len=lineEl.getTotalLength();
+  lineEl.style.strokeDasharray=len;
+  lineEl.style.strokeDashoffset=len;
+  areaEl.style.opacity=0;
+  svgEl.querySelectorAll(".chart-dot").forEach(d=>d.style.transform="scale(0)");
+  svgEl.getBoundingClientRect();
+  lineEl.style.transition="stroke-dashoffset .9s cubic-bezier(.4,0,.2,1)";
+  areaEl.style.transition="opacity .6s ease .35s";
+  svgEl.querySelectorAll(".chart-dot").forEach(d=>d.style.transition="transform .3s cubic-bezier(.34,1.56,.64,1) "+d.style.transitionDelay);
+  requestAnimationFrame(()=>{
+    lineEl.style.strokeDashoffset=0;
+    areaEl.style.opacity=1;
+    svgEl.querySelectorAll(".chart-dot").forEach(d=>{d.style.transformOrigin="center";d.style.transformBox="fill-box";d.style.transform="scale(1)";});
+  });
 }
 function renderWeight(){
   document.getElementById("weightGoalInput").value=weightGoal??"";
@@ -1681,33 +1742,21 @@ function renderWeight(){
   const svgEl=document.getElementById("weightChart");
   if(weights.length>1){
     const slice=weights.slice(-12);
-    const allVals=[...slice.map(w=>w.kg),...(weightGoal!=null?[weightGoal]:[])];
-    const min=Math.min(...allVals)-.4, max=Math.max(...allVals)+.4;
-    const W=300,H=90,PAD=8;
-    const x=i=>slice.length>1?PAD+(i/(slice.length-1))*(W-2*PAD):W/2;
-    const y=v=>max>min?H-PAD-((v-min)/(max-min))*(H-2*PAD):H/2;
     // Smoothed trend (EWMA) instead of raw connect-the-dots: raw weigh-ins are noisy
     // (water, food timing), the trend line is what actually shows if you're progressing.
     const alpha=0.35;
     const trend=[];
     slice.forEach((w,i)=>trend.push(i===0?w.kg:alpha*w.kg+(1-alpha)*trend[i-1]));
-    const trendPts=trend.map((v,i)=>`${x(i)},${y(v)}`).join(" ");
-    const goalLine=weightGoal!=null?`<line x1="${PAD}" y1="${y(weightGoal)}" x2="${W-PAD}" y2="${y(weightGoal)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3"/><text x="${W-PAD}" y="${y(weightGoal)-4}" text-anchor="end" font-size="8" fill="var(--muted)" font-family="'Plus Jakarta Sans',sans-serif">${t("weightGoal")} (${weightGoal}kg)</text>`:"";
-    const dots=slice.map((w,i)=>`<circle data-idx="${i}" cx="${x(i)}" cy="${y(w.kg)}" r="7" fill="transparent" style="cursor:pointer"/><circle cx="${x(i)}" cy="${y(w.kg)}" r="2" fill="var(--greenDim)" style="pointer-events:none"/>`).join("");
-    svgEl.innerHTML=`
-      ${goalLine}
-      <polyline points="${trendPts}" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-      ${dots}
-    `;
-    svgEl.querySelectorAll("circle[data-idx]").forEach(c=>{
-      c.onclick=()=>{
-        const w=slice[+c.dataset.idx];
+    buildTrendChartSVG(svgEl,slice,(w,i)=>trend[i],{
+      color:"var(--green)",
+      goalValue:weightGoal!=null?weightGoal:null,
+      goalLabel:weightGoal!=null?`${t("weightGoal")} (${weightGoal}kg)`:null,
+      onDotClick:w=>{
         if(confirm(t("weightDeleteConfirm",w.kg,new Date(w.date).toLocaleDateString(t("dateLocale"))))){
           weights=weights.filter(x=>x!==w);save("tracker:weights",weights);maybeUpdateCalorieGoal();renderWeight();renderCalories();
         }
-      };
+      },
     });
-    svgEl.classList.remove("hidden");
   }else{
     svgEl.innerHTML="";svgEl.classList.add("hidden");
   }
@@ -1757,11 +1806,17 @@ function renderCalories(){
     const y=v=>H-PAD-(v/maxVal)*(H-2*PAD);
     const bars=days.map((d,i)=>{
       const h=(d.total/maxVal)*(H-2*PAD);
-      return `<rect x="${x(i)}" y="${H-PAD-h}" width="${barW}" height="${h}" rx="2" fill="var(--amber)" opacity="${d.total>0?1:0.15}"/>`;
+      return `<rect class="chart-bar" data-i="${i}" x="${x(i)}" y="${H-PAD-h}" width="${barW}" height="${h}" rx="2" fill="var(--amber)" opacity="${d.total>0?1:0.15}" style="transform-box:fill-box;transform-origin:bottom;transform:scaleY(0)"/>`;
     }).join("");
     const goalLine=calorieGoal.value?`<line x1="${PAD}" y1="${y(calorieGoal.value)}" x2="${W-PAD}" y2="${y(calorieGoal.value)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3"/>`:"";
     svgEl.innerHTML=`${bars}${goalLine}`;
     svgEl.classList.remove("hidden");
+    // Grow the bars in from the baseline instead of just appearing, staggered
+    // left-to-right so it reads as a sweep rather than a single flat pop.
+    const barEls=svgEl.querySelectorAll(".chart-bar");
+    svgEl.getBoundingClientRect();
+    barEls.forEach(b=>{b.style.transition=`transform .5s cubic-bezier(.4,0,.2,1) ${+b.dataset.i*0.025}s`;});
+    requestAnimationFrame(()=>barEls.forEach(b=>{b.style.transform="scaleY(1)";}));
   }else{
     svgEl.innerHTML="";svgEl.classList.add("hidden");
   }
@@ -1858,9 +1913,9 @@ function renderReading(){
     metaEl.classList.add("hidden");
   }
   document.getElementById("totalChapInput").value=reading.totalChapters||"";
-  const img=document.getElementById("coverImg"),ph=document.getElementById("coverPlaceholder");
-  if(reading.coverPhoto){img.src=reading.coverPhoto;img.classList.remove("hidden");ph.classList.add("hidden");}
-  else{img.classList.add("hidden");ph.classList.remove("hidden");}
+  const img=document.getElementById("coverImg"),ph=document.getElementById("coverPlaceholder"),coverBtn=document.getElementById("coverBtn");
+  if(reading.coverPhoto){img.src=reading.coverPhoto;img.classList.remove("hidden");ph.classList.add("hidden");coverBtn.classList.add("has-cover");}
+  else{img.classList.add("hidden");ph.classList.remove("hidden");coverBtn.classList.remove("has-cover");}
 
   const pageRow=document.getElementById("currentPageRow");
   const currentPageInputEl=document.getElementById("currentPageInput");
@@ -1873,6 +1928,15 @@ function renderReading(){
   currentPageInputEl.value=reading.currentPage||"";
   currentPageInputEl.placeholder=estimatedPage!=null?t("currentPageEstimatePlaceholder",estimatedPage):t("currentPagePlaceholder");
   pageRow.classList.toggle("hidden",!reading.book);
+  // Surface the AI's page estimate right on the cover — it used to only show
+  // as a greyed-out input placeholder, easy to miss entirely.
+  const coverBadge=document.getElementById("coverPageBadge");
+  if(reading.coverPhoto&&estimatedPage!=null&&!reading.currentPage){
+    coverBadge.textContent=t("coverPageBadge",estimatedPage);
+    coverBadge.classList.remove("hidden");
+  }else{
+    coverBadge.classList.add("hidden");
+  }
 
   const summaryEl=document.getElementById("readingProgressSummary");
   const fillEl=document.getElementById("readingProgressFill");
