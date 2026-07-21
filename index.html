@@ -835,8 +835,8 @@ const STRINGS = {
     weighInDetail:"⚖️ Pèse-toi le matin, si possible à jeun, toujours dans les mêmes conditions.\n\nUne seule pesée ne veut rien dire — le poids varie ±1kg selon l'eau, le sel, la digestion. C'est la moyenne sur 7 jours (visible dans Progression) qui indique ta vraie tendance.",
     faceCareMorningDetail:"🕐 08h15 – 08h20\n\n🧼 Nettoie avec ton savon riz/algues.\n💧 Hydratation légère « jour » : jojoba ou squalane (non gras), ou un peu de gel d'aloe vera.\n\nRapide, peau fraîche pour la journée.",
     faceCareEveningDetail:"🕐 21h15 – 21h20\n\n🧼 Nettoie avec ton savon riz/sea moss.\n🌙 Crème de nuit anti-rides.\n💧 + quelques gouttes d'huile de sea moss ou de rose musquée (rosehip) si tu veux booster l'effet anti-âge.\n\nC'est le soir que la peau se régénère le mieux.",
-    suppsMorningDetail:"🕐 08h20 – 08h25\n\n💊 Fénugrec ×3 + Magnésium ×1\n\nAvec un repas, pas à jeun.",
-    suppsEveningDetail:"🕐 19h15 – 19h20\n\n💊 Fénugrec ×3 + Magnésium ×1\n\nAvec un repas, pas à jeun.",
+    suppsMorningDetail:"🕐 08h20 – 08h25\n\n🌿 Fénugrec (poudre) : 1 c. à café dans un verre d'eau, jus ou tisane.\n\n~25 min avant le petit-déj — ouvre l'appétit pour la journée.",
+    suppsEveningDetail:"🕐 19h15 – 19h20\n\n💊 Magnésium HealthAid : 1 comprimé (370mg élémentaire + zinc).\n\nAide au sommeil et à la récupération.",
     minoxidilMorningDetail:"🕐 08h25 – 08h30\n\n💊 Minoxidil 5% — 1ml, cuir chevelu SEC (pas mouillé).\n\n1. Pulvérise 1ml — vise la PEAU, pas les cheveux\n2. Concentre-toi sur les golfes temporaux\n3. Lave-toi les mains juste après\n4. Laisse sécher 2-4h avant de doucher ou de trop transpirer si possible\n\nFlacon 60ml = 30 jours (1ml × 2/jour). Tous les jours, 6 mois — pas de jour sauté.",
     minoxidilEveningDetail:"🕐 20h25 – 20h30\n\n💊 Minoxidil 5% — 1ml, cuir chevelu SEC (pas mouillé).\n\n1. Pulvérise 1ml — vise la PEAU, pas les cheveux\n2. Concentre-toi sur les golfes temporaux\n3. Lave-toi les mains juste après\n4. Laisse sécher 2-4h avant de dormir ou laver les cheveux (sinon ça part dans l'oreiller)\n\nFlacon 60ml = 30 jours (1ml × 2/jour). Tous les jours, 6 mois — pas de jour sauté.",
     readDetail:"🕐 06h40 – 07h10\n\n📖 Bible, puis 10-15 pages de ton livre.\n\n📵 Pas de téléphone — juste après le réveil, avant de foncer dans la journée.",
@@ -857,14 +857,14 @@ const STRINGS = {
       {id:"weighIn",label:"⚖️ Se peser",period:"morning",category:"dev"},
       {id:"read",label:"📖 Lire 1 chapitre",period:"morning",category:"dev"},
       {id:"faceCareMorning",label:"🧴 Soin visage matin",period:"morning",category:"dev"},
-      {id:"suppsMorning",label:"💊 Compléments matin",period:"morning",category:"dev"},
+      {id:"suppsMorning",label:"🌿 Fénugrec",period:"morning",category:"dev"},
       {id:"minoxidilMorning",label:"💊 Minoxidil matin",period:"morning",category:"dev"},
       {id:"gym",label:"💪 Muscu",period:"day",category:"dev",days:[0,1,2,3,4]},
       {id:"ecom",label:"💻 Tâche e-com du jour",period:"day",category:"business"},
       {id:"ecomAfternoon",label:"🛒 E-com — bloc après-midi",period:"day",category:"business"},
       {id:"meals",label:"🍽️ 3 repas complets",period:"day",category:"dev"},
       {id:"shake",label:"🥤 Shake + créatine",period:"day",category:"dev"},
-      {id:"suppsEvening",label:"💊 Compléments soir",period:"evening",category:"dev"},
+      {id:"suppsEvening",label:"💊 Magnésium",period:"evening",category:"dev"},
       {id:"minoxidilEvening",label:"💊 Minoxidil soir",period:"evening",category:"dev"},
       {id:"faceCareEvening",label:"🧴 Soin visage soir",period:"evening",category:"dev"},
       {id:"screens",label:"🌙 Écrans coupés à 21h30",period:"evening",category:"dev"},
@@ -1006,8 +1006,8 @@ const STRINGS = {
     weighInDetail:"⚖️ Weigh yourself in the morning, ideally fasted, always under the same conditions.\n\nA single weigh-in doesn't mean much — weight swings ±1kg with water, salt, digestion. The 7-day average (visible in Progress) is what shows your real trend.",
     faceCareMorningDetail:"🕐 8:15am – 8:20am\n\n🧼 Cleanse with your rice/seaweed soap.\n💧 Light \"day\" hydration: jojoba or squalane (non-greasy), or a bit of aloe vera gel.\n\nQuick, fresh skin for the day.",
     faceCareEveningDetail:"🕐 9:15pm – 9:20pm\n\n🧼 Cleanse with your rice/sea moss soap.\n🌙 Anti-wrinkle night cream.\n💧 + a few drops of sea moss oil or rosehip oil if you want to boost the anti-aging effect.\n\nSkin regenerates best at night.",
-    suppsMorningDetail:"🕐 8:20am – 8:25am\n\n💊 Fenugreek ×3 + Magnesium ×1\n\nWith a meal, not on an empty stomach.",
-    suppsEveningDetail:"🕐 7:15pm – 7:20pm\n\n💊 Fenugreek ×3 + Magnesium ×1\n\nWith a meal, not on an empty stomach.",
+    suppsMorningDetail:"🕐 8:20am – 8:25am\n\n🌿 Fenugreek (powder): 1 tsp in a glass of water, juice, or tea.\n\n~25 min before breakfast — opens up appetite for the day.",
+    suppsEveningDetail:"🕐 7:15pm – 7:20pm\n\n💊 Magnesium HealthAid: 1 tablet (370mg elemental + zinc).\n\nHelps with sleep and recovery.",
     minoxidilMorningDetail:"🕐 8:25am – 8:30am\n\n💊 Minoxidil 5% — 1ml, DRY scalp (not wet).\n\n1. Spray 1ml — target the SKIN, not the hair\n2. Focus on the temple areas\n3. Wash your hands right after\n4. Let dry 2-4h before showering or sweating heavily if possible\n\n60ml bottle = 30 days (1ml × 2/day). Every day, 6 months — no skipped day.",
     minoxidilEveningDetail:"🕐 8:25pm – 8:30pm\n\n💊 Minoxidil 5% — 1ml, DRY scalp (not wet).\n\n1. Spray 1ml — target the SKIN, not the hair\n2. Focus on the temple areas\n3. Wash your hands right after\n4. Let dry 2-4h before sleeping or washing your hair (otherwise it'll rub off on your pillow)\n\n60ml bottle = 30 days (1ml × 2/day). Every day, 6 months — no skipped day.",
     readDetail:"🕐 6:40am – 7:10am\n\n📖 Bible, then 10-15 pages of your book.\n\n📵 No phone — right after waking up, before the day takes over.",
@@ -1028,14 +1028,14 @@ const STRINGS = {
       {id:"weighIn",label:"⚖️ Weigh yourself",period:"morning",category:"dev"},
       {id:"read",label:"📖 Read 1 chapter",period:"morning",category:"dev"},
       {id:"faceCareMorning",label:"🧴 Face care — morning",period:"morning",category:"dev"},
-      {id:"suppsMorning",label:"💊 Supplements — morning",period:"morning",category:"dev"},
+      {id:"suppsMorning",label:"🌿 Fenugreek",period:"morning",category:"dev"},
       {id:"minoxidilMorning",label:"💊 Minoxidil — morning",period:"morning",category:"dev"},
       {id:"gym",label:"💪 Workout",period:"day",category:"dev",days:[0,1,2,3,4]},
       {id:"ecom",label:"💻 Today's e-com task",period:"day",category:"business"},
       {id:"ecomAfternoon",label:"🛒 E-com — afternoon block",period:"day",category:"business"},
       {id:"meals",label:"🍽️ 3 full meals",period:"day",category:"dev"},
       {id:"shake",label:"🥤 Shake + creatine",period:"day",category:"dev"},
-      {id:"suppsEvening",label:"💊 Supplements — evening",period:"evening",category:"dev"},
+      {id:"suppsEvening",label:"💊 Magnesium",period:"evening",category:"dev"},
       {id:"minoxidilEvening",label:"💊 Minoxidil — evening",period:"evening",category:"dev"},
       {id:"faceCareEvening",label:"🧴 Face care — evening",period:"evening",category:"dev"},
       {id:"screens",label:"🌙 Screens off at 9:30pm",period:"evening",category:"dev"},
@@ -1202,6 +1202,18 @@ if(!load("tracker:taskOrderV2Patched",false)){
     return ia-ib;
   });
   save("tracker:taskOrderV2Patched",true);
+}
+// One-off: the "Compléments" routine used to be Fénugrec+Magnésium taken
+// together morning AND evening — now it's split, Fénugrec only in the
+// morning and Magnésium only in the evening (matches the actual calendar
+// change). Relabel the existing tasks to match; detail text already updates
+// on its own since it's read live from the translation strings, not stored.
+if(!load("tracker:suppsSplitRelabeled",false)){
+  const sm=tasks.find(tk=>tk.id==="suppsMorning");
+  if(sm)sm.label=STRINGS.fr.defaultTasks.find(d=>d.id==="suppsMorning").label;
+  const se=tasks.find(tk=>tk.id==="suppsEvening");
+  if(se)se.label=STRINGS.fr.defaultTasks.find(d=>d.id==="suppsEvening").label;
+  save("tracker:suppsSplitRelabeled",true);
 }
 save("tracker:taskMigVersion",taskMigVersion);
 save("tracker:template",tasks);
