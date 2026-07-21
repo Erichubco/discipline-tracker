@@ -52,6 +52,8 @@
   .day-chip.active .day-lbl{color:var(--green)}
   .past-day-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--cardHi);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin:-8px 0 16px;font-size:12px;font-weight:700;color:var(--green)}
   .past-day-banner button{background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit}
+  .sync-toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--green);color:#fff;padding:10px 18px;border-radius:9999px;font-size:13px;font-weight:700;box-shadow:var(--shadow-lg);z-index:50;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;max-width:88vw;text-align:center;font-family:'Plus Jakarta Sans',sans-serif}
+  .sync-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .ring-wrap{position:relative;width:200px;height:200px;margin:0 auto}
   .ring-wrap svg{transform:rotate(-90deg);position:relative;z-index:1}
   .ring-glow{position:absolute;inset:12%;background:var(--amber);opacity:.18;filter:blur(28px);border-radius:50%}
@@ -265,6 +267,7 @@
 
     <div class="greeting-title display" id="greetingTitle"></div>
     <div class="greeting-sub" id="greetingSub"></div>
+    <div class="sync-toast" id="syncToast"></div>
     <div class="past-day-banner hidden" id="pastDayBanner">
       <span id="pastDayBannerText"></span>
       <button type="button" id="backToTodayBtn"></button>
@@ -764,6 +767,7 @@ const STRINGS = {
     progressPhotoMonthlyConfirm:date=>`Tu as déjà une photo de progression ce mois-ci (${date}). La remplacer par une nouvelle ?`,
     bodyAnalysisLoading:"🔍 Analyse de ta progression physique…", bodyAnalysisTitle:"Analyse IA",
     gymFocusAdditionLbl:"Ajout du mois (focus IA)",
+    tasksSyncedToast:"✅ Tâches mises à jour suite à un changement de calendrier",
     archiveToggleLbl:n=>`${n} livre${n>1?"s":""} lu${n>1?"s":""}`,
     catDevLbl:"Perso", catBusinessLbl:"Business",
     noTasksInPanel:"Aucune tâche ici pour l'instant. Ajoute-en une avec Modifier.",
@@ -935,6 +939,7 @@ const STRINGS = {
     progressPhotoMonthlyConfirm:date=>`You already have a progress photo this month (${date}). Replace it with a new one?`,
     bodyAnalysisLoading:"🔍 Analyzing your physical progress…", bodyAnalysisTitle:"AI Analysis",
     gymFocusAdditionLbl:"This month's addition (AI focus)",
+    tasksSyncedToast:"✅ Tasks updated from a calendar change",
     archiveToggleLbl:n=>`${n} book${n>1?"s":""} read`,
     catDevLbl:"Personal", catBusinessLbl:"Business",
     noTasksInPanel:"No tasks here yet. Add one with Edit.",
@@ -1253,6 +1258,10 @@ function taskDisplayLabel(tk){
 }
 const SIMPLE_TASK_DETAIL_KEYS={wake:"wakeDetail",weighIn:"weighInDetail",faceCareMorning:"faceCareMorningDetail",faceCareEvening:"faceCareEveningDetail",suppsMorning:"suppsMorningDetail",suppsEvening:"suppsEveningDetail",minoxidilMorning:"minoxidilMorningDetail",minoxidilEvening:"minoxidilEveningDetail",read:"readDetail",screens:"screensDetail"};
 function taskDetailText(tk){
+  // ecom/gym/meals rotate by day of week — never let a static AI-generated
+  // override (from the calendar-sync pipeline) freeze them on one day's
+  // content. Checked before the override so this holds even if the server
+  // side ever mistakenly proposes one for these ids.
   if(tk.id==="ecom")return ecomSprintDay>4?t("ecomSprintDoneMsg"):t("ecomSprintDetail")[ecomSprintDay-1];
   if(tk.id==="gym"){
     const dow=dowOf(new Date());
@@ -1261,6 +1270,7 @@ function taskDetailText(tk){
     return addition?`${base}\n\n🎯 ${t("gymFocusAdditionLbl")} :\n${addition}`:base;
   }
   if(tk.id==="meals")return t("mealsDetail")[dowOf(new Date())];
+  if(tk.detailOverride)return lang==="en"?(tk.detailOverrideEn||tk.detailOverride):tk.detailOverride;
   if(tk.id==="shake")return t("shakeDetail");
   if(SIMPLE_TASK_DETAIL_KEYS[tk.id])return t(SIMPLE_TASK_DETAIL_KEYS[tk.id]);
   return tk.detail||null;
@@ -3033,6 +3043,13 @@ async function loadHealthToday(){
   }catch(e){}
 }
 
+function showSyncToast(msg){
+  const el=document.getElementById("syncToast");
+  el.textContent=msg;
+  el.classList.add("show");
+  clearTimeout(el._hideTimer);
+  el._hideTimer=setTimeout(()=>el.classList.remove("show"),4000);
+}
 async function syncTaskSuggestions(){
   try{
     const res=await apiFetch("/task-suggestions");
@@ -3045,6 +3062,13 @@ async function syncTaskSuggestions(){
       if(!s.id||!s.label)return;
       applied.push(s.id);
       const incoming={id:s.id,label:s.label,period:s.period||"day",category:s.category==="business"?"business":"dev",days:Array.isArray(s.days)?s.days:null};
+      // Calendar-driven content updates to an EXISTING known task (e.g. a
+      // dosage/routine change) carry detail text instead of being a brand
+      // new habit — stored as an override so taskDetailText() can prefer it
+      // over the static translation without needing a new translation key
+      // per user-specific routine tweak.
+      if(s.detail)incoming.detailOverride=s.detail;
+      if(s.detailEn)incoming.detailOverrideEn=s.detailEn;
       const existingIdx=tasks.findIndex(tk=>tk.id===s.id);
       if(existingIdx===-1){
         tasks.push(incoming);
@@ -3056,6 +3080,7 @@ async function syncTaskSuggestions(){
     if(applied.length){
       save("tracker:template",tasks);
       renderTasks();renderScore();
+      showSyncToast(t("tasksSyncedToast"));
       await syncFullBackup();
       apiFetch("/task-suggestions/ack",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids:applied})}).catch(()=>{});
     }
