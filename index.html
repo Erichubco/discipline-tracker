@@ -2787,7 +2787,13 @@ function addTask(){
   const newTk={id:"t"+Date.now(),label:v,period:newTaskPeriod,category:newTaskCategory};
   if(newTaskHasPhoto)newTk.hasPhoto=true;
   const timeVal=document.getElementById("newTaskTime").value; // "HH:MM" 24h, or "" if unset
-  if(timeVal)newTk.time=timeVal;
+  if(timeVal){
+    newTk.time=timeVal;
+    // Best-effort — only tasks with a time have a clear calendar slot, and
+    // the task itself is already saved locally regardless of whether this
+    // succeeds (calendar sync is a bonus, not the source of truth).
+    apiFetch("/calendar/sync-task",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({label:v,time:timeVal})}).catch(()=>{});
+  }
   tasks.push(newTk);save("tracker:template",tasks);i.value="";renderTasks();renderScore();closeAddTask();
 }
 
