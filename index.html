@@ -379,6 +379,19 @@
       </div>
     </div>
 
+    <!-- Per-task consistency -->
+    <div class="card">
+      <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="taskConsistencyTitle">Consistance par tâche</span></div>
+      <div class="sub" style="margin-bottom:12px" id="taskConsistencySub">Ton taux de complétion, tâche par tâche.</div>
+      <div class="period-picker" id="consistencyPeriodPicker" style="margin-bottom:14px">
+        <button type="button" class="period-opt active" data-period-idx="0"><span id="consistencyPeriod0Btn"></span></button>
+        <button type="button" class="period-opt" data-period-idx="1"><span id="consistencyPeriod1Btn"></span></button>
+        <button type="button" class="period-opt" data-period-idx="2"><span id="consistencyPeriod2Btn"></span></button>
+        <button type="button" class="period-opt" data-period-idx="3"><span id="consistencyPeriod3Btn"></span></button>
+      </div>
+      <div id="taskConsistencyRows"></div>
+    </div>
+
     <!-- Business goal -->
     <div class="card">
       <div class="biz-head">
@@ -765,6 +778,8 @@ const STRINGS = {
     addTaskPhotoLbl:"Avec photo à chaque fois", taskPhotoAddBtn:"Ajouter une photo", taskPhotoGalleryEmpty:"Aucune photo pour l'instant.",
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
     streakCardTitle:"Consistance", weeklyProgressTitle:"Détail par catégorie (cette semaine)", periodStatsTitle:"Semaine · mois", periodStatsSub:"% des tâches du jour cochées, tout confondu.", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série", daysUnit:"jours",
+    taskConsistencyTitle:"Consistance par tâche", taskConsistencySub:"Ton taux de complétion, tâche par tâche.", pagesReadLbl:"Pages lues",
+    periodWeek:"7j", periodMonth:"30j", periodBimonth:"60j", periodQuarter:"90j",
     streakHint:"Une série se construit avec des journées à 100% (toutes les tâches cochées). Coche tout en une journée pour la démarrer.",
     thisWeekLbl:d=>`Cette semaine (jour ${d}/7)`, thisMonthLbl:(d,total)=>`Ce mois (jour ${d}/${total})`,
     reminderTitle:"Rappel du soir",
@@ -924,6 +939,8 @@ const STRINGS = {
     addTaskPhotoLbl:"With a photo each time", taskPhotoAddBtn:"Add a photo", taskPhotoGalleryEmpty:"No photos yet.",
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
     streakCardTitle:"Consistency", weeklyProgressTitle:"Breakdown by category (this week)", periodStatsTitle:"Week · month", periodStatsSub:"% of today's tasks checked, all combined.", streakCurLbl:"current streak", streakBestLbl:"best streak", daysUnit:"days",
+    taskConsistencyTitle:"Consistency by task", taskConsistencySub:"Your completion rate, task by task.", pagesReadLbl:"Pages read",
+    periodWeek:"7d", periodMonth:"30d", periodBimonth:"60d", periodQuarter:"90d",
     streakHint:"A streak is built from 100% days (every task checked). Complete a full day to start one.",
     thisWeekLbl:d=>`This week (day ${d}/7)`, thisMonthLbl:(d,total)=>`This month (day ${d}/${total})`,
     reminderTitle:"Evening reminder",
@@ -1386,6 +1403,10 @@ let bodyAnalysis=load("tracker:bodyAnalysis",null);
 let taskPhotos=load("tracker:taskPhotos",{});
 let ecomSprintDay=load("tracker:ecomSprintDay",1);
 let reading=load("tracker:reading",{book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null,author:null});
+// Day-keyed log of pages actually progressed (not a snapshot of the raw
+// "current page" value, which would break across a finished-book reset) —
+// see updateCurrentPage() below, the sole place currentPage changes.
+let pagesReadLog=load("tracker:pagesReadLog",{});
 let booksArchive=load("tracker:booksArchive",[]);
 let archiveExpanded=false;
 let editingBookTitle=false;
@@ -1539,6 +1560,12 @@ function applyStaticI18n(){
   document.getElementById("periodStatsSub").textContent=t("periodStatsSub");
   document.getElementById("streakCardTitle").textContent=t("streakCardTitle");
   document.getElementById("weeklyProgressTitle").textContent=t("weeklyProgressTitle");
+  document.getElementById("taskConsistencyTitle").textContent=t("taskConsistencyTitle");
+  document.getElementById("taskConsistencySub").textContent=t("taskConsistencySub");
+  document.getElementById("consistencyPeriod0Btn").textContent=t("periodWeek");
+  document.getElementById("consistencyPeriod1Btn").textContent=t("periodMonth");
+  document.getElementById("consistencyPeriod2Btn").textContent=t("periodBimonth");
+  document.getElementById("consistencyPeriod3Btn").textContent=t("periodQuarter");
   document.getElementById("streakCurLbl").textContent=t("streakCurLbl");
   document.getElementById("streakBestLbl").textContent=t("streakBestLbl");
   document.getElementById("streakCurUnit").textContent=t("daysUnit");
@@ -1656,7 +1683,7 @@ function renderTaskRow(tk){
         if(freshCheck)freshCheck.classList.remove("missed");
         if(hintEl)hintEl.remove();
       }
-      renderScore();renderHeatmap();renderPeriodStats();
+      renderScore();renderHeatmap();renderPeriodStats();renderTaskConsistency();
       if(isViewingToday())document.getElementById("greetingSub").textContent=motivationalSub();
       if(tk.id==="read"){
         if(wasCompleted)reading.chapters++;
@@ -2468,6 +2495,71 @@ function renderPeriodStats(){
   apiFetch("/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({weekPct,monthPct,streakCurrent:current,streakBest:best})}).catch(()=>{});
   syncFullBackup();
 }
+
+const CONSISTENCY_PERIODS=[
+  {days:7,labelKey:"periodWeek"},
+  {days:30,labelKey:"periodMonth"},
+  {days:60,labelKey:"periodBimonth"},
+  {days:90,labelKey:"periodQuarter"},
+];
+let consistencyPeriodIdx=load("tracker:consistencyPeriodIdx",0);
+// Counts against how many days the task was actually SCHEDULED in the
+// window (respecting tk.days and tk.addedDate), not just /7 or /30 — a
+// weekday-only task like gym shouldn't look "inconsistent" for the
+// weekends it was never supposed to run on.
+function taskConsistency(tk,startDate,records){
+  const now=new Date();now.setHours(0,0,0,0);
+  let scheduled=0,doneCount=0;
+  for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1)){
+    const key=keyFor(d);
+    if(tk.addedDate&&key<tk.addedDate)continue;
+    if(tk.days&&!tk.days.includes(dowOf(d)))continue;
+    scheduled++;
+    if((records[key]||{})[tk.id])doneCount++;
+  }
+  return{scheduled,done:doneCount,pct:scheduled?doneCount/scheduled:null};
+}
+function pagesReadInPeriod(startDate){
+  const now=new Date();now.setHours(0,0,0,0);
+  let total=0;
+  for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1))total+=pagesReadLog[keyFor(d)]||0;
+  return total;
+}
+function renderTaskConsistency(){
+  document.querySelectorAll("#consistencyPeriodPicker .period-opt").forEach((btn,i)=>btn.classList.toggle("active",i===consistencyPeriodIdx));
+  const period=CONSISTENCY_PERIODS[consistencyPeriodIdx];
+  const now=new Date();
+  const startDate=new Date(now.getTime()-(period.days-1)*DAY_MS);startDate.setHours(0,0,0,0);
+  const records=getAllDoneRecords();
+  const rowsEl=document.getElementById("taskConsistencyRows");
+  rowsEl.innerHTML="";
+  const barColors=["var(--amber)","var(--green)","#e17055","#00b894","#0984e3","#fdcb6e"];
+  let shown=0;
+  tasks.forEach(tk=>{
+    const{scheduled,done,pct}=taskConsistency(tk,startDate,records);
+    if(!scheduled)return; // didn't exist / wasn't scheduled at all in this window
+    const pctInt=Math.round(pct*100);
+    const row=document.createElement("div");
+    row.className="pbar-row";
+    if(!rowsEl.children.length)row.style.marginTop="0";
+    row.innerHTML=`<div class="pbar-lbl"><span></span> <b>${done}/${scheduled} · ${pctInt}%</b></div><div class="pbar-bg"><div class="pbar-fill" style="width:${pctInt}%;background:${barColors[shown%barColors.length]}"></div></div>`;
+    row.querySelector(".pbar-lbl span").textContent=tk.label;
+    rowsEl.appendChild(row);
+    shown++;
+  });
+  if(reading.book){
+    const pages=pagesReadInPeriod(startDate);
+    const row=document.createElement("div");
+    row.className="pbar-row";
+    if(!rowsEl.children.length)row.style.marginTop="0";
+    row.innerHTML=`<div class="pbar-lbl"><span>📖 ${t("pagesReadLbl")}</span> <b>${pages}</b></div>`;
+    rowsEl.appendChild(row);
+  }
+}
+document.querySelectorAll("#consistencyPeriodPicker .period-opt").forEach((btn,i)=>{
+  btn.onclick=()=>{consistencyPeriodIdx=i;save("tracker:consistencyPeriodIdx",i);renderTaskConsistency();};
+});
+
 // Guards against a real bug: on a fresh/empty device, the very first renderScore()
 // runs synchronously before the "load" handler below has had a chance to check
 // whether real data should be restored from the server first. Without this gate,
@@ -2783,7 +2875,7 @@ function setLang(l){
   lang=l;
   save("tracker:lang",lang);
   applyStaticI18n();
-  renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderBodyAnalysis();renderReading();renderPeriodStats();renderBiz();
+  renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderBodyAnalysis();renderReading();renderPeriodStats();renderTaskConsistency();renderBiz();
   if(document.getElementById("reminderCard")){
     setReminderBtnState(pushSubscribed);
     if(!(window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true)){
@@ -3150,10 +3242,24 @@ document.getElementById("totalChapInput").addEventListener("change",()=>{
   flashSaved(el);
 });
 document.getElementById("totalChapInput").addEventListener("keydown",e=>{if(e.key==="Enter")e.target.blur();});
+// A negative delta means a new book started (or a manual correction) —
+// clamped to 0 rather than subtracted, so "pages read" only ever counts
+// forward progress, never gets confused by a page count resetting.
+function logPagesRead(newPage){
+  const oldPage=reading.currentPage||0;
+  const delta=Math.max(0,newPage-oldPage);
+  if(delta>0){
+    const key=today();
+    pagesReadLog[key]=(pagesReadLog[key]||0)+delta;
+    save("tracker:pagesReadLog",pagesReadLog);
+  }
+}
 document.getElementById("currentPageInput").addEventListener("change",()=>{
   const el=document.getElementById("currentPageInput");
   const v=parseInt(el.value);
-  reading.currentPage=v>0?v:null;
+  const newPage=v>0?v:null;
+  if(newPage)logPagesRead(newPage);
+  reading.currentPage=newPage;
   save("tracker:reading",reading);renderReading();
   flashSaved(el);
 });
@@ -3377,7 +3483,7 @@ document.getElementById("finishBtn").onclick=async()=>{
 
 applyStaticI18n();
 maybeUpdateCalorieGoal();
-renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderBodyAnalysis();renderReading();renderPeriodStats();renderBiz();
+renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderBodyAnalysis();renderReading();renderPeriodStats();renderTaskConsistency();renderBiz();
 
 async function loadHealthToday(){
   try{
