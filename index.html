@@ -437,6 +437,7 @@
         <span id="currentPageLbl">Page actuelle</span>
         <input id="currentPageInput" inputmode="numeric" placeholder="ex: 120" style="flex:1;text-align:left" />
       </div>
+      <div class="sub hidden" id="pageToChapterHint" style="margin:-8px 0 10px"></div>
       <div class="row" style="margin-top:14px">
         <button class="btn btn-ghost" id="finishBtn" style="flex:1">Terminé ✓</button>
       </div>
@@ -754,6 +755,7 @@ const STRINGS = {
     bookPlaceholder:"Titre du livre…", totalChapPlaceholder:"Nb de chapitres total (optionnel)",
     currentlyReadingLbl:"En cours de lecture", byAuthor:a=>`de ${a}`, totalChapLbl:"Total", currentPageLbl:"Page actuelle (optionnel)",
     currentPagePlaceholder:"ex: 120", currentPageEstimatePlaceholder:n=>`≈ ${n} (estimé)`, coverPageBadge:n=>`📄 page ≈ ${n}`,
+    pageToChapterHint:n=>`≈ chapitre ${n}`,
     pagesRemaining:n=>`≈ ${n} pages restantes`,
     chaptersLbl:"chapitres lus", chaptersRemaining:n=>`${n} restants`, addChapter:"+", finishBook:"Livre terminé ✓",
     paceAllDone:"Tu as fini tous les chapitres — tape Terminé ✓ !",
@@ -927,6 +929,7 @@ const STRINGS = {
     bookPlaceholder:"Book title…", totalChapPlaceholder:"Total chapters (optional)",
     currentlyReadingLbl:"Currently reading", byAuthor:a=>`by ${a}`, totalChapLbl:"Total", currentPageLbl:"Current page (optional)",
     currentPagePlaceholder:"e.g. 120", currentPageEstimatePlaceholder:n=>`≈ ${n} (estimated)`, coverPageBadge:n=>`📄 page ≈ ${n}`,
+    pageToChapterHint:n=>`≈ chapter ${n}`,
     pagesRemaining:n=>`≈ ${n} pages left`,
     chaptersLbl:"chapters read", chaptersRemaining:n=>`${n} left`, addChapter:"+", finishBook:"Book finished ✓",
     paceAllDone:"You've finished all the chapters — tap Done ✓!",
@@ -2101,6 +2104,17 @@ function renderReading(){
   currentPageInputEl.value=reading.currentPage||"";
   currentPageInputEl.placeholder=estimatedPage!=null?t("currentPageEstimatePlaceholder",estimatedPage):t("currentPagePlaceholder");
   pageRow.classList.toggle("hidden",!reading.book);
+  // Reverse direction: given a page he actually typed in, show which
+  // chapter that lands in — same proportional logic as chapter→page, just
+  // inverted, so he doesn't have to do the math himself.
+  const chapterHintEl=document.getElementById("pageToChapterHint");
+  if(reading.currentPage&&reading.pageCount&&reading.totalChapters){
+    const estimatedChapter=Math.min(reading.totalChapters,Math.max(1,Math.round((reading.currentPage/reading.pageCount)*reading.totalChapters)));
+    chapterHintEl.textContent=t("pageToChapterHint",estimatedChapter);
+    chapterHintEl.classList.remove("hidden");
+  }else{
+    chapterHintEl.classList.add("hidden");
+  }
   // Surface the AI's page estimate right on the cover — it used to only show
   // as a greyed-out input placeholder, easy to miss entirely.
   const coverBadge=document.getElementById("coverPageBadge");
