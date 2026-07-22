@@ -158,7 +158,10 @@
   .book-archive-title{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .reading-card{border-left:4px solid var(--amber)}
   .reading-hero{display:flex;gap:14px;margin-bottom:14px}
-  .book-cover-lg{position:relative;width:108px;height:148px;border-radius:12px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:26px;box-shadow:0 10px 24px rgba(83,65,205,.18),0 2px 6px rgba(83,65,205,.12);transition:transform .1s ease}
+  .book-cover-ring-wrap{position:relative;width:124px;height:164px;flex-shrink:0}
+  .book-cover-ring-svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+  #bookCoverRingProgress{transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1)}
+  .book-cover-lg{position:absolute;top:8px;left:8px;width:108px;height:148px;border-radius:12px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:26px;box-shadow:0 10px 24px rgba(83,65,205,.18),0 2px 6px rgba(83,65,205,.12);transition:transform .1s ease}
   .book-cover-lg:active{transform:scale(.96)}
   .book-cover-lg.has-cover{border-color:transparent}
   .cover-page-badge{position:absolute;left:6px;right:6px;bottom:6px;background:rgba(22,29,31,.68);color:#fff;font-size:10px;font-weight:700;padding:4px 6px;border-radius:7px;text-align:center;font-family:'Plus Jakarta Sans',sans-serif;backdrop-filter:blur(3px)}
@@ -402,11 +405,17 @@
       <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="readingTitle">Lecture · 1 chapitre/jour → 1 livre/mois</span></div>
       <div class="sub" id="booksSub"></div>
       <div class="reading-hero">
-        <button class="book-cover-lg" id="coverBtn" type="button">
-          <img id="coverImg" class="hidden" />
-          <span id="coverPlaceholder"></span>
-          <div class="cover-page-badge hidden" id="coverPageBadge"></div>
-        </button>
+        <div class="book-cover-ring-wrap">
+          <svg class="book-cover-ring-svg" viewBox="0 0 124 164">
+            <rect x="4" y="4" width="116" height="156" rx="16" fill="none" stroke="var(--cardHi)" stroke-width="4"/>
+            <rect id="bookCoverRingProgress" x="4" y="4" width="116" height="156" rx="16" fill="none" stroke="var(--amber)" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+          <button class="book-cover-lg" id="coverBtn" type="button">
+            <img id="coverImg" class="hidden" />
+            <span id="coverPlaceholder"></span>
+            <div class="cover-page-badge hidden" id="coverPageBadge"></div>
+          </button>
+        </div>
         <input type="file" accept="image/*" capture="environment" id="coverInput" class="hidden" />
         <div class="reading-hero-info">
           <div>
@@ -1720,6 +1729,7 @@ function renderBiz(){
       color:"var(--amber)",
       goalValue:bizGoal!=null?bizGoal:null,
       minFloor:0,
+      trendUnit:"€",
       onDotClick:async r=>{
         if(await showConfirmModal(t("bizDeleteConfirm",r.amount,new Date(r.date).toLocaleDateString(t("dateLocale"))),t("confirmModalDeleteBtn"))){
           bizRevenue=bizRevenue.filter(x=>x!==r);save("tracker:bizRevenue",bizRevenue);renderBiz();
@@ -1782,7 +1792,7 @@ let trendChartGradientSeq=0;
 // Shared renderer for the weight/business trend line charts: smooth curve,
 // a gradient area fill under it, and an animated draw-in so the chart
 // actually has some motion on render instead of just appearing static.
-function buildTrendChartSVG(svgEl,slice,getValue,{color,H=90,PAD=8,goalValue,goalLabel,onDotClick,minFloor,padFactor=0.1}){
+function buildTrendChartSVG(svgEl,slice,getValue,{color,H=90,PAD=8,goalValue,goalLabel,onDotClick,minFloor,padFactor=0.1,trendGoodDirection="up",trendUnit=""}){
   if(slice.length<2){svgEl.innerHTML="";svgEl.classList.add("hidden");return;}
   const W=300;
   const allVals=[...slice.map(getValue),...(goalValue!=null?[goalValue]:[])];
@@ -1796,6 +1806,33 @@ function buildTrendChartSVG(svgEl,slice,getValue,{color,H=90,PAD=8,goalValue,goa
   const areaD=`${lineD} L${pts[pts.length-1].x},${H-PAD} L${pts[0].x},${H-PAD} Z`;
   const gradId=`trendGrad${trendChartGradientSeq++}`;
   const goalLine=goalValue!=null?`<line x1="${PAD}" y1="${y(goalValue)}" x2="${W-PAD}" y2="${y(goalValue)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3"/>${goalLabel?`<text x="${W-PAD}" y="${y(goalValue)-4}" text-anchor="end" font-size="8" fill="var(--muted)" font-family="'Plus Jakarta Sans',sans-serif">${goalLabel}</text>`:""}`:"";
+  // Highest and lowest points get a small value label so the chart reads
+  // as real data at a glance instead of an abstract decorative squiggle —
+  // only the extremes, not every point, to stay uncluttered.
+  let maxIdx=0,minIdx=0;
+  slice.forEach((d,i)=>{const v=getValue(d,i);if(v>getValue(slice[maxIdx],maxIdx))maxIdx=i;if(v<getValue(slice[minIdx],minIdx))minIdx=i;});
+  const fmtVal=v=>Number.isInteger(v)?String(v):v.toFixed(1);
+  const extremeLabels=maxIdx!==minIdx?[maxIdx,minIdx].map(i=>{
+    const above=pts[i].y>H/2;
+    return `<text x="${pts[i].x}" y="${pts[i].y+(above?14:-8)}" text-anchor="middle" font-size="9" font-weight="700" fill="${color}" font-family="'Plus Jakarta Sans',sans-serif" opacity="0">${fmtVal(getValue(slice[i],i))}</text>`;
+  }).join(""):"";
+  // Small trend badge, top-right — first-to-last delta over this slice,
+  // colored by whether that direction is the GOOD one for this metric
+  // (gaining weight is the goal here, so "up" is green for weight but
+  // would be red for something like a "days missed" chart).
+  const firstVal=getValue(slice[0],0),lastVal=getValue(slice[slice.length-1],slice.length-1);
+  const delta=lastVal-firstVal;
+  const deltaAbs=Math.abs(delta);
+  const isFlat=deltaAbs<(hi-lo)*0.02;
+  const deltaGood=isFlat?null:((delta>0)===(trendGoodDirection==="up"));
+  const badgeColor=isFlat?"var(--muted)":(deltaGood?"var(--green)":"var(--red)");
+  const arrow=isFlat?"→":(delta>0?"↑":"↓");
+  const deltaText=`${arrow} ${delta>0?"+":delta<0?"−":""}${fmtVal(deltaAbs)}${trendUnit}`;
+  const badgeW=14+deltaText.length*5.6;
+  const trendBadge=`<g transform="translate(${W-PAD-badgeW},${PAD-2})" opacity="0" class="chart-trend-badge">
+    <rect width="${badgeW}" height="16" rx="8" fill="${badgeColor}" opacity=".14"/>
+    <text x="${badgeW/2}" y="11.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="${badgeColor}" font-family="'Plus Jakarta Sans',sans-serif">${deltaText}</text>
+  </g>`;
   const dots=slice.map((d,i)=>`<circle data-idx="${i}" cx="${pts[i].x}" cy="${pts[i].y}" r="7" fill="transparent" style="cursor:pointer"/><circle class="chart-dot" cx="${pts[i].x}" cy="${pts[i].y}" r="2" fill="${color}" style="pointer-events:none;transition-delay:${.4+i*.03}s"/>`).join("");
   svgEl.innerHTML=`
     <defs><linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
@@ -1806,6 +1843,8 @@ function buildTrendChartSVG(svgEl,slice,getValue,{color,H=90,PAD=8,goalValue,goa
     <path class="chart-area" d="${areaD}" fill="url(#${gradId})"/>
     <path class="chart-line" d="${lineD}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
     ${dots}
+    <g class="chart-extreme-labels">${extremeLabels}</g>
+    ${trendBadge}
   `;
   if(onDotClick)svgEl.querySelectorAll("circle[data-idx]").forEach(c=>{c.onclick=()=>onDotClick(slice[+c.dataset.idx]);});
   svgEl.classList.remove("hidden");
@@ -1822,10 +1861,15 @@ function buildTrendChartSVG(svgEl,slice,getValue,{color,H=90,PAD=8,goalValue,goa
   lineEl.style.transition="stroke-dashoffset .9s cubic-bezier(.4,0,.2,1)";
   areaEl.style.transition="opacity .6s ease .35s";
   svgEl.querySelectorAll(".chart-dot").forEach(d=>d.style.transition="transform .3s cubic-bezier(.34,1.56,.64,1) "+d.style.transitionDelay);
+  svgEl.querySelectorAll(".chart-extreme-labels text").forEach(el=>el.style.transition="opacity .5s ease .7s");
+  const trendBadgeEl=svgEl.querySelector(".chart-trend-badge");
+  if(trendBadgeEl)trendBadgeEl.style.transition="opacity .5s ease .8s";
   requestAnimationFrame(()=>{
     lineEl.style.strokeDashoffset=0;
     areaEl.style.opacity=1;
     svgEl.querySelectorAll(".chart-dot").forEach(d=>{d.style.transformOrigin="center";d.style.transformBox="fill-box";d.style.transform="scale(1)";});
+    svgEl.querySelectorAll(".chart-extreme-labels text").forEach(el=>el.style.opacity=1);
+    if(trendBadgeEl)trendBadgeEl.style.opacity=1;
   });
 }
 function renderWeight(){
@@ -1901,6 +1945,11 @@ function renderWeight(){
       color:"var(--green)",
       goalValue:weightGoal!=null?weightGoal:null,
       goalLabel:weightGoal!=null?`${t("weightGoal")} (${weightGoal}kg)`:null,
+      // Direction that counts as "good" follows the actual goal rather than
+      // assuming — he's on a gain phase now, but this stays correct if that
+      // ever flips to a cut later.
+      trendGoodDirection:(weightGoal!=null&&weights.length)?(weightGoal>=weights[weights.length-1].kg?"up":"down"):"up",
+      trendUnit:"kg",
       onDotClick:async w=>{
         if(await showConfirmModal(t("weightDeleteConfirm",w.kg,new Date(w.date).toLocaleDateString(t("dateLocale"))),t("confirmModalDeleteBtn"))){
           weights=weights.filter(x=>x!==w);save("tracker:weights",weights);maybeUpdateCalorieGoal();renderWeight();renderCalories();
@@ -2102,6 +2151,15 @@ function renderReading(){
   const img=document.getElementById("coverImg"),ph=document.getElementById("coverPlaceholder"),coverBtn=document.getElementById("coverBtn");
   if(reading.coverPhoto){img.src=reading.coverPhoto;img.classList.remove("hidden");ph.classList.add("hidden");coverBtn.classList.add("has-cover");}
   else{img.classList.add("hidden");ph.classList.remove("hidden");coverBtn.classList.remove("has-cover");}
+  // Progress ring traced around the cover itself — reuses the same
+  // getTotalLength()/stroke-dasharray technique as the daily score ring,
+  // just on a rounded rect instead of a circle so it fits the cover shape.
+  const ringProgressEl=document.getElementById("bookCoverRingProgress");
+  const ringPct=reading.totalChapters?Math.min(1,reading.chapters/reading.totalChapters):0;
+  const ringLen=ringProgressEl.getTotalLength();
+  ringProgressEl.style.strokeDasharray=ringLen;
+  ringProgressEl.style.strokeDashoffset=ringLen*(1-ringPct);
+  ringProgressEl.style.stroke=ringPct>=1?"var(--green)":"var(--amber)";
 
   const pageRow=document.getElementById("currentPageRow");
   const currentPageInputEl=document.getElementById("currentPageInput");
