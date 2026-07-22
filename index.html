@@ -159,7 +159,7 @@
   .reading-card{border-left:4px solid var(--amber)}
   .reading-hero{display:flex;gap:14px;margin-bottom:14px}
   .book-cover-ring-wrap{position:relative;width:124px;height:164px;flex-shrink:0}
-  .book-cover-ring-svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+  .book-cover-ring-svg{position:absolute;inset:0;width:100%;height:100%}
   #bookCoverRingProgress{transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1)}
   .book-cover-lg{position:absolute;top:8px;left:8px;width:108px;height:148px;border-radius:12px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:26px;box-shadow:0 10px 24px rgba(83,65,205,.18),0 2px 6px rgba(83,65,205,.12);transition:transform .1s ease}
   .book-cover-lg:active{transform:scale(.96)}
@@ -1808,18 +1808,29 @@ function buildTrendChartSVG(svgEl,slice,getValue,{color,H=90,PAD=8,goalValue,goa
   const goalLine=goalValue!=null?`<line x1="${PAD}" y1="${y(goalValue)}" x2="${W-PAD}" y2="${y(goalValue)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3"/>${goalLabel?`<text x="${W-PAD}" y="${y(goalValue)-4}" text-anchor="end" font-size="8" fill="var(--muted)" font-family="'Plus Jakarta Sans',sans-serif">${goalLabel}</text>`:""}`:"";
   // Highest and lowest points get a small value label so the chart reads
   // as real data at a glance instead of an abstract decorative squiggle —
-  // only the extremes, not every point, to stay uncluttered.
+  // only the extremes, not every point, to stay uncluttered. Tries above
+  // the point first, falls back to below if that would run off the top
+  // edge or land on top of the goal line's label band.
   let maxIdx=0,minIdx=0;
   slice.forEach((d,i)=>{const v=getValue(d,i);if(v>getValue(slice[maxIdx],maxIdx))maxIdx=i;if(v<getValue(slice[minIdx],minIdx))minIdx=i;});
   const fmtVal=v=>Number.isInteger(v)?String(v):v.toFixed(1);
-  const extremeLabels=maxIdx!==minIdx?[maxIdx,minIdx].map(i=>{
-    const above=pts[i].y>H/2;
-    return `<text x="${pts[i].x}" y="${pts[i].y+(above?14:-8)}" text-anchor="middle" font-size="9" font-weight="700" fill="${color}" font-family="'Plus Jakarta Sans',sans-serif" opacity="0">${fmtVal(getValue(slice[i],i))}</text>`;
-  }).join(""):"";
-  // Small trend badge, top-right — first-to-last delta over this slice,
-  // colored by whether that direction is the GOOD one for this metric
-  // (gaining weight is the goal here, so "up" is green for weight but
-  // would be red for something like a "days missed" chart).
+  const goalY=goalValue!=null?y(goalValue):null;
+  function pickLabelY(py){
+    const above=py-8,below=py+14;
+    const collidesGoal=cy=>goalY!=null&&Math.abs(cy-goalY)<10;
+    const inBounds=cy=>cy>=9&&cy<=H-3;
+    if(inBounds(above)&&!collidesGoal(above))return above;
+    if(inBounds(below)&&!collidesGoal(below))return below;
+    return goalY!=null&&py>goalY?Math.min(H-3,below+8):Math.max(9,above-8);
+  }
+  const extremeLabels=maxIdx!==minIdx?[maxIdx,minIdx].map(i=>
+    `<text x="${pts[i].x}" y="${pickLabelY(pts[i].y)}" text-anchor="middle" font-size="9" font-weight="700" fill="${color}" font-family="'Plus Jakarta Sans',sans-serif" opacity="0">${fmtVal(getValue(slice[i],i))}</text>`
+  ).join(""):"";
+  // Small trend badge, top-LEFT (goal label already lives top-right, giving
+  // both room instead of stacking in the same corner) — first-to-last delta
+  // over this slice, colored by whether that direction is the GOOD one for
+  // this metric (gaining weight is the goal here, so "up" is green for
+  // weight but would be red for something like a "days missed" chart).
   const firstVal=getValue(slice[0],0),lastVal=getValue(slice[slice.length-1],slice.length-1);
   const delta=lastVal-firstVal;
   const deltaAbs=Math.abs(delta);
@@ -1829,7 +1840,7 @@ function buildTrendChartSVG(svgEl,slice,getValue,{color,H=90,PAD=8,goalValue,goa
   const arrow=isFlat?"→":(delta>0?"↑":"↓");
   const deltaText=`${arrow} ${delta>0?"+":delta<0?"−":""}${fmtVal(deltaAbs)}${trendUnit}`;
   const badgeW=14+deltaText.length*5.6;
-  const trendBadge=`<g transform="translate(${W-PAD-badgeW},${PAD-2})" opacity="0" class="chart-trend-badge">
+  const trendBadge=`<g transform="translate(${PAD},${PAD-2})" opacity="0" class="chart-trend-badge">
     <rect width="${badgeW}" height="16" rx="8" fill="${badgeColor}" opacity=".14"/>
     <text x="${badgeW/2}" y="11.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="${badgeColor}" font-family="'Plus Jakarta Sans',sans-serif">${deltaText}</text>
   </g>`;
