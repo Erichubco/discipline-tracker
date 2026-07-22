@@ -1810,22 +1810,35 @@ function buildTrendChartSVG(svgEl,slice,getValue,{color,H=90,PAD=8,goalValue,goa
   // as real data at a glance instead of an abstract decorative squiggle —
   // only the extremes, not every point, to stay uncluttered. Tries above
   // the point first, falls back to below if that would run off the top
-  // edge or land on top of the goal line's label band.
+  // edge or land on top of the goal line's label band. Needs real clearance
+  // from the point itself, not just from other labels — too tight a gap and
+  // the curve visually cuts through the text like a strikethrough, which is
+  // exactly what happened at 8px (bumped to 15/21px, checked against actual
+  // rendered bounding boxes, not just eyeballed).
   let maxIdx=0,minIdx=0;
   slice.forEach((d,i)=>{const v=getValue(d,i);if(v>getValue(slice[maxIdx],maxIdx))maxIdx=i;if(v<getValue(slice[minIdx],minIdx))minIdx=i;});
   const fmtVal=v=>Number.isInteger(v)?String(v):v.toFixed(1);
   const goalY=goalValue!=null?y(goalValue):null;
   function pickLabelY(py){
-    const above=py-8,below=py+14;
+    const above=py-15,below=py+21;
     const collidesGoal=cy=>goalY!=null&&Math.abs(cy-goalY)<10;
     const inBounds=cy=>cy>=9&&cy<=H-3;
     if(inBounds(above)&&!collidesGoal(above))return above;
     if(inBounds(below)&&!collidesGoal(below))return below;
     return goalY!=null&&py>goalY?Math.min(H-3,below+8):Math.max(9,above-8);
   }
-  const extremeLabels=maxIdx!==minIdx?[maxIdx,minIdx].map(i=>
-    `<text x="${pts[i].x}" y="${pickLabelY(pts[i].y)}" text-anchor="middle" font-size="9" font-weight="700" fill="${color}" font-family="'Plus Jakarta Sans',sans-serif" opacity="0">${fmtVal(getValue(slice[i],i))}</text>`
-  ).join(""):"";
+  // Anchor shifts near the left/right edges instead of staying centered on
+  // the point, so a label on the first/last point (very common — the most
+  // recent entry is often the extreme) doesn't run past the chart bounds.
+  function pickAnchor(px){
+    if(px>W-30)return{anchor:"end",dx:6};
+    if(px<30)return{anchor:"start",dx:-6};
+    return{anchor:"middle",dx:0};
+  }
+  const extremeLabels=maxIdx!==minIdx?[maxIdx,minIdx].map(i=>{
+    const{anchor,dx}=pickAnchor(pts[i].x);
+    return `<text x="${pts[i].x+dx}" y="${pickLabelY(pts[i].y)}" text-anchor="${anchor}" font-size="9" font-weight="700" fill="${color}" font-family="'Plus Jakarta Sans',sans-serif" opacity="0">${fmtVal(getValue(slice[i],i))}</text>`;
+  }).join(""):"";
   // Small trend badge, top-LEFT (goal label already lives top-right, giving
   // both room instead of stacking in the same corner) — first-to-last delta
   // over this slice, colored by whether that direction is the GOOD one for
@@ -1840,7 +1853,12 @@ function buildTrendChartSVG(svgEl,slice,getValue,{color,H=90,PAD=8,goalValue,goa
   const arrow=isFlat?"→":(delta>0?"↑":"↓");
   const deltaText=`${arrow} ${delta>0?"+":delta<0?"−":""}${fmtVal(deltaAbs)}${trendUnit}`;
   const badgeW=14+deltaText.length*5.6;
+  // Solid backing rect first (opaque, matches the card background) so the
+  // goal line / curve / area fill behind the badge is fully occluded rather
+  // than showing through a translucent pill — a dashed goal line sitting
+  // near the top of the chart was visually striking through the badge text.
   const trendBadge=`<g transform="translate(${PAD},${PAD-2})" opacity="0" class="chart-trend-badge">
+    <rect width="${badgeW}" height="16" rx="8" fill="var(--card)"/>
     <rect width="${badgeW}" height="16" rx="8" fill="${badgeColor}" opacity=".14"/>
     <text x="${badgeW/2}" y="11.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="${badgeColor}" font-family="'Plus Jakarta Sans',sans-serif">${deltaText}</text>
   </g>`;
