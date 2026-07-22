@@ -658,6 +658,10 @@
       <button type="button" class="period-opt active" data-period="day"><span id="periodDayBtn"></span></button>
       <button type="button" class="period-opt" data-period="evening"><span id="periodEveningBtn"></span></button>
     </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <span id="addTaskTimeLbl" style="color:var(--muted);font-size:12px;flex:none"></span>
+      <input type="time" id="newTaskTime" style="flex:none;width:auto" />
+    </div>
     <div class="period-picker category-picker-scroll" id="categoryPicker" style="margin-bottom:14px"></div>
     <div class="toggle-row" style="margin-bottom:20px">
       <div class="toggle-icon" id="addTaskPhotoIcon"></div>
@@ -727,7 +731,7 @@ const STRINGS = {
     dateLocale:"fr-FR",
     heatmapTitle:"Activité", heatmapSub:"Un carré = un jour. Plus foncé = plus de tâches cochées ce jour-là. 16 dernières semaines.", legendLess:"Moins", legendMore:"Plus",
     tasksTitle:"Tâches du jour", editBtn:"Modifier", editBtnDone:"Terminé",
-    newTaskPlaceholder:"Nouvelle tâche…", addTaskTitle:"Nouvelle tâche", addTaskCancelBtn:"Annuler", addTaskConfirmBtn:"Ajouter",
+    newTaskPlaceholder:"Nouvelle tâche…", addTaskTitle:"Nouvelle tâche", addTaskCancelBtn:"Annuler", addTaskConfirmBtn:"Ajouter", addTaskTimeLbl:"Heure (optionnel)",
     addCategoryTitle:"Nouvelle catégorie", newCategoryPlaceholder:"Nom (ex : Sport, Études)…", addCategoryCancelBtn:"Annuler", addCategoryConfirmBtn:"Ajouter",
     addTaskPhotoLbl:"Avec photo à chaque fois", taskPhotoAddBtn:"Ajouter une photo", taskPhotoGalleryEmpty:"Aucune photo pour l'instant.",
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
@@ -885,7 +889,7 @@ const STRINGS = {
     dateLocale:"en-US",
     heatmapTitle:"Activity", heatmapSub:"One square = one day. Darker = more tasks checked that day. Last 16 weeks.", legendLess:"Less", legendMore:"More",
     tasksTitle:"Today's tasks", editBtn:"Edit", editBtnDone:"Done",
-    newTaskPlaceholder:"New task…", addTaskTitle:"New task", addTaskCancelBtn:"Cancel", addTaskConfirmBtn:"Add",
+    newTaskPlaceholder:"New task…", addTaskTitle:"New task", addTaskCancelBtn:"Cancel", addTaskConfirmBtn:"Add", addTaskTimeLbl:"Time (optional)",
     addCategoryTitle:"New category", newCategoryPlaceholder:"Name (e.g. Sport, Studies)…", addCategoryCancelBtn:"Cancel", addCategoryConfirmBtn:"Add",
     addTaskPhotoLbl:"With a photo each time", taskPhotoAddBtn:"Add a photo", taskPhotoGalleryEmpty:"No photos yet.",
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
@@ -1352,7 +1356,23 @@ function getViewedDone(){return isViewingToday()?done:load("tracker:day:"+viewed
 // clock time (once a week, whenever he wakes up on Monday).
 const TASK_TIMES={wake:"06h00",read:"06h40",gym:"07h10",faceCareMorning:"08h15",suppsMorning:"08h20",magnesiumMorning:"08h20",minoxidilMorning:"08h25",breakfast:"08h45",ecom:"09h30",lunch:"11h45",ecomAfternoon:"14h00",shake:"15h30",suppsEvening:"19h15",dinner:"19h30",minoxidilEvening:"20h25",faceCareEvening:"21h15",screens:"21h30"};
 const TASK_TIMES_EN={wake:"6:00am",read:"6:40am",gym:"7:10am",faceCareMorning:"8:15am",suppsMorning:"8:20am",magnesiumMorning:"8:20am",minoxidilMorning:"8:25am",breakfast:"8:45am",ecom:"9:30am",lunch:"11:45am",ecomAfternoon:"2:00pm",shake:"3:30pm",suppsEvening:"7:15pm",dinner:"7:30pm",minoxidilEvening:"8:25pm",faceCareEvening:"9:15pm",screens:"9:30pm"};
-function taskTimeLabel(tk){return (lang==="en"?TASK_TIMES_EN:TASK_TIMES)[tk.id]||null;}
+// Custom tasks (added via the + button) can carry their own "HH:MM" 24h
+// time, set once at creation — formatted to match the same style as the
+// built-in TASK_TIMES badges (24h "08h45" in French, 12h "8:45am" in
+// English) rather than showing the raw <input type="time"> value.
+function formatTaskTime(hhmm){
+  const [h,m]=hhmm.split(":").map(Number);
+  if(lang==="en"){
+    const period=h<12?"am":"pm";
+    const h12=h%12===0?12:h%12;
+    return `${h12}:${String(m).padStart(2,"0")}${period}`;
+  }
+  return `${String(h).padStart(2,"0")}h${String(m).padStart(2,"0")}`;
+}
+function taskTimeLabel(tk){
+  if(tk.time)return formatTaskTime(tk.time);
+  return (lang==="en"?TASK_TIMES_EN:TASK_TIMES)[tk.id]||null;
+}
 function taskDisplayLabel(tk){
   if(tk.id==="ecom"){
     if(ecomSprintDay>4)return `${tk.label} — ${t("ecomSprintTestingLbl")}`;
@@ -1455,6 +1475,7 @@ function applyStaticI18n(){
   document.getElementById("periodMorningBtn").textContent=t("periodMorning");
   document.getElementById("periodDayBtn").textContent=t("periodDay");
   document.getElementById("periodEveningBtn").textContent=t("periodEvening");
+  document.getElementById("addTaskTimeLbl").textContent=t("addTaskTimeLbl");
   document.getElementById("addTaskCancelBtn").textContent=t("addTaskCancelBtn");
   document.getElementById("addBtn").textContent=t("addTaskConfirmBtn");
   document.getElementById("addCategoryTitle").textContent=t("addCategoryTitle");
@@ -2736,6 +2757,7 @@ function setNewTaskHasPhoto(v){
 }
 function openAddTask(){
   document.getElementById("newTask").value="";
+  document.getElementById("newTaskTime").value="";
   setNewTaskHasPhoto(false);
   showSheet("addTaskSheet");
 }
@@ -2760,7 +2782,14 @@ function setNewTaskCategory(cat){
   newTaskCategory=cat;
   document.querySelectorAll("#categoryPicker .period-opt").forEach(b=>b.classList.toggle("active",b.dataset.category===cat));
 }
-function addTask(){const i=document.getElementById("newTask");const v=i.value.trim();if(!v)return;const newTk={id:"t"+Date.now(),label:v,period:newTaskPeriod,category:newTaskCategory};if(newTaskHasPhoto)newTk.hasPhoto=true;tasks.push(newTk);save("tracker:template",tasks);i.value="";renderTasks();renderScore();closeAddTask();}
+function addTask(){
+  const i=document.getElementById("newTask");const v=i.value.trim();if(!v)return;
+  const newTk={id:"t"+Date.now(),label:v,period:newTaskPeriod,category:newTaskCategory};
+  if(newTaskHasPhoto)newTk.hasPhoto=true;
+  const timeVal=document.getElementById("newTaskTime").value; // "HH:MM" 24h, or "" if unset
+  if(timeVal)newTk.time=timeVal;
+  tasks.push(newTk);save("tracker:template",tasks);i.value="";renderTasks();renderScore();closeAddTask();
+}
 
 const taskSlider=document.getElementById("taskSlider");
 const taskSliderViewport=document.getElementById("taskSliderViewport");
