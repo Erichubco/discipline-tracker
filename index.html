@@ -62,6 +62,19 @@
   .ring-num{font-size:38px;font-weight:700;line-height:1;font-family:'Quicksand',sans-serif;color:var(--green)}
   .ring-den{color:var(--muted);font-size:22px;font-weight:600}
   .ring-lbl{color:var(--muted);font-size:12px;margin-top:4px}
+  .hero-slider-viewport{overflow:hidden}
+  .hero-slider{display:flex;transition:transform .32s cubic-bezier(.4,0,.2,1);will-change:transform}
+  .hero-panel{flex:0 0 100%;min-width:100%;display:flex;flex-direction:column;align-items:center}
+  .hero-ring-wrap{position:relative;width:140px;height:140px}
+  .hero-ring-wrap svg{transform:rotate(-90deg);position:relative;z-index:1}
+  .hero-ring-glow{position:absolute;inset:16%;opacity:.16;filter:blur(22px);border-radius:50%}
+  .hero-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;animation:float 3s ease-in-out infinite}
+  .hero-ring-pct{font-size:28px;font-weight:700;line-height:1;font-family:'Quicksand',sans-serif;color:var(--text)}
+  .hero-ring-sub{color:var(--muted);font-size:12px;margin-top:5px;text-align:center}
+  .hero-panel-label{margin-top:14px;font-size:15px;font-weight:700;color:var(--text)}
+  .hero-dots{display:flex;justify-content:center;gap:8px;margin-top:16px}
+  .hero-dot{width:8px;height:8px;border-radius:50%;background:var(--border);border:none;padding:0;cursor:pointer;transition:width .25s,background .25s}
+  .hero-dot.active{background:var(--green);width:20px;border-radius:4px}
   .score-title{display:inline-block;margin:18px auto 0;padding:8px 20px;background:var(--cardHi);border:1px solid var(--border);border-radius:9999px;font-size:13px;font-weight:700;color:var(--green);font-family:'Plus Jakarta Sans',sans-serif}
   .score-sub{color:var(--muted);font-size:12px;margin-top:10px;line-height:1.4;text-align:center}
   .fab{position:fixed;right:20px;bottom:calc(88px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--amber));color:#fff;border:none;font-size:26px;box-shadow:var(--shadow-lg);cursor:pointer;z-index:41;display:flex;align-items:center;justify-content:center}
@@ -381,15 +394,69 @@
 
     <!-- Per-task consistency -->
     <div class="card">
-      <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="taskConsistencyTitle">Consistance par tâche</span></div>
+      <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="taskConsistencyTitle">Consistance</span></div>
       <div class="sub" style="margin-bottom:12px" id="taskConsistencySub">Ton taux de complétion, tâche par tâche.</div>
-      <div class="period-picker" id="consistencyPeriodPicker" style="margin-bottom:14px">
+      <div class="period-picker" id="consistencyPeriodPicker" style="margin-bottom:16px">
         <button type="button" class="period-opt active" data-period-idx="0"><span id="consistencyPeriod0Btn"></span></button>
         <button type="button" class="period-opt" data-period-idx="1"><span id="consistencyPeriod1Btn"></span></button>
         <button type="button" class="period-opt" data-period-idx="2"><span id="consistencyPeriod2Btn"></span></button>
         <button type="button" class="period-opt" data-period-idx="3"><span id="consistencyPeriod3Btn"></span></button>
       </div>
-      <div id="taskConsistencyRows"></div>
+      <div class="hero-slider-viewport" id="heroSliderViewport">
+        <div class="hero-slider" id="heroSlider">
+          <div class="hero-panel">
+            <div class="hero-ring-wrap">
+              <div class="hero-ring-glow" style="background:#e17055"></div>
+              <svg width="140" height="140" viewBox="0 0 140 140">
+                <circle cx="70" cy="70" r="60" fill="none" stroke="var(--cardHi)" stroke-width="10"/>
+                <circle id="heroRingGym" cx="70" cy="70" r="60" fill="none" stroke="#e17055" stroke-width="10" stroke-linecap="round" style="transition:stroke-dashoffset .6s ease"/>
+              </svg>
+              <div class="hero-ring-center">
+                <div class="hero-ring-pct" id="heroPctGym">0%</div>
+                <div class="hero-ring-sub" id="heroSubGym">0/0</div>
+              </div>
+            </div>
+            <div class="hero-panel-label">💪 <span id="heroLblGym">Muscu</span></div>
+          </div>
+          <div class="hero-panel">
+            <div class="hero-ring-wrap">
+              <div class="hero-ring-glow" style="background:#00b894"></div>
+              <svg width="140" height="140" viewBox="0 0 140 140">
+                <circle cx="70" cy="70" r="60" fill="none" stroke="var(--cardHi)" stroke-width="10"/>
+                <circle id="heroRingMeals" cx="70" cy="70" r="60" fill="none" stroke="#00b894" stroke-width="10" stroke-linecap="round" style="transition:stroke-dashoffset .6s ease"/>
+              </svg>
+              <div class="hero-ring-center">
+                <div class="hero-ring-pct" id="heroPctMeals">0%</div>
+                <div class="hero-ring-sub" id="heroSubMeals">0/0</div>
+              </div>
+            </div>
+            <div class="hero-panel-label">🍽️ <span id="heroLblMeals">Repas complets</span></div>
+          </div>
+          <div class="hero-panel">
+            <div class="hero-ring-wrap">
+              <div class="hero-ring-glow" style="background:#fdcb6e"></div>
+              <svg width="140" height="140" viewBox="0 0 140 140">
+                <circle cx="70" cy="70" r="60" fill="none" stroke="var(--cardHi)" stroke-width="10"/>
+                <circle id="heroRingReading" cx="70" cy="70" r="60" fill="none" stroke="#fdcb6e" stroke-width="10" stroke-linecap="round" style="transition:stroke-dashoffset .6s ease"/>
+              </svg>
+              <div class="hero-ring-center">
+                <div class="hero-ring-pct" id="heroPctReading">0</div>
+                <div class="hero-ring-sub" id="heroSubReading">0/0</div>
+              </div>
+            </div>
+            <div class="hero-panel-label">📖 <span id="heroLblReading">Pages lues</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-dots" id="heroDots">
+        <button class="hero-dot active" data-idx="0" type="button"></button>
+        <button class="hero-dot" data-idx="1" type="button"></button>
+        <button class="hero-dot" data-idx="2" type="button"></button>
+      </div>
+      <div style="text-align:center;margin-top:16px">
+        <button class="btn-link" id="consistencyDetailToggleBtn"></button>
+      </div>
+      <div class="hidden" id="taskConsistencyRows" style="margin-top:14px"></div>
     </div>
 
     <!-- Business goal -->
@@ -778,8 +845,11 @@ const STRINGS = {
     addTaskPhotoLbl:"Avec photo à chaque fois", taskPhotoAddBtn:"Ajouter une photo", taskPhotoGalleryEmpty:"Aucune photo pour l'instant.",
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
     streakCardTitle:"Consistance", weeklyProgressTitle:"Détail par catégorie (cette semaine)", periodStatsTitle:"Semaine · mois", periodStatsSub:"% des tâches du jour cochées, tout confondu.", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série", daysUnit:"jours",
-    taskConsistencyTitle:"Consistance par tâche", taskConsistencySub:"Ton taux de complétion, tâche par tâche.", pagesReadLbl:"Pages lues",
+    taskConsistencyTitle:"Consistance", taskConsistencySub:"Glisse pour voir chaque habitude.", pagesReadLbl:"Pages lues",
     periodWeek:"7j", periodMonth:"30j", periodBimonth:"60j", periodQuarter:"90j",
+    heroLblGym:"Muscu", heroLblMeals:"Repas complets", heroLblReading:"Pages lues",
+    consistencyShowDetailBtn:"Voir le détail complet", consistencyHideDetailBtn:"Masquer le détail",
+    daysActiveUnit:"j actifs",
     streakHint:"Une série se construit avec des journées à 100% (toutes les tâches cochées). Coche tout en une journée pour la démarrer.",
     thisWeekLbl:d=>`Cette semaine (jour ${d}/7)`, thisMonthLbl:(d,total)=>`Ce mois (jour ${d}/${total})`,
     reminderTitle:"Rappel du soir",
@@ -939,8 +1009,11 @@ const STRINGS = {
     addTaskPhotoLbl:"With a photo each time", taskPhotoAddBtn:"Add a photo", taskPhotoGalleryEmpty:"No photos yet.",
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
     streakCardTitle:"Consistency", weeklyProgressTitle:"Breakdown by category (this week)", periodStatsTitle:"Week · month", periodStatsSub:"% of today's tasks checked, all combined.", streakCurLbl:"current streak", streakBestLbl:"best streak", daysUnit:"days",
-    taskConsistencyTitle:"Consistency by task", taskConsistencySub:"Your completion rate, task by task.", pagesReadLbl:"Pages read",
+    taskConsistencyTitle:"Consistency", taskConsistencySub:"Swipe to see each habit.", pagesReadLbl:"Pages read",
     periodWeek:"7d", periodMonth:"30d", periodBimonth:"60d", periodQuarter:"90d",
+    heroLblGym:"Workout", heroLblMeals:"Full meal days", heroLblReading:"Pages read",
+    consistencyShowDetailBtn:"See full detail", consistencyHideDetailBtn:"Hide detail",
+    daysActiveUnit:"d active",
     streakHint:"A streak is built from 100% days (every task checked). Complete a full day to start one.",
     thisWeekLbl:d=>`This week (day ${d}/7)`, thisMonthLbl:(d,total)=>`This month (day ${d}/${total})`,
     reminderTitle:"Evening reminder",
@@ -1566,6 +1639,10 @@ function applyStaticI18n(){
   document.getElementById("consistencyPeriod1Btn").textContent=t("periodMonth");
   document.getElementById("consistencyPeriod2Btn").textContent=t("periodBimonth");
   document.getElementById("consistencyPeriod3Btn").textContent=t("periodQuarter");
+  document.getElementById("heroLblGym").textContent=t("heroLblGym");
+  document.getElementById("heroLblMeals").textContent=t("heroLblMeals");
+  document.getElementById("heroLblReading").textContent=t("heroLblReading");
+  updateConsistencyDetailToggleBtn();
   document.getElementById("streakCurLbl").textContent=t("streakCurLbl");
   document.getElementById("streakBestLbl").textContent=t("streakBestLbl");
   document.getElementById("streakCurUnit").textContent=t("daysUnit");
@@ -2525,12 +2602,61 @@ function pagesReadInPeriod(startDate){
   for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1))total+=pagesReadLog[keyFor(d)]||0;
   return total;
 }
+// "Did I eat all 3 meals" — an AND across breakfast/lunch/dinner, matching
+// how Eric actually thinks about it ("j'ai mangé 3 fois par jour... combien
+// de fois par semaine"), rather than 3 separate percentages he'd have to
+// combine himself.
+function mealsConsistency(startDate,records){
+  const now=new Date();now.setHours(0,0,0,0);
+  const mealTasks=tasks.filter(tk=>MEAL_TASK_IDS.has(tk.id));
+  let scheduled=0,doneCount=0;
+  for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1)){
+    const key=keyFor(d);
+    if(!mealTasks.length||mealTasks.some(tk=>tk.addedDate&&key<tk.addedDate))continue;
+    scheduled++;
+    const dayRecord=records[key]||{};
+    if(mealTasks.every(tk=>dayRecord[tk.id]))doneCount++;
+  }
+  return{scheduled,done:doneCount,pct:scheduled?doneCount/scheduled:null};
+}
+// Reading has no natural "done/not done" checkbox for a specific page
+// target, so its ring instead reflects how many days he actually logged
+// some progress — the page COUNT itself (what he actually asked for) is
+// the headline number in the center.
+function readingActiveDaysConsistency(startDate){
+  const now=new Date();now.setHours(0,0,0,0);
+  let scheduled=0,activeDays=0;
+  for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1)){
+    scheduled++;
+    if((pagesReadLog[keyFor(d)]||0)>0)activeDays++;
+  }
+  return{scheduled,done:activeDays,pct:scheduled?activeDays/scheduled:null};
+}
+const HERO_RING_C=2*Math.PI*60;
+function setHeroRing(ringId,pctId,subId,pct,centerText,subText){
+  document.getElementById(ringId).style.strokeDashoffset=HERO_RING_C*(1-(pct||0));
+  document.getElementById(pctId).textContent=centerText;
+  document.getElementById(subId).textContent=subText;
+}
 function renderTaskConsistency(){
   document.querySelectorAll("#consistencyPeriodPicker .period-opt").forEach((btn,i)=>btn.classList.toggle("active",i===consistencyPeriodIdx));
   const period=CONSISTENCY_PERIODS[consistencyPeriodIdx];
   const now=new Date();
   const startDate=new Date(now.getTime()-(period.days-1)*DAY_MS);startDate.setHours(0,0,0,0);
   const records=getAllDoneRecords();
+
+  const gymTk=tasks.find(tk=>tk.id==="gym");
+  if(gymTk){
+    const{scheduled,done,pct}=taskConsistency(gymTk,startDate,records);
+    setHeroRing("heroRingGym","heroPctGym","heroSubGym",pct,scheduled?`${Math.round(pct*100)}%`:"—",`${done}/${scheduled} ${t("daysUnit")}`);
+  }
+  const meals=mealsConsistency(startDate,records);
+  setHeroRing("heroRingMeals","heroPctMeals","heroSubMeals",meals.pct,meals.scheduled?`${Math.round(meals.pct*100)}%`:"—",`${meals.done}/${meals.scheduled} ${t("daysUnit")}`);
+
+  const pages=pagesReadInPeriod(startDate);
+  const readingActive=readingActiveDaysConsistency(startDate);
+  setHeroRing("heroRingReading","heroPctReading","heroSubReading",readingActive.pct,String(pages),t("pagesReadLbl"));
+
   const rowsEl=document.getElementById("taskConsistencyRows");
   rowsEl.innerHTML="";
   const barColors=["var(--amber)","var(--green)","#e17055","#00b894","#0984e3","#fdcb6e"];
@@ -2548,16 +2674,71 @@ function renderTaskConsistency(){
     shown++;
   });
   if(reading.book){
-    const pages=pagesReadInPeriod(startDate);
     const row=document.createElement("div");
     row.className="pbar-row";
     if(!rowsEl.children.length)row.style.marginTop="0";
     row.innerHTML=`<div class="pbar-lbl"><span>📖 ${t("pagesReadLbl")}</span> <b>${pages}</b></div>`;
     rowsEl.appendChild(row);
   }
+  rowsEl.classList.toggle("hidden",!consistencyDetailExpanded);
 }
 document.querySelectorAll("#consistencyPeriodPicker .period-opt").forEach((btn,i)=>{
   btn.onclick=()=>{consistencyPeriodIdx=i;save("tracker:consistencyPeriodIdx",i);renderTaskConsistency();};
+});
+
+let consistencyDetailExpanded=load("tracker:consistencyDetailExpanded",false);
+function updateConsistencyDetailToggleBtn(){
+  document.getElementById("consistencyDetailToggleBtn").textContent=consistencyDetailExpanded?t("consistencyHideDetailBtn"):t("consistencyShowDetailBtn");
+}
+document.getElementById("consistencyDetailToggleBtn").onclick=()=>{
+  consistencyDetailExpanded=!consistencyDetailExpanded;
+  save("tracker:consistencyDetailExpanded",consistencyDetailExpanded);
+  updateConsistencyDetailToggleBtn();
+  document.getElementById("taskConsistencyRows").classList.toggle("hidden",!consistencyDetailExpanded);
+};
+
+const heroSlider=document.getElementById("heroSlider");
+const heroSliderViewport=document.getElementById("heroSliderViewport");
+const HERO_PANEL_COUNT=3;
+let currentHeroIdx=load("tracker:currentHeroIdx",0);
+function goToHeroPanel(idx){
+  currentHeroIdx=Math.max(0,Math.min(HERO_PANEL_COUNT-1,idx));
+  heroSlider.style.transform=`translateX(-${currentHeroIdx*100}%)`;
+  document.querySelectorAll("#heroDots .hero-dot").forEach((d,i)=>d.classList.toggle("active",i===currentHeroIdx));
+}
+document.querySelectorAll("#heroDots .hero-dot").forEach((btn,i)=>{
+  btn.onclick=()=>{goToHeroPanel(i);save("tracker:currentHeroIdx",currentHeroIdx);};
+});
+goToHeroPanel(currentHeroIdx);
+let heroTouchStartX=null,heroTouchStartY=null,heroTouchDeltaX=0,heroSwipeAxis=null;
+heroSliderViewport.addEventListener("touchstart",e=>{
+  heroTouchStartX=e.touches[0].clientX;heroTouchStartY=e.touches[0].clientY;
+  heroTouchDeltaX=0;heroSwipeAxis=null;
+},{passive:true});
+heroSliderViewport.addEventListener("touchmove",e=>{
+  if(heroTouchStartX==null)return;
+  const dx=e.touches[0].clientX-heroTouchStartX,dy=e.touches[0].clientY-heroTouchStartY;
+  if(heroSwipeAxis===null){
+    if(Math.abs(dx)<SWIPE_AXIS_THRESHOLD&&Math.abs(dy)<SWIPE_AXIS_THRESHOLD)return;
+    heroSwipeAxis=Math.abs(dx)>Math.abs(dy)?"x":"y";
+    if(heroSwipeAxis==="x")heroSlider.style.transition="none";
+  }
+  if(heroSwipeAxis!=="x")return;
+  heroTouchDeltaX=dx;
+  const basePercent=-currentHeroIdx*100;
+  const dragPercent=(heroTouchDeltaX/heroSliderViewport.clientWidth)*100;
+  heroSlider.style.transform=`translateX(${basePercent+dragPercent}%)`;
+},{passive:true});
+heroSliderViewport.addEventListener("touchend",()=>{
+  if(heroSwipeAxis!=="x"){heroTouchStartX=null;heroSwipeAxis=null;return;}
+  heroSlider.style.transition="";
+  const threshold=heroSliderViewport.clientWidth*0.22;
+  let targetIdx=currentHeroIdx;
+  if(heroTouchDeltaX<-threshold&&currentHeroIdx<HERO_PANEL_COUNT-1)targetIdx=currentHeroIdx+1;
+  else if(heroTouchDeltaX>threshold&&currentHeroIdx>0)targetIdx=currentHeroIdx-1;
+  goToHeroPanel(targetIdx);
+  save("tracker:currentHeroIdx",currentHeroIdx);
+  heroTouchStartX=null;heroSwipeAxis=null;
 });
 
 // Guards against a real bug: on a fresh/empty device, the very first renderScore()
