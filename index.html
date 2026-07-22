@@ -686,6 +686,16 @@
   </div>
 </div>
 
+<div class="celebration hidden" id="confirmModal">
+  <div class="task-detail-card">
+    <div class="task-detail-label" id="confirmModalText" style="margin-bottom:0"></div>
+    <div class="task-detail-actions">
+      <button class="btn btn-ghost" id="confirmModalCancelBtn" style="flex:1"></button>
+      <button class="btn btn-amber" id="confirmModalOkBtn" style="flex:1"></button>
+    </div>
+  </div>
+</div>
+
 <input type="file" accept="image/*" capture="environment" class="hidden" id="taskPhotoInput">
 
 <script>
@@ -768,6 +778,7 @@ const STRINGS = {
     bodyAnalysisLoading:"🔍 Analyse de ta progression physique…", bodyAnalysisTitle:"Analyse IA",
     gymFocusAdditionLbl:"Ajout du mois (focus IA)",
     tasksSyncedToast:"✅ Tâches mises à jour suite à un changement de calendrier",
+    confirmModalCancelBtn:"Annuler", confirmModalOkBtn:"Confirmer", confirmModalDeleteBtn:"Supprimer",
     archiveToggleLbl:n=>`${n} livre${n>1?"s":""} lu${n>1?"s":""}`,
     catDevLbl:"Perso", catBusinessLbl:"Business",
     noTasksInPanel:"Aucune tâche ici pour l'instant. Ajoute-en une avec Modifier.",
@@ -940,6 +951,7 @@ const STRINGS = {
     bodyAnalysisLoading:"🔍 Analyzing your physical progress…", bodyAnalysisTitle:"AI Analysis",
     gymFocusAdditionLbl:"This month's addition (AI focus)",
     tasksSyncedToast:"✅ Tasks updated from a calendar change",
+    confirmModalCancelBtn:"Cancel", confirmModalOkBtn:"Confirm", confirmModalDeleteBtn:"Delete",
     archiveToggleLbl:n=>`${n} book${n>1?"s":""} read`,
     catDevLbl:"Personal", catBusinessLbl:"Business",
     noTasksInPanel:"No tasks here yet. Add one with Edit.",
@@ -1082,6 +1094,25 @@ const today=()=>keyFor(new Date());
 const load=(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch(e){return f;}};
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
 function flashSaved(el){el.classList.remove("input-saved");void el.offsetWidth;el.classList.add("input-saved");}
+let confirmModalResolve=null;
+// In-app replacement for window.confirm() — the native browser dialog reads
+// as a jarring "not part of the app" black-and-white system sheet on iOS.
+// Returns a Promise<boolean> so call sites just `await` it in place of the
+// old synchronous confirm().
+function showConfirmModal(message,okLabel){
+  document.getElementById("confirmModalText").textContent=message;
+  document.getElementById("confirmModalOkBtn").textContent=okLabel||t("confirmModalOkBtn");
+  document.getElementById("confirmModalCancelBtn").textContent=t("confirmModalCancelBtn");
+  showSheet("confirmModal");
+  return new Promise(resolve=>{confirmModalResolve=resolve;});
+}
+function closeConfirmModal(result){
+  hideSheet("confirmModal");
+  if(confirmModalResolve){const r=confirmModalResolve;confirmModalResolve=null;r(result);}
+}
+document.getElementById("confirmModalCancelBtn").onclick=()=>closeConfirmModal(false);
+document.getElementById("confirmModalOkBtn").onclick=()=>closeConfirmModal(true);
+document.getElementById("confirmModal").addEventListener("click",e=>{if(e.target.id==="confirmModal")closeConfirmModal(false);});
 // A modal opening on top of a tall, scrollable page can leak touch-scroll
 // gestures through to the page behind it on mobile Safari (the sheet stays
 // put since it's fixed, but the body underneath scrolls) unless the body's
@@ -1089,23 +1120,34 @@ function flashSaved(el){el.classList.remove("input-saved");void el.offsetWidth;e
 // classList.contains so re-opening/refreshing an already-open sheet (e.g.
 // openTaskDetail calling itself after an in-sheet action) can't double-lock.
 let scrollLockY=0;
+let openSheetCount=0;
+// Reference-counted so a sheet opened ON TOP of another (e.g. the confirm
+// modal from inside the photo viewer) doesn't re-capture scrollY (which
+// would read 0 once the body is already position:fixed) or unlock scroll
+// while the sheet underneath is still open.
 function showSheet(id){
   const el=document.getElementById(id);
   if(el.classList.contains("hidden")){
-    scrollLockY=window.scrollY;
-    document.body.style.position="fixed";
-    document.body.style.top=`-${scrollLockY}px`;
-    document.body.style.width="100%";
+    if(openSheetCount===0){
+      scrollLockY=window.scrollY;
+      document.body.style.position="fixed";
+      document.body.style.top=`-${scrollLockY}px`;
+      document.body.style.width="100%";
+    }
+    openSheetCount++;
   }
   el.classList.remove("hidden");
 }
 function hideSheet(id){
   const el=document.getElementById(id);
   if(!el.classList.contains("hidden")){
-    document.body.style.position="";
-    document.body.style.top="";
-    document.body.style.width="";
-    window.scrollTo(0,scrollLockY);
+    openSheetCount=Math.max(0,openSheetCount-1);
+    if(openSheetCount===0){
+      document.body.style.position="";
+      document.body.style.top="";
+      document.body.style.width="";
+      window.scrollTo(0,scrollLockY);
+    }
   }
   el.classList.add("hidden");
 }
@@ -1665,8 +1707,8 @@ function renderBiz(){
       color:"var(--amber)",
       goalValue:bizGoal!=null?bizGoal:null,
       minFloor:0,
-      onDotClick:r=>{
-        if(confirm(t("bizDeleteConfirm",r.amount,new Date(r.date).toLocaleDateString(t("dateLocale"))))){
+      onDotClick:async r=>{
+        if(await showConfirmModal(t("bizDeleteConfirm",r.amount,new Date(r.date).toLocaleDateString(t("dateLocale"))),t("confirmModalDeleteBtn"))){
           bizRevenue=bizRevenue.filter(x=>x!==r);save("tracker:bizRevenue",bizRevenue);renderBiz();
         }
       },
@@ -1846,8 +1888,8 @@ function renderWeight(){
       color:"var(--green)",
       goalValue:weightGoal!=null?weightGoal:null,
       goalLabel:weightGoal!=null?`${t("weightGoal")} (${weightGoal}kg)`:null,
-      onDotClick:w=>{
-        if(confirm(t("weightDeleteConfirm",w.kg,new Date(w.date).toLocaleDateString(t("dateLocale"))))){
+      onDotClick:async w=>{
+        if(await showConfirmModal(t("weightDeleteConfirm",w.kg,new Date(w.date).toLocaleDateString(t("dateLocale"))),t("confirmModalDeleteBtn"))){
           weights=weights.filter(x=>x!==w);save("tracker:weights",weights);maybeUpdateCalorieGoal();renderWeight();renderCalories();
         }
       },
@@ -1971,8 +2013,8 @@ function openPhotoView(idx,photos,onDelete){
   document.getElementById("photoViewDate").textContent=new Date(p.date).toLocaleDateString(t("dateLocale"),{day:"numeric",month:"long",year:"numeric"});
   const delBtn=document.getElementById("photoDeleteBtn");
   delBtn.textContent=t("photoDeleteBtn");
-  delBtn.onclick=()=>{
-    if(!confirm(t("photoDeleteConfirm")))return;
+  delBtn.onclick=async()=>{
+    if(!(await showConfirmModal(t("photoDeleteConfirm"),t("confirmModalDeleteBtn"))))return;
     if(onDelete){
       onDelete(idx);
     }else{
@@ -1988,13 +2030,13 @@ function openPhotoView(idx,photos,onDelete){
 function closePhotoView(){hideSheet("photoViewSheet");}
 document.getElementById("photoViewCloseBtn").onclick=closePhotoView;
 document.getElementById("photoViewSheet").addEventListener("click",e=>{if(e.target.id==="photoViewSheet")closePhotoView();});
-document.getElementById("photoAddBtn").onclick=()=>{
+document.getElementById("photoAddBtn").onclick=async()=>{
   // One photo per calendar month — this is meant to track real month-over-
   // month change, not become a daily gallery. An existing same-month entry
   // can still be replaced (mistakes/retakes happen), just not stacked.
   const thisMonth=today().slice(0,7);
   const existing=progressPhotos.find(p=>p.date.slice(0,7)===thisMonth);
-  if(existing&&!confirm(t("progressPhotoMonthlyConfirm",new Date(existing.date).toLocaleDateString(t("dateLocale"),{day:"numeric",month:"long"}))))return;
+  if(existing&&!(await showConfirmModal(t("progressPhotoMonthlyConfirm",new Date(existing.date).toLocaleDateString(t("dateLocale"),{day:"numeric",month:"long"})))))return;
   document.getElementById("photoInput").click();
 };
 document.getElementById("photoInput").addEventListener("change",e=>{
@@ -2121,10 +2163,10 @@ function renderReading(){
       </div>
     `;}).join("");
     archiveEl.querySelectorAll(".book-archive-item").forEach(el=>{
-      el.onclick=()=>{
+      el.onclick=async()=>{
         const idx=+el.dataset.idx;
         const b=booksArchive[idx];
-        if(confirm(t("archiveDeleteConfirm",b.title))){
+        if(await showConfirmModal(t("archiveDeleteConfirm",b.title),t("confirmModalDeleteBtn"))){
           booksArchive=booksArchive.filter((_,i)=>i!==idx);
           save("tracker:booksArchive",booksArchive);
           renderReading();
@@ -2303,8 +2345,8 @@ function renderFoodLog(){
     const row=document.createElement("div");
     row.className="food-log-item";
     row.innerHTML=`<span class="food-log-item-desc">${it.description}</span><span class="food-log-item-kcal">${it.kcal} kcal</span>`;
-    row.onclick=()=>{
-      if(!confirm(t("foodLogDeleteConfirm",it.description)))return;
+    row.onclick=async()=>{
+      if(!(await showConfirmModal(t("foodLogDeleteConfirm",it.description),t("confirmModalDeleteBtn"))))return;
       saveCalories(dateKey,loadCalories(dateKey).filter(x=>x.id!==it.id));
       renderFoodLog();renderCalories();
     };
@@ -2409,8 +2451,8 @@ function openTaskDetail(tk){
   if(tk.id==="ecom"&&isViewingToday()&&ecomSprintDay<=4){
     const advBtn=document.getElementById("ecomSprintAdvanceBtn");
     advBtn.textContent=ecomSprintDay<4?t("ecomSprintAdvanceBtn",ecomSprintDay+1):t("ecomSprintFinishBtn");
-    advBtn.onclick=()=>{
-      if(!confirm(t("ecomSprintAdvanceConfirm")))return;
+    advBtn.onclick=async()=>{
+      if(!(await showConfirmModal(t("ecomSprintAdvanceConfirm"))))return;
       ecomSprintDay=Math.min(ecomSprintDay+1,5);
       save("tracker:ecomSprintDay",ecomSprintDay);
       renderTasks();
@@ -2423,8 +2465,8 @@ function openTaskDetail(tk){
   renderTaskPhotoGallery(tk);
   const delBtn=document.getElementById("taskDetailDeleteBtn");
   delBtn.textContent=t("taskDetailDelete");
-  delBtn.onclick=()=>{
-    if(!confirm(t("taskDetailDeleteConfirm",taskDisplayLabel(tk))))return;
+  delBtn.onclick=async()=>{
+    if(!(await showConfirmModal(t("taskDetailDeleteConfirm",taskDisplayLabel(tk)),t("confirmModalDeleteBtn"))))return;
     tasks=tasks.filter(x=>x.id!==tk.id);
     save("tracker:template",tasks);
     renderTasks();renderScore();
@@ -3072,9 +3114,9 @@ function scheduleAiPageEstimate(){
     }catch(e){}
   },900);
 }
-document.getElementById("finishBtn").onclick=()=>{
+document.getElementById("finishBtn").onclick=async()=>{
   if(!reading.book)return;
-  if(!confirm(t("finishBookConfirm",reading.book,reading.chapters,reading.totalChapters)))return;
+  if(!(await showConfirmModal(t("finishBookConfirm",reading.book,reading.chapters,reading.totalChapters))))return;
   booksArchive.push({title:reading.book,coverPhoto:reading.coverPhoto,chapters:reading.chapters,totalChapters:reading.totalChapters,pageCount:reading.pageCount,finishedDate:today()});
   save("tracker:booksArchive",booksArchive);
   reading={book:"",chapters:0,totalChapters:null,coverPhoto:null,startDate:null,pageCount:null,currentPage:null,author:null};
