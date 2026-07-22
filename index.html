@@ -27,7 +27,7 @@
   .display{font-family:'Quicksand',ui-sans-serif,system-ui,sans-serif}
   body{min-height:100vh}
   .app{max-width:460px;margin:0 auto}
-  .view{display:none;padding:calc(env(safe-area-inset-top) + 20px) 16px calc(100px + env(safe-area-inset-bottom))}
+  .view{display:none;padding:calc(env(safe-area-inset-top) + 20px) 16px calc(160px + env(safe-area-inset-bottom))}
   .view.active{display:block}
   #view-settings.active{display:flex;flex-direction:column;justify-content:center;min-height:100vh}
   .head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
@@ -78,6 +78,15 @@
   .period-picker{display:flex;gap:6px}
   .period-opt{flex:1;background:var(--cardHi);border:1px solid var(--border);border-radius:10px;padding:8px;font-size:16px;cursor:pointer;line-height:1;color:var(--muted);font-family:inherit}
   .period-opt.active{border-color:var(--green);background:var(--green);color:#fff}
+  .time-trigger-row{display:flex;align-items:center;justify-content:space-between}
+  .time-trigger-btn{display:flex;align-items:center;gap:8px;background:var(--cardHi);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:15px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit}
+  .time-trigger-btn.has-value{border-color:var(--green);color:var(--green)}
+  .time-trigger-icon{font-size:14px}
+  .time-wheels{display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0 22px}
+  .time-wheel-sep{font-size:22px;font-weight:700;color:var(--text)}
+  .time-wheel{height:180px;width:76px;overflow-y:auto;background:var(--cardHi);border-radius:12px;padding:6px 0;scroll-behavior:smooth}
+  .time-wheel-item{padding:11px 0;text-align:center;font-size:17px;color:var(--muted);cursor:pointer;border-radius:8px;margin:0 4px}
+  .time-wheel-item.active{background:var(--green);color:#fff;font-weight:700}
   .task-tabs{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .task-tabs::-webkit-scrollbar{display:none}
   .task-tab{flex:0 0 auto;background:var(--cardHi);border:1px solid var(--border);border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;white-space:nowrap}
@@ -96,18 +105,19 @@
   .check{position:relative;width:24px;height:24px;border-radius:8px;flex-shrink:0;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;transition:all .15s}
   .task.done .check{background:var(--green);border-color:var(--green)}
   .check.missed{border-color:var(--red)}
-  .missed-hint{display:block;font-size:10px;font-weight:700;color:var(--red);margin-top:1px}
+  .missed-hint{font-size:10px;font-weight:700;color:var(--red);margin-top:1px;flex-basis:100%}
   .check svg{opacity:0;transition:opacity .15s}
   .task.done .check svg{opacity:1}
   @keyframes checkRipple{0%{transform:scale(.6);opacity:.6}100%{transform:scale(2.6);opacity:0}}
   .check-ripple{position:absolute;inset:0;border-radius:8px;background:var(--green);animation:checkRipple .55s ease-out forwards;pointer-events:none}
   @keyframes pillPop{0%{transform:scale(1)}45%{transform:scale(1.22)}100%{transform:scale(1)}}
   .chapter-pill-count.pop{animation:pillPop .32s cubic-bezier(.34,1.56,.64,1)}
-  .task-label{font-size:14px;flex:1;min-width:0}
-  .task-time{color:var(--muted);font-size:11px;font-weight:600;margin-left:6px;white-space:nowrap}
-  .task.done .task-label{color:var(--muted);text-decoration:line-through}
+  .task-label{font-size:14px;flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px}
+  .task-label-text{}
+  .task-time{color:var(--muted);font-size:11px;font-weight:600;white-space:nowrap;background:var(--cardHi);padding:2px 8px;border-radius:20px}
+  .task.done .task-label-text{color:var(--muted);text-decoration:line-through}
   .del{background:#fdecea;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--red);width:32px;height:32px;border-radius:50%;flex-shrink:0;font-size:14px}
-  .btn-link{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:4px;font-family:inherit}
+  .btn-link{background:var(--cardHi);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;padding:8px 18px;border-radius:20px;font-family:inherit}
   .row{display:flex;gap:8px}
   input{flex:1;background:var(--cardHi);border:1px solid transparent;border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit;width:100%}
   input:focus{border-color:var(--green);background:#fff}
@@ -658,9 +668,12 @@
       <button type="button" class="period-opt active" data-period="day"><span id="periodDayBtn"></span></button>
       <button type="button" class="period-opt" data-period="evening"><span id="periodEveningBtn"></span></button>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-      <span id="addTaskTimeLbl" style="color:var(--muted);font-size:12px;flex:none"></span>
-      <input type="time" id="newTaskTime" style="flex:none;width:auto" />
+    <div class="time-trigger-row" style="margin-bottom:16px">
+      <span id="addTaskTimeLbl" style="color:var(--muted);font-size:12px"></span>
+      <button type="button" class="time-trigger-btn" id="newTaskTimeBtn">
+        <span class="time-trigger-icon">🕐</span>
+        <span id="newTaskTimeBtnLbl"></span>
+      </button>
     </div>
     <div class="period-picker category-picker-scroll" id="categoryPicker" style="margin-bottom:14px"></div>
     <div class="toggle-row" style="margin-bottom:20px">
@@ -673,6 +686,21 @@
     <div class="task-detail-actions">
       <button class="btn btn-ghost" id="addTaskCancelBtn" style="flex:1"></button>
       <button class="btn btn-amber" id="addBtn" style="flex:1"></button>
+    </div>
+  </div>
+</div>
+
+<div class="celebration hidden" id="timePickerSheet">
+  <div class="task-detail-card">
+    <div class="task-detail-label" id="timePickerTitle"></div>
+    <div class="time-wheels">
+      <div class="time-wheel" id="hourWheel"></div>
+      <div class="time-wheel-sep">:</div>
+      <div class="time-wheel" id="minuteWheel"></div>
+    </div>
+    <div class="task-detail-actions">
+      <button class="btn btn-ghost" id="timePickerClearBtn" style="flex:1"></button>
+      <button class="btn btn-amber" id="timePickerConfirmBtn" style="flex:1"></button>
     </div>
   </div>
 </div>
@@ -732,6 +760,7 @@ const STRINGS = {
     heatmapTitle:"Activité", heatmapSub:"Un carré = un jour. Plus foncé = plus de tâches cochées ce jour-là. 16 dernières semaines.", legendLess:"Moins", legendMore:"Plus",
     tasksTitle:"Tâches du jour", editBtn:"Modifier", editBtnDone:"Terminé",
     newTaskPlaceholder:"Nouvelle tâche…", addTaskTitle:"Nouvelle tâche", addTaskCancelBtn:"Annuler", addTaskConfirmBtn:"Ajouter", addTaskTimeLbl:"Heure (optionnel)",
+    newTaskTimeBtnPlaceholder:"Aucune heure", timePickerTitle:"Choisir une heure", timePickerClearBtn:"Effacer", timePickerConfirmBtn:"Valider",
     addCategoryTitle:"Nouvelle catégorie", newCategoryPlaceholder:"Nom (ex : Sport, Études)…", addCategoryCancelBtn:"Annuler", addCategoryConfirmBtn:"Ajouter",
     addTaskPhotoLbl:"Avec photo à chaque fois", taskPhotoAddBtn:"Ajouter une photo", taskPhotoGalleryEmpty:"Aucune photo pour l'instant.",
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
@@ -835,11 +864,11 @@ const STRINGS = {
     ecomSprintFinishBtn:"✅ J4 terminé → passer en phase de test",
     gymSplitLbl:["PUSH","PULL","JAMBES","UPPER","LOWER + abdos","Repos","Repos"],
     gymDetail:[
-      "💪 PUSH — Pec / Épaules / Triceps\n\n1. Développé couché haltères — 4×8-10\n   → Couché sur le dos, descends les haltères jusqu'à la poitrine, pousse en explosif\n2. Développé incliné haltères — 3×10\n   → Banc (ou dossier de chaise) à 30-45°, travaille le haut de la poitrine, descends lentement\n3. Développé militaire (épaules) — 3×10\n   → Debout ou assis, pousse les haltères au-dessus de la tête, coudes à 90° en bas\n4. Élévations latérales — 3×15\n   → Bras tendus sur les côtés, monte jusqu'à l'horizontal, descends lentement\n5. Extensions triceps — 3×12\n   → Haltère au-dessus de la tête, descends derrière la nuque, coudes fixes\n\n⏱️ Repos 90 sec. Charge progressive : vise à ajouter un peu chaque semaine.\n🥤 Shake whey juste après.",
-      "💪 PULL — Dos / Biceps\n\n1. Tractions ou rowing barre — 4×8\n   → Tractions : barre fixe, tirer jusqu'au menton. Sinon rowing penché à 45°\n2. Rowing haltère unilatéral — 4×10\n   → Genou et main sur une chaise/banc, tire l'haltère vers la hanche, coude collé au corps\n3. Tirage / face pull élastique — 3×15\n   → Élastique fixé en hauteur, tire vers le ventre ou le visage en serrant les omoplates\n4. Curl biceps haltères — 3×12\n   → Coudes fixes contre le corps, monte lentement, descends encore plus lentement\n5. Curl marteau — 3×12\n   → Prise marteau (paumes face à face), coudes fixes, monte et descends contrôlé\n\n⏱️ Repos 90 sec. Serre bien les omoplates sur le tirage.\n🥤 Shake whey juste après.",
-      "💪 JAMBES — Quadris / Ischios / Fessiers / Mollets\n\n1. Squats — 4×10\n   → Pieds largeur épaules, descends cuisses parallèles au sol, dos droit, genoux dans l'axe des pieds\n2. Fentes marchées — 3×12 / jambe\n   → Grand pas en avant, genou arrière proche du sol, alterne en avançant\n3. Soulevé de terre jambes tendues — 4×10\n   → Haltères devant les cuisses, penche le buste dos droit, sens l'étirement des ischio\n4. Hip thrust — 3×12\n   → Dos sur le bord d'une chaise, monte les fesses en serrant fort en haut, descends lentement\n5. Mollets debout — 4×20\n   → Sur une marche ou au sol, monte sur la pointe des pieds, tiens 1 sec en haut\n\n⏱️ Repos 2 min sur les squats, 90 sec le reste. Les jambes = grosse prise de masse globale.\n🥤 Shake whey juste après.",
-      "💪 UPPER — Haut du corps complet\n\n1. Développé incliné haltères — 4×10\n   → Banc (ou dossier de chaise) à 30-45°, descends lentement\n2. Rowing haltères — 4×10\n   → Penché à 45°, tire les haltères vers le ventre, coudes collés au corps\n3. Développé militaire — 3×10\n   → Debout ou assis, pousse les haltères au-dessus de la tête\n4. Curl biceps — 3×12\n   → Coudes fixes contre le corps, monte lentement, descends encore plus lentement\n5. Extensions triceps — 3×12\n   → Haltère au-dessus de la tête, descends derrière la nuque, coudes fixes\n\n⏱️ Repos 90 sec. Deuxième passage sur le haut du corps dans la semaine = plus de volume = plus de muscle.\n🥤 Shake whey juste après.",
-      "💪 LOWER + ABDOS — Bas du corps & gainage\n\n1. Squats bulgares — 4×10 / jambe\n   → Pied arrière sur une chaise, descends buste droit, genou avant ne dépasse pas le pied\n2. Hip thrust — 4×12\n   → Dos sur le bord d'une chaise, monte les fesses en serrant fort en haut\n3. Soulevé de terre jambes tendues — 3×12\n   → Haltères devant les cuisses, penche le buste dos droit\n4. Mollets debout — 4×20\n   → Sur une marche ou au sol, monte sur la pointe des pieds\n5. Gainage (planche) — 3×45 sec + relevés de jambes 3×15\n   → Planche : corps aligné, gainage serré. Relevés : allongé, jambes tendues, sans cambrer le dos\n\n⏱️ Repos 90 sec. Dernière séance de la semaine — donne tout, puis repos bien mérité.\n🥤 Shake whey juste après.",
+      "Pec / Épaules / Triceps\n\n1. Développé couché haltères — 4×8-10\n   → Couché sur le dos, descends les haltères jusqu'à la poitrine, pousse en explosif\n\n2. Développé incliné haltères — 3×10\n   → Banc (ou dossier de chaise) à 30-45°, travaille le haut de la poitrine, descends lentement\n\n3. Développé militaire (épaules) — 3×10\n   → Debout ou assis, pousse les haltères au-dessus de la tête, coudes à 90° en bas\n\n4. Élévations latérales — 3×15\n   → Bras tendus sur les côtés, monte jusqu'à l'horizontal, descends lentement\n\n5. Extensions triceps — 3×12\n   → Haltère au-dessus de la tête, descends derrière la nuque, coudes fixes\n\n⏱️ Repos 90 sec. Charge progressive : vise à ajouter un peu chaque semaine.\n🥤 Shake whey juste après.",
+      "Dos / Biceps\n\n1. Tractions ou rowing barre — 4×8\n   → Tractions : barre fixe, tirer jusqu'au menton. Sinon rowing penché à 45°\n\n2. Rowing haltère unilatéral — 4×10\n   → Genou et main sur une chaise/banc, tire l'haltère vers la hanche, coude collé au corps\n\n3. Tirage / face pull élastique — 3×15\n   → Élastique fixé en hauteur, tire vers le ventre ou le visage en serrant les omoplates\n\n4. Curl biceps haltères — 3×12\n   → Coudes fixes contre le corps, monte lentement, descends encore plus lentement\n\n5. Curl marteau — 3×12\n   → Prise marteau (paumes face à face), coudes fixes, monte et descends contrôlé\n\n⏱️ Repos 90 sec. Serre bien les omoplates sur le tirage.\n🥤 Shake whey juste après.",
+      "Quadris / Ischios / Fessiers / Mollets\n\n1. Squats — 4×10\n   → Pieds largeur épaules, descends cuisses parallèles au sol, dos droit, genoux dans l'axe des pieds\n\n2. Fentes marchées — 3×12 / jambe\n   → Grand pas en avant, genou arrière proche du sol, alterne en avançant\n\n3. Soulevé de terre jambes tendues — 4×10\n   → Haltères devant les cuisses, penche le buste dos droit, sens l'étirement des ischio\n\n4. Hip thrust — 3×12\n   → Dos sur le bord d'une chaise, monte les fesses en serrant fort en haut, descends lentement\n\n5. Mollets debout — 4×20\n   → Sur une marche ou au sol, monte sur la pointe des pieds, tiens 1 sec en haut\n\n⏱️ Repos 2 min sur les squats, 90 sec le reste. Les jambes = grosse prise de masse globale.\n🥤 Shake whey juste après.",
+      "Haut du corps complet\n\n1. Développé incliné haltères — 4×10\n   → Banc (ou dossier de chaise) à 30-45°, descends lentement\n\n2. Rowing haltères — 4×10\n   → Penché à 45°, tire les haltères vers le ventre, coudes collés au corps\n\n3. Développé militaire — 3×10\n   → Debout ou assis, pousse les haltères au-dessus de la tête\n\n4. Curl biceps — 3×12\n   → Coudes fixes contre le corps, monte lentement, descends encore plus lentement\n\n5. Extensions triceps — 3×12\n   → Haltère au-dessus de la tête, descends derrière la nuque, coudes fixes\n\n⏱️ Repos 90 sec. Deuxième passage sur le haut du corps dans la semaine = plus de volume = plus de muscle.\n🥤 Shake whey juste après.",
+      "Bas du corps et gainage\n\n1. Squats bulgares — 4×10 / jambe\n   → Pied arrière sur une chaise, descends buste droit, genou avant ne dépasse pas le pied\n\n2. Hip thrust — 4×12\n   → Dos sur le bord d'une chaise, monte les fesses en serrant fort en haut\n\n3. Soulevé de terre jambes tendues — 3×12\n   → Haltères devant les cuisses, penche le buste dos droit\n\n4. Mollets debout — 4×20\n   → Sur une marche ou au sol, monte sur la pointe des pieds\n\n5. Gainage (planche) — 3×45 sec + relevés de jambes 3×15\n   → Planche : corps aligné, gainage serré. Relevés : allongé, jambes tendues, sans cambrer le dos\n\n⏱️ Repos 90 sec. Dernière séance de la semaine — donne tout, puis repos bien mérité.\n🥤 Shake whey juste après.",
       "Repos. Ton corps récupère et se reconstruit — la récup fait partie du programme. Pas de séance aujourd'hui.",
       "Repos. Profite du week-end, la prochaine séance (PUSH) reprend lundi.",
     ],
@@ -882,7 +911,7 @@ const STRINGS = {
       {id:"dinner",label:"🍽️ Dîner",period:"evening",category:"dev"},
       {id:"minoxidilEvening",label:"💇 Soin cheveux — Minoxidil soir",period:"evening",category:"dev"},
       {id:"faceCareEvening",label:"🧴 Soin visage soir",period:"evening",category:"dev"},
-      {id:"screens",label:"🌙 Écrans coupés à 21h30",period:"evening",category:"dev"},
+      {id:"screens",label:"🌙 Écrans coupés",period:"evening",category:"dev"},
     ],
   },
   en: {
@@ -890,6 +919,7 @@ const STRINGS = {
     heatmapTitle:"Activity", heatmapSub:"One square = one day. Darker = more tasks checked that day. Last 16 weeks.", legendLess:"Less", legendMore:"More",
     tasksTitle:"Today's tasks", editBtn:"Edit", editBtnDone:"Done",
     newTaskPlaceholder:"New task…", addTaskTitle:"New task", addTaskCancelBtn:"Cancel", addTaskConfirmBtn:"Add", addTaskTimeLbl:"Time (optional)",
+    newTaskTimeBtnPlaceholder:"No time", timePickerTitle:"Choose a time", timePickerClearBtn:"Clear", timePickerConfirmBtn:"Confirm",
     addCategoryTitle:"New category", newCategoryPlaceholder:"Name (e.g. Sport, Studies)…", addCategoryCancelBtn:"Cancel", addCategoryConfirmBtn:"Add",
     addTaskPhotoLbl:"With a photo each time", taskPhotoAddBtn:"Add a photo", taskPhotoGalleryEmpty:"No photos yet.",
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
@@ -993,11 +1023,11 @@ const STRINGS = {
     ecomSprintFinishBtn:"✅ Day 4 done → move to testing phase",
     gymSplitLbl:["PUSH","PULL","LEGS","UPPER","LOWER + abs","Rest","Rest"],
     gymDetail:[
-      "💪 PUSH — Chest / Shoulders / Triceps\n\n1. Dumbbell bench press — 4×8-10\n   → Lying on your back, lower the dumbbells to your chest, push up explosively\n2. Incline dumbbell press — 3×10\n   → Bench (or chair back) at 30-45°, targets upper chest, lower slowly\n3. Overhead press (shoulders) — 3×10\n   → Standing or seated, push dumbbells overhead, elbows at 90° at the bottom\n4. Lateral raises — 3×15\n   → Arms straight at your sides, raise to horizontal, lower slowly\n5. Triceps extensions — 3×12\n   → Dumbbell overhead, lower behind your head, elbows fixed\n\n⏱️ Rest 90 sec. Progressive overload: aim to add a bit each week.\n🥤 Whey shake right after.",
-      "💪 PULL — Back / Biceps\n\n1. Pull-ups or barbell rows — 4×8\n   → Pull-ups: fixed bar, pull to your chin. Otherwise row bent at 45°\n2. Single-arm dumbbell row — 4×10\n   → Knee and hand on a chair/bench, pull the dumbbell to your hip, elbow close to body\n3. Band pull / face pull — 3×15\n   → Band anchored high, pull toward your belly or face, squeeze shoulder blades\n4. Dumbbell biceps curl — 3×12\n   → Elbows fixed against your body, curl up slowly, lower even slower\n5. Hammer curl — 3×12\n   → Neutral grip (palms facing in), elbows fixed, controlled up and down\n\n⏱️ Rest 90 sec. Squeeze your shoulder blades on the row.\n🥤 Whey shake right after.",
-      "💪 LEGS — Quads / Hamstrings / Glutes / Calves\n\n1. Squats — 4×10\n   → Feet shoulder-width, lower until thighs are parallel to the floor, back straight, knees tracking toes\n2. Walking lunges — 3×12 / leg\n   → Big step forward, back knee close to the ground, alternate legs as you move\n3. Stiff-leg deadlift — 4×10\n   → Dumbbells in front of thighs, hinge forward with a straight back, feel the hamstring stretch\n4. Hip thrust — 3×12\n   → Back against the edge of a chair, drive hips up squeezing hard at the top, lower slowly\n5. Standing calf raises — 4×20\n   → On a step or the floor, rise onto your toes, hold 1 sec at the top\n\n⏱️ Rest 2 min on squats, 90 sec the rest. Legs = biggest overall mass builder.\n🥤 Whey shake right after.",
-      "💪 UPPER — Full upper body\n\n1. Incline dumbbell press — 4×10\n   → Bench (or chair back) at 30-45°, lower slowly\n2. Dumbbell rows — 4×10\n   → Bent at 45°, pull dumbbells to your belly, elbows close to body\n3. Overhead press — 3×10\n   → Standing or seated, push dumbbells overhead\n4. Biceps curl — 3×12\n   → Elbows fixed against your body, curl up slowly, lower even slower\n5. Triceps extensions — 3×12\n   → Dumbbell overhead, lower behind your head, elbows fixed\n\n⏱️ Rest 90 sec. Second upper-body pass this week = more volume = more muscle.\n🥤 Whey shake right after.",
-      "💪 LOWER + ABS — Lower body & core\n\n1. Bulgarian split squats — 4×10 / leg\n   → Back foot on a chair, lower with a straight torso, front knee doesn't pass your toes\n2. Hip thrust — 4×12\n   → Back against the edge of a chair, drive hips up squeezing hard at the top\n3. Stiff-leg deadlift — 3×12\n   → Dumbbells in front of thighs, hinge forward with a straight back\n4. Standing calf raises — 4×20\n   → On a step or the floor, rise onto your toes\n5. Plank — 3×45 sec + leg raises 3×15\n   → Plank: body aligned, core tight. Leg raises: lying down, legs straight, no arching your back\n\n⏱️ Rest 90 sec. Last session of the week — give it everything, then well-earned rest.\n🥤 Whey shake right after.",
+      "Chest / Shoulders / Triceps\n\n1. Dumbbell bench press — 4×8-10\n   → Lying on your back, lower the dumbbells to your chest, push up explosively\n\n2. Incline dumbbell press — 3×10\n   → Bench (or chair back) at 30-45°, targets upper chest, lower slowly\n\n3. Overhead press (shoulders) — 3×10\n   → Standing or seated, push dumbbells overhead, elbows at 90° at the bottom\n\n4. Lateral raises — 3×15\n   → Arms straight at your sides, raise to horizontal, lower slowly\n\n5. Triceps extensions — 3×12\n   → Dumbbell overhead, lower behind your head, elbows fixed\n\n⏱️ Rest 90 sec. Progressive overload: aim to add a bit each week.\n🥤 Whey shake right after.",
+      "Back / Biceps\n\n1. Pull-ups or barbell rows — 4×8\n   → Pull-ups: fixed bar, pull to your chin. Otherwise row bent at 45°\n\n2. Single-arm dumbbell row — 4×10\n   → Knee and hand on a chair/bench, pull the dumbbell to your hip, elbow close to body\n\n3. Band pull / face pull — 3×15\n   → Band anchored high, pull toward your belly or face, squeeze shoulder blades\n\n4. Dumbbell biceps curl — 3×12\n   → Elbows fixed against your body, curl up slowly, lower even slower\n\n5. Hammer curl — 3×12\n   → Neutral grip (palms facing in), elbows fixed, controlled up and down\n\n⏱️ Rest 90 sec. Squeeze your shoulder blades on the row.\n🥤 Whey shake right after.",
+      "Quads / Hamstrings / Glutes / Calves\n\n1. Squats — 4×10\n   → Feet shoulder-width, lower until thighs are parallel to the floor, back straight, knees tracking toes\n\n2. Walking lunges — 3×12 / leg\n   → Big step forward, back knee close to the ground, alternate legs as you move\n\n3. Stiff-leg deadlift — 4×10\n   → Dumbbells in front of thighs, hinge forward with a straight back, feel the hamstring stretch\n\n4. Hip thrust — 3×12\n   → Back against the edge of a chair, drive hips up squeezing hard at the top, lower slowly\n\n5. Standing calf raises — 4×20\n   → On a step or the floor, rise onto your toes, hold 1 sec at the top\n\n⏱️ Rest 2 min on squats, 90 sec the rest. Legs = biggest overall mass builder.\n🥤 Whey shake right after.",
+      "Full upper body\n\n1. Incline dumbbell press — 4×10\n   → Bench (or chair back) at 30-45°, lower slowly\n\n2. Dumbbell rows — 4×10\n   → Bent at 45°, pull dumbbells to your belly, elbows close to body\n\n3. Overhead press — 3×10\n   → Standing or seated, push dumbbells overhead\n\n4. Biceps curl — 3×12\n   → Elbows fixed against your body, curl up slowly, lower even slower\n\n5. Triceps extensions — 3×12\n   → Dumbbell overhead, lower behind your head, elbows fixed\n\n⏱️ Rest 90 sec. Second upper-body pass this week = more volume = more muscle.\n🥤 Whey shake right after.",
+      "Lower body and core\n\n1. Bulgarian split squats — 4×10 / leg\n   → Back foot on a chair, lower with a straight torso, front knee doesn't pass your toes\n\n2. Hip thrust — 4×12\n   → Back against the edge of a chair, drive hips up squeezing hard at the top\n\n3. Stiff-leg deadlift — 3×12\n   → Dumbbells in front of thighs, hinge forward with a straight back\n\n4. Standing calf raises — 4×20\n   → On a step or the floor, rise onto your toes\n\n5. Plank — 3×45 sec + leg raises 3×15\n   → Plank: body aligned, core tight. Leg raises: lying down, legs straight, no arching your back\n\n⏱️ Rest 90 sec. Last session of the week — give it everything, then well-earned rest.\n🥤 Whey shake right after.",
       "Rest. Your body recovers and rebuilds — recovery is part of the program. No session today.",
       "Rest. Enjoy the weekend, next session (PUSH) starts Monday.",
     ],
@@ -1040,7 +1070,7 @@ const STRINGS = {
       {id:"dinner",label:"🍽️ Dinner",period:"evening",category:"dev"},
       {id:"minoxidilEvening",label:"💇 Hair care — Minoxidil evening",period:"evening",category:"dev"},
       {id:"faceCareEvening",label:"🧴 Face care — evening",period:"evening",category:"dev"},
-      {id:"screens",label:"🌙 Screens off at 9:30pm",period:"evening",category:"dev"},
+      {id:"screens",label:"🌙 Screens off",period:"evening",category:"dev"},
     ],
   },
 };
@@ -1297,9 +1327,23 @@ if(!load("tracker:suppsMorningRevertedV3",false)){
 if(!load("tracker:mealsSplitV1",false)){
   tasks=tasks.filter(tk=>tk.id!=="meals");
   ["breakfast","lunch","dinner"].forEach(id=>{
-    if(!tasks.some(tk=>tk.id===id))tasks.push(STRINGS.fr.defaultTasks.find(d=>d.id===id));
+    if(!tasks.some(tk=>tk.id===id))tasks.push({...STRINGS.fr.defaultTasks.find(d=>d.id===id),addedDate:"2026-07-22"});
   });
   save("tracker:mealsSplitV1",true);
+}
+// One-off: breakfast/lunch/dinner (from the split above) and magnesiumMorning
+// (added earlier without a stamp) had no addedDate, so the "missed last
+// time" hint looked back at a day before either existed under its current
+// id — "meals" was tracked under a different id, magnesiumMorning wasn't
+// tracked at all — and always found nothing there, flagging every one of
+// them as missed even on the very first day. Backfill so the hint only
+// starts counting from when the task actually started existing.
+if(!load("tracker:newTaskAddedDateBackfillV1",false)){
+  ["breakfast","lunch","dinner","magnesiumMorning"].forEach(id=>{
+    const tk=tasks.find(t=>t.id===id);
+    if(tk&&!tk.addedDate)tk.addedDate="2026-07-22";
+  });
+  save("tracker:newTaskAddedDateBackfillV1",true);
 }
 // One-off: the calendar-sync content-update pipeline picked up a real
 // calendar event title ("dodo 22h30" — his sleep TARGET, hit an hour after
@@ -1476,6 +1520,10 @@ function applyStaticI18n(){
   document.getElementById("periodDayBtn").textContent=t("periodDay");
   document.getElementById("periodEveningBtn").textContent=t("periodEvening");
   document.getElementById("addTaskTimeLbl").textContent=t("addTaskTimeLbl");
+  document.getElementById("timePickerTitle").textContent=t("timePickerTitle");
+  document.getElementById("timePickerClearBtn").textContent=t("timePickerClearBtn");
+  document.getElementById("timePickerConfirmBtn").textContent=t("timePickerConfirmBtn");
+  refreshTimeTriggerBtnLabel();
   document.getElementById("addTaskCancelBtn").textContent=t("addTaskCancelBtn");
   document.getElementById("addBtn").textContent=t("addTaskConfirmBtn");
   document.getElementById("addCategoryTitle").textContent=t("addCategoryTitle");
@@ -1576,14 +1624,14 @@ function renderTaskRow(tk){
   d.dataset.taskId=tk.id;
   const timeBadge=taskTimeLabel(tk)?`<span class="task-time">${taskTimeLabel(tk)}</span>`:"";
   if(readOnly){
-    d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label">${taskDisplayLabel(tk)}${timeBadge}</span>`;
+    d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label"><span class="task-label-text">${taskDisplayLabel(tk)}</span>${timeBadge}</span>`;
   }else if(editMode){
-    d.innerHTML=`<button class="del">✕</button><span class="task-label">${taskDisplayLabel(tk)}${timeBadge}</span>`;
+    d.innerHTML=`<button class="del">✕</button><span class="task-label"><span class="task-label-text">${taskDisplayLabel(tk)}</span>${timeBadge}</span>`;
     d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==tk.id);save("tracker:template",tasks);renderTasks();renderScore();};
   }else{
     const missed=!viewedDone[tk.id]&&wasTaskMissedRecently(tk);
     const cameraBtn=(MEAL_TASK_IDS.has(tk.id)||tk.hasPhoto)?`<button class="task-camera" type="button" title="${t("foodLogAddBtn")}">${CAMERA_SVG}</button>`:"";
-    d.innerHTML=`<div class="check${missed?" missed":""}">${CHECK_SVG}</div><span class="task-label">${taskDisplayLabel(tk)}${timeBadge}${missed?`<span class="missed-hint">${t("missedHint")}</span>`:""}</span>${cameraBtn}<button class="task-menu" type="button">⋮</button>`;
+    d.innerHTML=`<div class="check${missed?" missed":""}">${CHECK_SVG}</div><span class="task-label"><span class="task-label-text">${taskDisplayLabel(tk)}</span>${timeBadge}${missed?`<span class="missed-hint">${t("missedHint")}</span>`:""}</span>${cameraBtn}<button class="task-menu" type="button">⋮</button>`;
     d.querySelector(".task-menu").onclick=(e)=>{e.stopPropagation();openTaskDetail(tk);};
     if(MEAL_TASK_IDS.has(tk.id)){
       d.querySelector(".task-camera").onclick=(e)=>{
@@ -2755,9 +2803,75 @@ function setNewTaskHasPhoto(v){
   newTaskHasPhoto=v;
   document.getElementById("addTaskPhotoSwitch").setAttribute("aria-checked",v?"true":"false");
 }
+// Custom scroll-wheel time picker for the add-task sheet — a native
+// <input type="time"> pops up completely different-looking OS chrome on
+// every platform (the same reason confirm()/alert() were replaced earlier),
+// so this reuses the app's own sheet/pill visual language instead.
+let newTaskTimeValue=null; // "HH:MM" 24h, or null if unset
+let pickedHour=null,pickedMinute=null; // live picker state while the sheet is open
+function buildTimeWheels(){
+  const hourWheel=document.getElementById("hourWheel");
+  for(let h=0;h<24;h++){
+    const el=document.createElement("div");
+    el.className="time-wheel-item";el.textContent=String(h).padStart(2,"0");
+    el.dataset.hour=h;el.onclick=()=>selectPickerHour(h);
+    hourWheel.appendChild(el);
+  }
+  const minuteWheel=document.getElementById("minuteWheel");
+  for(let m=0;m<60;m+=5){
+    const el=document.createElement("div");
+    el.className="time-wheel-item";el.textContent=String(m).padStart(2,"0");
+    el.dataset.minute=m;el.onclick=()=>selectPickerMinute(m);
+    minuteWheel.appendChild(el);
+  }
+}
+buildTimeWheels();
+function selectPickerHour(h,instant){
+  pickedHour=h;
+  document.querySelectorAll("#hourWheel .time-wheel-item").forEach(el=>el.classList.toggle("active",+el.dataset.hour===h));
+  scrollWheelToActive("hourWheel",instant);
+}
+function selectPickerMinute(m,instant){
+  pickedMinute=m;
+  document.querySelectorAll("#minuteWheel .time-wheel-item").forEach(el=>el.classList.toggle("active",+el.dataset.minute===m));
+  scrollWheelToActive("minuteWheel",instant);
+}
+function scrollWheelToActive(wheelId,instant){
+  const wheel=document.getElementById(wheelId);
+  const active=wheel.querySelector(".time-wheel-item.active");
+  if(active)wheel.scrollTo({top:active.offsetTop-wheel.clientHeight/2+active.offsetHeight/2,behavior:instant?"instant":"smooth"});
+}
+function refreshTimeTriggerBtnLabel(){
+  const lbl=document.getElementById("newTaskTimeBtnLbl");
+  const btn=document.getElementById("newTaskTimeBtn");
+  if(!lbl||!btn)return;
+  if(newTaskTimeValue){lbl.textContent=formatTaskTime(newTaskTimeValue);btn.classList.add("has-value");}
+  else{lbl.textContent=t("newTaskTimeBtnPlaceholder");btn.classList.remove("has-value");}
+}
+function openTimePicker(){
+  let h,m;
+  if(newTaskTimeValue){[h,m]=newTaskTimeValue.split(":").map(Number);}
+  else{
+    const now=new Date();h=now.getHours();m=Math.round(now.getMinutes()/5)*5;
+    if(m===60){m=0;h=(h+1)%24;}
+  }
+  selectPickerHour(h,true);selectPickerMinute(m,true);
+  showSheet("timePickerSheet");
+}
+function closeTimePicker(){hideSheet("timePickerSheet");}
+document.getElementById("newTaskTimeBtn").onclick=openTimePicker;
+document.getElementById("timePickerConfirmBtn").onclick=()=>{
+  if(pickedHour!=null&&pickedMinute!=null)newTaskTimeValue=`${String(pickedHour).padStart(2,"0")}:${String(pickedMinute).padStart(2,"0")}`;
+  refreshTimeTriggerBtnLabel();closeTimePicker();
+};
+document.getElementById("timePickerClearBtn").onclick=()=>{
+  newTaskTimeValue=null;refreshTimeTriggerBtnLabel();closeTimePicker();
+};
+document.getElementById("timePickerSheet").addEventListener("click",(e)=>{if(e.target.id==="timePickerSheet")closeTimePicker();});
+
 function openAddTask(){
   document.getElementById("newTask").value="";
-  document.getElementById("newTaskTime").value="";
+  newTaskTimeValue=null;refreshTimeTriggerBtnLabel();
   setNewTaskHasPhoto(false);
   showSheet("addTaskSheet");
 }
@@ -2786,7 +2900,7 @@ function addTask(){
   const i=document.getElementById("newTask");const v=i.value.trim();if(!v)return;
   const newTk={id:"t"+Date.now(),label:v,period:newTaskPeriod,category:newTaskCategory};
   if(newTaskHasPhoto)newTk.hasPhoto=true;
-  const timeVal=document.getElementById("newTaskTime").value; // "HH:MM" 24h, or "" if unset
+  const timeVal=newTaskTimeValue; // "HH:MM" 24h, or null if unset
   if(timeVal){
     newTk.time=timeVal;
     // Best-effort — only tasks with a time have a clear calendar slot, and
