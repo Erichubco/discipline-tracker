@@ -3115,7 +3115,16 @@ async function syncTaskSuggestions(){
     const existingIds=new Set(tasks.map(tk=>tk.id));
     const applied=[];
     suggestions.forEach(s=>{
-      if(!s.id||!s.label)return;
+      if(!s.id)return;
+      // A calendar habit that got auto-added and later turns out to be
+      // redundant/removed from the calendar needs a way back out, not just
+      // add/update.
+      if(s.remove){
+        applied.push(s.id);
+        tasks=tasks.filter(tk=>tk.id!==s.id);
+        return;
+      }
+      if(!s.label)return;
       applied.push(s.id);
       const incoming={id:s.id,label:s.label,period:s.period||"day",category:s.category==="business"?"business":"dev",days:Array.isArray(s.days)?s.days:null};
       // Calendar-driven content updates to an EXISTING known task (e.g. a
