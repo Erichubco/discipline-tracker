@@ -62,7 +62,7 @@
   .ring-num{font-size:38px;font-weight:700;line-height:1;font-family:'Quicksand',sans-serif;color:var(--green)}
   .ring-den{color:var(--muted);font-size:22px;font-weight:600}
   .ring-lbl{color:var(--muted);font-size:12px;margin-top:4px}
-  .hero-slider-viewport{overflow:hidden;position:relative}
+  .hero-slider-viewport{overflow:hidden;position:relative;touch-action:pan-y}
   .hero-slider-viewport::before,.hero-slider-viewport::after{content:"";position:absolute;top:20%;bottom:20%;width:14px;border-radius:10px;opacity:.5;z-index:0;transition:background .3s}
   .hero-slider-viewport::before{left:-7px;background:var(--peek-prev-color,transparent)}
   .hero-slider-viewport::after{right:-7px;background:var(--peek-next-color,transparent)}
@@ -73,7 +73,7 @@
   .hero-ring-glow{position:absolute;inset:14%;opacity:.22;filter:blur(30px);border-radius:50%}
   .hero-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;animation:float 3s ease-in-out infinite}
   .hero-ring-pill{display:flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
-  .hero-ring-num{font-size:58px;font-weight:800;line-height:1;font-family:'Quicksand',sans-serif;color:var(--text);margin-top:10px}
+  .hero-ring-num{font-size:38px;font-weight:800;line-height:1;font-family:'Quicksand',sans-serif;color:var(--text);margin-top:10px}
   .hero-ring-unit{color:var(--muted);font-size:13px;font-weight:600;margin-top:2px}
   .hero-caption{margin-top:16px;font-size:13px;color:var(--muted);text-align:center;padding:0 20px}
   .hero-panel-label{margin-top:2px;font-size:16px;font-weight:700;color:var(--text)}
@@ -83,8 +83,8 @@
   .consistency-module{padding:0;overflow:hidden}
   .consistency-hero{padding:26px 20px 6px;text-align:center;background:linear-gradient(to bottom,var(--cardHi),transparent)}
   .consistency-streak-row{display:flex;align-items:baseline;justify-content:center;gap:8px}
-  .consistency-streak-num{font-size:60px;font-weight:800;line-height:1;font-family:'Quicksand',sans-serif;color:var(--green);transition:opacity .2s}
-  .consistency-streak-lbl{font-size:15px;font-weight:700;color:var(--green);opacity:.6;text-transform:uppercase;letter-spacing:.02em}
+  .consistency-streak-num{font-size:36px;font-weight:800;line-height:1;font-family:'Quicksand',sans-serif;color:var(--green);transition:opacity .2s}
+  .consistency-streak-lbl{font-size:12px;font-weight:700;color:var(--green);opacity:.6;text-transform:uppercase;letter-spacing:.02em}
   .consistency-score-pill{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:7px 16px;border-radius:20px;background:var(--cardHi);font-size:13px;color:var(--green);border:1px solid var(--border)}
   .consistency-score-pill b{font-weight:800}
   .score-sparkline{width:36px;height:14px;margin-left:2px;opacity:.85}
@@ -136,7 +136,7 @@
   .category-picker-scroll{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .category-picker-scroll::-webkit-scrollbar{display:none}
   .category-picker-scroll .period-opt{flex:0 0 auto;padding:8px 16px;white-space:nowrap}
-  .task-slider-viewport{overflow:hidden}
+  .task-slider-viewport{overflow:hidden;touch-action:pan-y}
   .task-slider{display:flex;transition:transform .32s cubic-bezier(.4,0,.2,1);will-change:transform}
   .task-panel{flex:0 0 100%;min-width:100%}
   .task-panel-empty{color:var(--muted);font-size:13px;text-align:center;padding:24px 0}
@@ -2807,6 +2807,10 @@ heroSliderViewport.addEventListener("touchend",()=>{
   save("tracker:currentHeroIdx",currentHeroIdx);
   heroTouchStartX=null;heroSwipeAxis=null;
 });
+heroSliderViewport.addEventListener("touchcancel",()=>{
+  if(heroSwipeAxis==="x"){heroSlider.style.transition="";goToHeroPanel(currentHeroIdx);}
+  heroTouchStartX=null;heroSwipeAxis=null;
+});
 
 // Guards against a real bug: on a fresh/empty device, the very first renderScore()
 // runs synchronously before the "load" handler below has had a chance to check
@@ -3358,6 +3362,10 @@ taskSliderViewport.addEventListener("touchend",()=>{
   const targetPanel=taskPanelOrder[targetIdx];
   goToTaskPanel(targetPanel);
   setNewTaskCategory(targetPanel==="business"?"business":"dev");
+  touchStartX=null;swipeAxis=null;
+});
+taskSliderViewport.addEventListener("touchcancel",()=>{
+  if(swipeAxis==="x"){taskSlider.style.transition="";goToTaskPanel(taskPanelOrder[currentTaskPanelIdx]);}
   touchStartX=null;swipeAxis=null;
 });
 
