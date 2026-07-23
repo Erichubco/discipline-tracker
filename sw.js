@@ -1,4 +1,4 @@
-const CACHE = "discipline-v98";
+const CACHE = "discipline-v99";
 const ASSETS = ["./", "./index.html", "./manifest.json",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/avatar.png"];
 
@@ -16,8 +16,15 @@ self.addEventListener("activate", e => {
 
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
+  // GitHub Pages serves everything with Cache-Control: max-age=600. A plain
+  // fetch() here respects that and can get silently satisfied from the
+  // browser's own HTTP cache instead of hitting the network — meaning this
+  // "network-first" handler can serve a stale deploy for up to 10+ minutes
+  // (longer in practice for installed iOS PWAs) even right after a fresh
+  // push. cache:"no-store" forces every request to actually go to the
+  // network so updates show up immediately.
   e.respondWith(
-    fetch(e.request).then(res => {
+    fetch(e.request, { cache: "no-store" }).then(res => {
       caches.open(CACHE).then(c => c.put(e.request, res.clone()));
       return res;
     }).catch(() => caches.match(e.request))
