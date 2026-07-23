@@ -162,6 +162,8 @@
   .row{display:flex;gap:8px}
   input{flex:1;background:var(--cardHi);border:1px solid transparent;border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit;width:100%}
   input:focus{border-color:var(--green);background:#fff}
+  .food-log-textarea{background:var(--cardHi);border:1px solid transparent;border-radius:14px;padding:12px 14px;color:var(--text);font-size:14px;outline:none;font-family:inherit;width:100%;resize:none}
+  .food-log-textarea:focus{border-color:var(--green);background:#fff}
   .btn{border:none;border-radius:9999px;cursor:pointer;font-weight:700;font-size:14px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
   .btn,.icon-btn,.period-opt,.task-tab,.chapter-pill-btn,.fab,.del,.task-menu{transition:transform .1s ease}
   .btn:active,.icon-btn:active,.period-opt:active,.task-tab:active,.chapter-pill-btn:active,.fab:active,.del:active,.task-menu:active{transform:scale(.94)}
@@ -233,6 +235,7 @@
   .book-cover-lg:active{transform:scale(.96)}
   .book-cover-lg.has-cover{border-color:transparent}
   .cover-page-badge{position:absolute;left:6px;right:6px;bottom:6px;background:rgba(22,29,31,.68);color:#fff;font-size:10px;font-weight:700;padding:4px 6px;border-radius:7px;text-align:center;font-family:'Plus Jakarta Sans',sans-serif;backdrop-filter:blur(3px)}
+  .cover-pct-badge{position:absolute;bottom:-4px;right:-6px;background:var(--green);color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px;box-shadow:var(--shadow);font-family:'Plus Jakarta Sans',sans-serif;z-index:3}
   .book-cover-lg img{width:100%;height:100%;object-fit:cover}
   .reading-hero-info{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
   .book-title-input{border:none;background:transparent;font-family:'Quicksand',sans-serif;font-size:13px;font-weight:700;color:var(--text);padding:0;width:100%;letter-spacing:-.01em}
@@ -562,6 +565,7 @@
             <span id="coverPlaceholder"></span>
             <div class="cover-page-badge hidden" id="coverPageBadge"></div>
           </button>
+          <div class="cover-pct-badge hidden" id="coverPctBadge"></div>
         </div>
         <input type="file" accept="image/*" capture="environment" id="coverInput" class="hidden" />
         <div class="reading-hero-info">
@@ -579,6 +583,7 @@
               <button class="chapter-pill-btn chapter-pill-btn-primary" id="chapBtn" type="button">+</button>
             </div>
           </div>
+          <div class="sub hidden" id="readingStreakLine" style="margin-top:2px"></div>
         </div>
       </div>
       <div class="sub hidden" id="bookLookupInfo" style="margin:10px 0 0"></div>
@@ -808,8 +813,18 @@
           <button class="btn btn-amber" id="foodLogClarifyConfirmBtn"></button>
         </div>
       </div>
-      <div class="food-log-add-btn" id="foodLogAddBtn"></div>
-      <input type="file" accept="image/*" capture="environment" class="hidden" id="foodLogInput">
+      <div class="period-picker" id="foodLogTabs" style="margin-bottom:12px">
+        <button type="button" class="period-opt active" id="foodLogTabPhoto" data-mode="photo"></button>
+        <button type="button" class="period-opt" id="foodLogTabText" data-mode="text"></button>
+      </div>
+      <div id="foodLogModePhoto">
+        <div class="food-log-add-btn" id="foodLogAddBtn"></div>
+        <input type="file" accept="image/*" capture="environment" class="hidden" id="foodLogInput">
+      </div>
+      <div class="hidden" id="foodLogModeText">
+        <textarea id="foodLogTextInput" class="food-log-textarea" rows="3"></textarea>
+        <button type="button" class="btn btn-amber" id="foodLogTextBtn" style="width:100%;margin-top:10px"></button>
+      </div>
       <div class="food-log-approx" id="foodLogApprox"></div>
     </div>
     <div class="hidden" id="ecomSprintSection" style="margin-bottom:16px">
@@ -980,12 +995,16 @@ const STRINGS = {
     pageToChapterHint:n=>`≈ chapitre ${n}`,
     pagesRemaining:n=>`≈ ${n} pages restantes`,
     chaptersLbl:"chapitres lus", chaptersRemaining:n=>`${n} restants`, addChapter:"+", finishBook:"Livre terminé ✓",
+    readingStreakLine:n=>`🔥 Série de lecture : ${n} jour${n>1?"s":""}`,
     paceAllDone:"Tu as fini tous les chapitres — tape Terminé ✓ !",
     bookLookupLoading:"🔍 Identification du livre…",
     bookNotIdentified:"Livre non identifié — tape le titre toi-même.",
     bookClarifyPlaceholder:"Titre du livre…", bookClarifyConfirmBtn:"Valider", bookClarifyCancelBtn:"Passer",
     pageCountBadge:n=>`📄 ${n} pages (Open Library)`,
     foodLogAddBtn:"Ajouter une photo", foodLogLoading:"🔍 Estimation en cours…",
+    foodLogTabPhoto:"📷 Photo", foodLogTabText:"✏️ Décrire",
+    foodLogTextPlaceholder:"Ex : 200g de poulet grillé, riz, salade…", foodLogTextBtn:"Calculer",
+    foodLogTextNotFood:"Texte non reconnu comme un repas — décris ce que tu as mangé.",
     archiveAddTitle:"Livres déjà lus cette année", archiveAddSub:"Prends une photo de la couverture, un par un — pas besoin de suivre leur progression.", archiveAddBtn:"Ajouter un livre", archiveAddLoading:"🔍 Identification…", archiveAddUnidentified:"Livre (non identifié)",
     foodLogClarifyPlaceholder:"Ta réponse…", foodLogClarifyConfirmBtn:"Valider",
     foodLogNotFood:"Photo non reconnue comme un repas — réessaie avec une photo plus claire.",
@@ -1152,12 +1171,16 @@ const STRINGS = {
     pageToChapterHint:n=>`≈ chapter ${n}`,
     pagesRemaining:n=>`≈ ${n} pages left`,
     chaptersLbl:"chapters read", chaptersRemaining:n=>`${n} left`, addChapter:"+", finishBook:"Book finished ✓",
+    readingStreakLine:n=>`🔥 Reading streak: ${n} day${n>1?"s":""}`,
     paceAllDone:"You've finished all the chapters — tap Done ✓!",
     bookLookupLoading:"🔍 Identifying the book…",
     bookNotIdentified:"Book not identified — type the title yourself.",
     bookClarifyPlaceholder:"Book title…", bookClarifyConfirmBtn:"Confirm", bookClarifyCancelBtn:"Skip",
     pageCountBadge:n=>`📄 ${n} pages (Open Library)`,
     foodLogAddBtn:"Add a photo", foodLogLoading:"🔍 Estimating…",
+    foodLogTabPhoto:"📷 Photo", foodLogTabText:"✏️ Describe",
+    foodLogTextPlaceholder:"E.g.: 200g grilled chicken, rice, salad…", foodLogTextBtn:"Calculate",
+    foodLogTextNotFood:"Text not recognized as food — describe what you ate.",
     archiveAddTitle:"Books already read this year", archiveAddSub:"Take a photo of the cover, one at a time — no need to track their progress.", archiveAddBtn:"Add a book", archiveAddLoading:"🔍 Identifying…", archiveAddUnidentified:"Book (not identified)",
     foodLogClarifyPlaceholder:"Your answer…", foodLogClarifyConfirmBtn:"Confirm",
     foodLogNotFood:"Photo not recognized as a meal — try again with a clearer photo.",
@@ -2493,6 +2516,18 @@ function renderReading(){
   const booksThisYearCount=booksArchive.filter(b=>new Date(b.finishedDate).getFullYear()===thisYear).length;
   document.getElementById("booksSub").textContent=t("booksThisYear",booksThisYearCount);
   document.getElementById("chapCount").textContent=reading.chapters;
+  let readingStreak=0;
+  for(let d=new Date();;d.setDate(d.getDate()-1)){
+    if(!(pagesReadLog[keyFor(d)]>0))break;
+    readingStreak++;
+  }
+  const readingStreakEl=document.getElementById("readingStreakLine");
+  if(readingStreak>0){
+    readingStreakEl.textContent=t("readingStreakLine",readingStreak);
+    readingStreakEl.classList.remove("hidden");
+  }else{
+    readingStreakEl.classList.add("hidden");
+  }
   const bookInputEl=document.getElementById("bookInput");
   const bookDisplayEl=document.getElementById("bookTitleDisplay");
   bookInputEl.value=reading.book||"";
@@ -2527,6 +2562,13 @@ function renderReading(){
   ringProgressEl.style.strokeDasharray=ringLen;
   ringProgressEl.style.strokeDashoffset=ringLen*(1-ringPct);
   ringProgressEl.style.stroke=ringPct>=1?"var(--green)":"var(--amber)";
+  const pctBadgeEl=document.getElementById("coverPctBadge");
+  if(reading.totalChapters){
+    pctBadgeEl.textContent=Math.round(ringPct*100)+"%";
+    pctBadgeEl.classList.remove("hidden");
+  }else{
+    pctBadgeEl.classList.add("hidden");
+  }
 
   const pageRow=document.getElementById("currentPageRow");
   const currentPageInputEl=document.getElementById("currentPageInput");
@@ -3077,6 +3119,39 @@ document.getElementById("foodLogInput").addEventListener("change",e=>{
   reader.readAsDataURL(file);
   e.target.value="";
 });
+function setFoodLogMode(mode){
+  document.getElementById("foodLogTabPhoto").classList.toggle("active",mode==="photo");
+  document.getElementById("foodLogTabText").classList.toggle("active",mode==="text");
+  document.getElementById("foodLogModePhoto").classList.toggle("hidden",mode!=="photo");
+  document.getElementById("foodLogModeText").classList.toggle("hidden",mode!=="text");
+}
+document.querySelectorAll("#foodLogTabs .period-opt").forEach(btn=>{
+  btn.onclick=()=>setFoodLogMode(btn.dataset.mode);
+});
+async function estimateFoodFromText(){
+  const input=document.getElementById("foodLogTextInput");
+  const description=input.value.trim();
+  if(!description)return;
+  const loadingEl=document.getElementById("foodLogLoading");
+  loadingEl.textContent=t("foodLogLoading");
+  loadingEl.classList.remove("hidden");
+  document.getElementById("foodLogModeText").classList.add("hidden");
+  try{
+    const res=await apiFetch("/food-lookup-text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({description})});
+    const data=await res.json();
+    if(data.description&&data.kcal){
+      logFoodItem(data.description,data.kcal);
+      input.value="";
+    }else{
+      alert(t("foodLogTextNotFood"));
+    }
+  }catch(e){
+    alert(t("foodLogTextNotFood"));
+  }
+  loadingEl.classList.add("hidden");
+  document.getElementById("foodLogModeText").classList.remove("hidden");
+}
+document.getElementById("foodLogTextBtn").onclick=estimateFoodFromText;
 
 function closeTaskDetail(){hideSheet("taskDetailSheet");}
 function openTaskDetail(tk){
@@ -3092,6 +3167,12 @@ function openTaskDetail(tk){
     document.getElementById("foodLogClarifyConfirmBtn").textContent=t("foodLogClarifyConfirmBtn");
     document.getElementById("foodLogClarifyInput").placeholder=t("foodLogClarifyPlaceholder");
     document.getElementById("foodLogClarifyAsk").classList.add("hidden");
+    document.getElementById("foodLogTabPhoto").textContent=t("foodLogTabPhoto");
+    document.getElementById("foodLogTabText").textContent=t("foodLogTabText");
+    document.getElementById("foodLogTextInput").placeholder=t("foodLogTextPlaceholder");
+    document.getElementById("foodLogTextInput").value="";
+    document.getElementById("foodLogTextBtn").textContent=t("foodLogTextBtn");
+    setFoodLogMode("photo");
     pendingFoodPhoto=null;
     renderFoodLog();
     foodSection.classList.remove("hidden");
