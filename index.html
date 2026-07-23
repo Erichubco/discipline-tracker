@@ -73,10 +73,9 @@
   .hero-ring-glow{position:absolute;inset:14%;opacity:.22;filter:blur(30px);border-radius:50%}
   .hero-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;animation:float 3s ease-in-out infinite}
   .hero-ring-pill{display:flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
-  .hero-ring-num{font-size:52px;font-weight:800;line-height:1;font-family:'Quicksand',sans-serif;color:var(--text);margin-top:10px}
+  .hero-ring-num{font-size:58px;font-weight:800;line-height:1;font-family:'Quicksand',sans-serif;color:var(--text);margin-top:10px}
   .hero-ring-unit{color:var(--muted);font-size:13px;font-weight:600;margin-top:2px}
-  .hero-pct-badge{position:absolute;top:6px;right:6px;z-index:3;background:#fff;border-radius:14px;padding:5px 11px;font-size:13px;font-weight:800;box-shadow:var(--shadow);display:flex;align-items:center;gap:3px}
-  .hero-caption{margin-top:16px;font-size:13px;color:var(--muted);text-align:center}
+  .hero-caption{margin-top:16px;font-size:13px;color:var(--muted);text-align:center;padding:0 20px}
   .hero-panel-label{margin-top:2px;font-size:16px;font-weight:700;color:var(--text)}
   .hero-dots{display:flex;justify-content:center;gap:8px;margin-top:18px}
   .hero-dot{width:8px;height:8px;border-radius:50%;background:var(--border);border:none;padding:0;cursor:pointer;transition:width .25s,background .25s}
@@ -84,10 +83,11 @@
   .consistency-module{padding:0;overflow:hidden}
   .consistency-hero{padding:26px 20px 6px;text-align:center;background:linear-gradient(to bottom,var(--cardHi),transparent)}
   .consistency-streak-row{display:flex;align-items:baseline;justify-content:center;gap:8px}
-  .consistency-streak-num{font-size:52px;font-weight:800;line-height:1;font-family:'Quicksand',sans-serif;color:var(--green)}
+  .consistency-streak-num{font-size:60px;font-weight:800;line-height:1;font-family:'Quicksand',sans-serif;color:var(--green);transition:opacity .2s}
   .consistency-streak-lbl{font-size:15px;font-weight:700;color:var(--green);opacity:.6;text-transform:uppercase;letter-spacing:.02em}
-  .consistency-score-pill{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:7px 16px;border-radius:20px;background:var(--cardHi);font-size:13px;color:var(--green)}
+  .consistency-score-pill{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:7px 16px;border-radius:20px;background:var(--cardHi);font-size:13px;color:var(--green);border:1px solid var(--border)}
   .consistency-score-pill b{font-weight:800}
+  .score-sparkline{width:36px;height:14px;margin-left:2px;opacity:.85}
   .consistency-module .period-picker{padding:0 20px;margin:16px 0 0}
   .consistency-category{margin-top:8px;border-top:1px solid var(--border)}
   .consistency-category-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:none;border:none;cursor:pointer;font-family:inherit}
@@ -398,6 +398,7 @@
         </div>
         <div class="consistency-score-pill">
           📈&nbsp;<b id="unifiedScorePct">0%</b>&nbsp;<span id="unifiedScoreLbl">score de consistance</span>
+          <svg class="score-sparkline" id="scoreSparkline" viewBox="0 0 40 16"><path id="scoreSparklinePath" fill="none" stroke="#FF7E67" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </div>
       <div class="period-picker" id="consistencyPeriodPicker">
@@ -415,7 +416,6 @@
                 <circle cx="105" cy="105" r="90" fill="none" stroke="var(--cardHi)" stroke-width="15"/>
                 <circle id="heroRingGym" cx="105" cy="105" r="90" fill="none" stroke="#FF7E67" stroke-width="15" stroke-linecap="round" style="transition:stroke-dashoffset .6s ease"/>
               </svg>
-              <div class="hero-pct-badge" id="heroPctBadgeGym" style="color:#FF7E67">80%</div>
               <div class="hero-ring-center">
                 <div class="hero-ring-pill" style="background:#fff0ec;color:#e0603f">💪 <span id="heroLblGym">Muscu</span></div>
                 <div class="hero-ring-num" id="heroPctGym">0</div>
@@ -431,7 +431,6 @@
                 <circle cx="105" cy="105" r="90" fill="none" stroke="var(--cardHi)" stroke-width="15"/>
                 <circle id="heroRingMeals" cx="105" cy="105" r="90" fill="none" stroke="#45B69C" stroke-width="15" stroke-linecap="round" style="transition:stroke-dashoffset .6s ease"/>
               </svg>
-              <div class="hero-pct-badge" id="heroPctBadgeMeals" style="color:#45B69C">80%</div>
               <div class="hero-ring-center">
                 <div class="hero-ring-pill" style="background:#e6fbf5;color:#00966f">🍽️ <span id="heroLblMeals">Repas complets</span></div>
                 <div class="hero-ring-num" id="heroPctMeals">0</div>
@@ -447,7 +446,6 @@
                 <circle cx="105" cy="105" r="90" fill="none" stroke="var(--cardHi)" stroke-width="15"/>
                 <circle id="heroRingReading" cx="105" cy="105" r="90" fill="none" stroke="#F9C74F" stroke-width="15" stroke-linecap="round" style="transition:stroke-dashoffset .6s ease"/>
               </svg>
-              <div class="hero-pct-badge" id="heroPctBadgeReading" style="color:#d68910">80%</div>
               <div class="hero-ring-center">
                 <div class="hero-ring-pill" style="background:#fef6e7;color:#b9770e">📖 <span id="heroLblReading">Pages lues</span></div>
                 <div class="hero-ring-num" id="heroPctReading">0</div>
@@ -874,7 +872,8 @@ const STRINGS = {
     consistencyShowDetailBtn:"Voir le détail complet", consistencyHideDetailBtn:"Masquer le détail",
     daysActiveUnit:"j actifs",
     unifiedStreakLbl:"jours de suite", unifiedScoreLbl:"score de consistance", byCategoryLbl:"Par catégorie",
-    insightTrendUp:n=>`Consistance en hausse de ${n}%`, insightTrendDown:n=>`Consistance en baisse de ${n}%`, insightTrendStable:()=>"Consistance stable",
+    insightTrendUp:(n,d)=>`En hausse de ${n}% vs les ${d} jours précédents`, insightTrendDown:(n,d)=>`En baisse de ${n}% vs les ${d} jours précédents`, insightTrendStable:(n,d)=>`Stable vs les ${d} jours précédents`,
+    habitCaption:(done,scheduled)=>`${done} jour${done>1?"s":""} sur ${scheduled} prévu${scheduled>1?"s":""}`,
     insightBestDay:d=>`Tu es le plus actif le ${d}.`,
     dayNamesFull:["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"],
     streakHint:"Une série se construit avec des journées à 100% (toutes les tâches cochées). Coche tout en une journée pour la démarrer.",
@@ -1042,7 +1041,8 @@ const STRINGS = {
     consistencyShowDetailBtn:"See full detail", consistencyHideDetailBtn:"Hide detail",
     daysActiveUnit:"d active",
     unifiedStreakLbl:"day streak", unifiedScoreLbl:"consistency score", byCategoryLbl:"By category",
-    insightTrendUp:n=>`Consistency is up ${n}%`, insightTrendDown:n=>`Consistency is down ${n}%`, insightTrendStable:()=>"Consistency is stable",
+    insightTrendUp:(n,d)=>`Up ${n}% vs the previous ${d} days`, insightTrendDown:(n,d)=>`Down ${n}% vs the previous ${d} days`, insightTrendStable:(n,d)=>`Stable vs the previous ${d} days`,
+    habitCaption:(done,scheduled)=>`${done} of ${scheduled} scheduled day${scheduled>1?"s":""}`,
     insightBestDay:d=>`You're most active on ${d}.`,
     dayNamesFull:["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
     streakHint:"A streak is built from 100% days (every task checked). Complete a full day to start one.",
@@ -2555,7 +2555,7 @@ function renderPeriodStats(){
   const weekPct=Math.round(periodAvg(startOfWeek(now),records)*100);
   const monthPct=Math.round(periodAvg(startOfMonth(now),records)*100);
   const{current,best}=computeStreaks(records);
-  document.getElementById("unifiedStreakNum").textContent=current;
+  animateNumber(document.getElementById("unifiedStreakNum"),current);
 
   checkCelebrations(current,weekPct,monthPct);
   apiFetch("/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({weekPct,monthPct,streakCurrent:current,streakBest:best})}).catch(()=>{});
@@ -2622,10 +2622,27 @@ function readingActiveDaysConsistency(startDate){
   return{scheduled,done:activeDays,pct:scheduled?activeDays/scheduled:null};
 }
 const HERO_RING_C=2*Math.PI*90;
-function setHeroRing(idPrefix,pct,bigNum,badgeText,captionText){
+// Generic count-up animation — reads the element's own last-shown value off
+// a data attribute so repeated renders (period toggle clicks, etc.) animate
+// from wherever the number currently is, not from 0 every time.
+function animateNumber(el,toValue,opts){
+  opts=opts||{};
+  const duration=opts.duration||600,suffix=opts.suffix||"";
+  const fromValue=parseFloat(el.dataset.animValue||"0");
+  el.dataset.animValue=toValue;
+  if(fromValue===toValue){el.textContent=Math.round(toValue)+suffix;return;}
+  const startTime=performance.now();
+  function tick(now){
+    const progress=Math.min(1,(now-startTime)/duration);
+    const eased=1-Math.pow(1-progress,3);
+    el.textContent=Math.round(fromValue+(toValue-fromValue)*eased)+suffix;
+    if(progress<1)requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+function setHeroRing(idPrefix,pct,bigNum,captionText){
   document.getElementById("heroRing"+idPrefix).style.strokeDashoffset=HERO_RING_C*(1-(pct||0));
-  document.getElementById("heroPct"+idPrefix).textContent=bigNum;
-  document.getElementById("heroPctBadge"+idPrefix).textContent=badgeText;
+  animateNumber(document.getElementById("heroPct"+idPrefix),bigNum);
   document.getElementById("heroSub"+idPrefix).textContent=captionText;
 }
 function renderTaskConsistency(){
@@ -2637,15 +2654,15 @@ function renderTaskConsistency(){
 
   const gymTk=tasks.find(tk=>tk.id==="gym");
   if(gymTk){
-    const{scheduled,done,pct}=taskConsistency(gymTk,startDate,records);
-    setHeroRing("Gym",pct,done,scheduled?`${Math.round(pct*100)}%`:"—",`${done}/${scheduled} ${t("daysUnit")}`);
+    const{scheduled,done}=taskConsistency(gymTk,startDate,records);
+    setHeroRing("Gym",scheduled?done/scheduled:0,done,scheduled?t("habitCaption",done,scheduled):"—");
   }
   const meals=mealsConsistency(startDate,records);
-  setHeroRing("Meals",meals.pct,meals.done,meals.scheduled?`${Math.round(meals.pct*100)}%`:"—",`${meals.done}/${meals.scheduled} ${t("daysUnit")}`);
+  setHeroRing("Meals",meals.scheduled?meals.done/meals.scheduled:0,meals.done,meals.scheduled?t("habitCaption",meals.done,meals.scheduled):"—");
 
   const pages=pagesReadInPeriod(startDate);
   const readingActive=readingActiveDaysConsistency(startDate);
-  setHeroRing("Reading",readingActive.pct,pages,readingActive.scheduled?`${Math.round(readingActive.pct*100)}%`:"—",`${readingActive.done}/${readingActive.scheduled} ${t("daysActiveUnit")}`);
+  setHeroRing("Reading",readingActive.pct,pages,readingActive.scheduled?`${readingActive.done}/${readingActive.scheduled} ${t("daysActiveUnit")}`:"—");
 
   // "Consistency Score": a 30-day rolling average, deliberately NOT tied to
   // the 7/30/60/90 period toggle above (that toggle is for exploring
@@ -2653,10 +2670,30 @@ function renderTaskConsistency(){
   // headline number — a wide rolling window so a single missed day dips it
   // gently instead of it swinging wildly like a 7-day average would).
   const scorePct=Math.round(periodAvg(new Date(now.getTime()-29*DAY_MS),records)*100);
-  document.getElementById("unifiedScorePct").textContent=scorePct+"%";
+  animateNumber(document.getElementById("unifiedScorePct"),scorePct,{suffix:"%"});
+  renderScoreSparkline(records,now);
 
   renderCategoryBreakdown(startDate,records);
   renderConsistencyInsight(period,startDate,now,records);
+}
+// Six weekly-average points over the last ~6 weeks, independent of the
+// selected period toggle — a quick "which way is this heading" glance next
+// to the score, not meant to be read precisely.
+function renderScoreSparkline(records,now){
+  const points=[];
+  for(let w=5;w>=0;w--){
+    const weekEnd=new Date(now.getTime()-w*7*DAY_MS);
+    const weekStart=new Date(weekEnd.getTime()-6*DAY_MS);
+    points.push(periodAvgRange(weekStart,weekEnd,records));
+  }
+  const width=40,height=16,min=Math.min(...points),max=Math.max(...points),range=(max-min)||1;
+  const d=points.map((p,i)=>{
+    const x=(i/(points.length-1))*width,y=height-((p-min)/range)*height;
+    return `${i===0?"M":"L"}${x.toFixed(1)} ${y.toFixed(1)}`;
+  }).join(" ");
+  const pathEl=document.getElementById("scoreSparklinePath");
+  pathEl.setAttribute("d",d);
+  pathEl.setAttribute("stroke",points[points.length-1]>=points[0]?"#45B69C":"#FF7E67");
 }
 document.querySelectorAll("#consistencyPeriodPicker .period-opt").forEach((btn,i)=>{
   btn.onclick=()=>{consistencyPeriodIdx=i;save("tracker:consistencyPeriodIdx",i);renderTaskConsistency();};
@@ -2712,7 +2749,7 @@ function renderConsistencyInsight(period,startDate,now,records){
   for(let i=0;i<7;i++){if(counts[i]&&sums[i]/counts[i]>bestAvg){bestAvg=sums[i]/counts[i];bestDow=i;}}
 
   const trendKey=deltaPct>2?"insightTrendUp":deltaPct<-2?"insightTrendDown":"insightTrendStable";
-  document.getElementById("insightTitle").textContent=t(trendKey,Math.abs(deltaPct));
+  document.getElementById("insightTitle").textContent=t(trendKey,Math.abs(deltaPct),period.days);
   document.getElementById("insightSub").textContent=bestDow>=0?t("insightBestDay",t("dayNamesFull")[bestDow]):"";
   el.classList.remove("hidden");
 }
