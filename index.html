@@ -235,7 +235,6 @@
   .book-cover-lg:active{transform:scale(.96)}
   .book-cover-lg.has-cover{border-color:transparent}
   .cover-page-badge{position:absolute;left:6px;right:6px;bottom:6px;background:rgba(22,29,31,.68);color:#fff;font-size:10px;font-weight:700;padding:4px 6px;border-radius:7px;text-align:center;font-family:'Plus Jakarta Sans',sans-serif;backdrop-filter:blur(3px)}
-  .cover-pct-badge{position:absolute;bottom:-4px;right:-6px;background:var(--green);color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px;box-shadow:var(--shadow);font-family:'Plus Jakarta Sans',sans-serif;z-index:3}
   .book-cover-lg img{width:100%;height:100%;object-fit:cover}
   .reading-hero-info{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
   .book-title-input{border:none;background:transparent;font-family:'Quicksand',sans-serif;font-size:13px;font-weight:700;color:var(--text);padding:0;width:100%;letter-spacing:-.01em}
@@ -565,7 +564,6 @@
             <span id="coverPlaceholder"></span>
             <div class="cover-page-badge hidden" id="coverPageBadge"></div>
           </button>
-          <div class="cover-pct-badge hidden" id="coverPctBadge"></div>
         </div>
         <input type="file" accept="image/*" capture="environment" id="coverInput" class="hidden" />
         <div class="reading-hero-info">
@@ -823,7 +821,7 @@
       </div>
       <div class="hidden" id="foodLogModeText">
         <textarea id="foodLogTextInput" class="food-log-textarea" rows="3"></textarea>
-        <button type="button" class="btn btn-amber" id="foodLogTextBtn" style="width:100%;margin-top:10px"></button>
+        <button type="button" class="btn btn-amber" id="foodLogTextBtn" style="width:100%;margin-top:10px;padding:15px 18px;font-size:15px"></button>
       </div>
       <div class="food-log-approx" id="foodLogApprox"></div>
     </div>
@@ -2562,13 +2560,6 @@ function renderReading(){
   ringProgressEl.style.strokeDasharray=ringLen;
   ringProgressEl.style.strokeDashoffset=ringLen*(1-ringPct);
   ringProgressEl.style.stroke=ringPct>=1?"var(--green)":"var(--amber)";
-  const pctBadgeEl=document.getElementById("coverPctBadge");
-  if(reading.totalChapters){
-    pctBadgeEl.textContent=Math.round(ringPct*100)+"%";
-    pctBadgeEl.classList.remove("hidden");
-  }else{
-    pctBadgeEl.classList.add("hidden");
-  }
 
   const pageRow=document.getElementById("currentPageRow");
   const currentPageInputEl=document.getElementById("currentPageInput");
