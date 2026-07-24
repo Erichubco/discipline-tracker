@@ -81,13 +81,12 @@
   .hero-dot{width:8px;height:8px;border-radius:50%;background:var(--border);border:none;padding:0;cursor:pointer;transition:width .25s,background .25s}
   .hero-dot.active{background:var(--green);width:20px;border-radius:4px}
   .consistency-module{padding:0;overflow:hidden}
-  .consistency-hero{padding:26px 20px 6px;text-align:center;background:linear-gradient(to bottom,var(--cardHi),transparent)}
-  .consistency-streak-row{display:flex;align-items:baseline;justify-content:center;gap:8px}
-  .consistency-streak-num{font-size:36px;font-weight:800;line-height:1;font-family:'Quicksand',sans-serif;color:var(--green);transition:opacity .2s}
-  .consistency-streak-lbl{font-size:12px;font-weight:700;color:var(--green);opacity:.6;text-transform:uppercase;letter-spacing:.02em}
-  .consistency-score-pill{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:7px 16px;border-radius:20px;background:var(--cardHi);font-size:13px;color:var(--green);border:1px solid var(--border)}
-  .consistency-score-pill b{font-weight:800}
-  .score-sparkline{width:36px;height:14px;margin-left:2px;opacity:.85}
+  .consistency-hero{padding:14px 20px 6px;text-align:center;background:linear-gradient(to bottom,var(--cardHi),transparent)}
+  .consistency-streak-badge-row{display:flex;justify-content:flex-end}
+  .consistency-streak-badge{display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;background:var(--card);border:1px solid var(--border);font-size:13px;font-weight:700;color:var(--text)}
+  .consistency-score-lbl{display:block;margin-top:2px;font-size:12px;font-weight:700;color:var(--green);opacity:.7;text-transform:uppercase;letter-spacing:.03em}
+  .consistency-score-hero{font-size:52px;font-weight:800;line-height:1;font-family:'Quicksand',sans-serif;color:var(--green);margin-top:4px;transition:opacity .2s}
+  .consistency-score-caption{font-size:13px;color:var(--muted);margin:8px auto 0;max-width:260px;line-height:1.4}
   .consistency-module .period-picker{padding:0 20px;margin:16px 0 0}
   .consistency-category{margin-top:8px;border-top:1px solid var(--border)}
   .consistency-category-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:none;border:none;cursor:pointer;font-family:inherit}
@@ -424,14 +423,12 @@
     <!-- Unified Consistency module -->
     <div class="card consistency-module">
       <div class="consistency-hero">
-        <div class="consistency-streak-row">
-          <span class="consistency-streak-num" id="unifiedStreakNum">0</span>
-          <span class="consistency-streak-lbl" id="unifiedStreakLbl">jours de suite</span>
+        <div class="consistency-streak-badge-row">
+          <span class="consistency-streak-badge" id="unifiedStreakBadge">🔥&nbsp;<span id="unifiedStreakNum">0</span></span>
         </div>
-        <div class="consistency-score-pill">
-          📈&nbsp;<b id="unifiedScorePct">0%</b>&nbsp;<span id="unifiedScoreLbl">score de consistance</span>
-          <svg class="score-sparkline" id="scoreSparkline" viewBox="0 0 40 16"><path id="scoreSparklinePath" fill="none" stroke="#FF7E67" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
+        <span class="consistency-score-lbl" id="unifiedScoreLbl">score de consistance</span>
+        <div class="consistency-score-hero" id="unifiedScorePct">0%</div>
+        <p class="consistency-score-caption" id="unifiedScoreCaption"></p>
       </div>
       <div class="period-picker" id="consistencyPeriodPicker">
         <button type="button" class="period-opt active" data-period-idx="0"><span id="consistencyPeriod0Btn"></span></button>
@@ -954,6 +951,7 @@ const STRINGS = {
     consistencyShowDetailBtn:"Voir le détail complet", consistencyHideDetailBtn:"Masquer le détail",
     daysActiveUnit:"j actifs",
     unifiedStreakLbl:"jours de suite", unifiedScoreLbl:"score de consistance", byCategoryLbl:"Par catégorie",
+    unifiedScoreCaption:(pct,days)=>`Tu as complété ${pct}% de tes habitudes sur les ${days} derniers jours`,
     insightTrendUp:(n,d)=>`En hausse de ${n}% vs les ${d} jours précédents`, insightTrendDown:(n,d)=>`En baisse de ${n}% vs les ${d} jours précédents`, insightTrendStable:(n,d)=>`Stable vs les ${d} jours précédents`,
     habitCaption:(done,scheduled)=>`${done} jour${done>1?"s":""} sur ${scheduled} prévu${scheduled>1?"s":""}`,
     insightBestDay:d=>`Tu es le plus actif le ${d}.`,
@@ -1132,6 +1130,7 @@ const STRINGS = {
     consistencyShowDetailBtn:"See full detail", consistencyHideDetailBtn:"Hide detail",
     daysActiveUnit:"d active",
     unifiedStreakLbl:"day streak", unifiedScoreLbl:"consistency score", byCategoryLbl:"By category",
+    unifiedScoreCaption:(pct,days)=>`You completed ${pct}% of your habits over the last ${days} days`,
     insightTrendUp:(n,d)=>`Up ${n}% vs the previous ${d} days`, insightTrendDown:(n,d)=>`Down ${n}% vs the previous ${d} days`, insightTrendStable:(n,d)=>`Stable vs the previous ${d} days`,
     habitCaption:(done,scheduled)=>`${done} of ${scheduled} scheduled day${scheduled>1?"s":""}`,
     insightBestDay:d=>`You're most active on ${d}.`,
@@ -1769,7 +1768,7 @@ function applyStaticI18n(){
   document.getElementById("heroUnitGym").textContent=t("daysUnit");
   document.getElementById("heroUnitMeals").textContent=t("daysUnit");
   document.getElementById("heroUnitReading").textContent=t("pagesUnit");
-  document.getElementById("unifiedStreakLbl").textContent=t("unifiedStreakLbl");
+  document.getElementById("unifiedStreakBadge").title=t("unifiedStreakLbl");
   document.getElementById("unifiedScoreLbl").textContent=t("unifiedScoreLbl");
   document.getElementById("byCategoryLbl").textContent=t("byCategoryLbl");
   document.getElementById("reminderTitle").textContent=t("reminderTitle");
@@ -2851,36 +2850,16 @@ function renderTaskConsistency(){
   const readingActive=readingActiveDaysConsistency(startDate);
   setHeroRing("Reading",readingActive.pct,pages,readingActive.scheduled?`${readingActive.done}/${readingActive.scheduled} ${t("daysActiveUnit")}`:"—");
 
-  // "Consistency Score": a 30-day rolling average, deliberately NOT tied to
-  // the 7/30/60/90 period toggle above (that toggle is for exploring
-  // per-habit history; the score is meant to be one stable, always-current
-  // headline number — a wide rolling window so a single missed day dips it
-  // gently instead of it swinging wildly like a 7-day average would).
-  const scorePct=Math.round(periodAvg(new Date(now.getTime()-29*DAY_MS),records)*100);
+  // "Consistency Score" now genuinely reflects the selected period (7/30/
+  // 60/90) instead of a fixed 30-day window — the period picker sits right
+  // under this number, so it has to actually drive it or the caption below
+  // ("you completed X% over the last N days") would just be lying.
+  const scorePct=Math.round(periodAvg(startDate,records)*100);
   animateNumber(document.getElementById("unifiedScorePct"),scorePct,{suffix:"%"});
-  renderScoreSparkline(records,now);
+  document.getElementById("unifiedScoreCaption").textContent=t("unifiedScoreCaption",scorePct,period.days);
 
   renderCategoryBreakdown(startDate,records);
   renderConsistencyInsight(period,startDate,now,records);
-}
-// Six weekly-average points over the last ~6 weeks, independent of the
-// selected period toggle — a quick "which way is this heading" glance next
-// to the score, not meant to be read precisely.
-function renderScoreSparkline(records,now){
-  const points=[];
-  for(let w=5;w>=0;w--){
-    const weekEnd=new Date(now.getTime()-w*7*DAY_MS);
-    const weekStart=new Date(weekEnd.getTime()-6*DAY_MS);
-    points.push(periodAvgRange(weekStart,weekEnd,records));
-  }
-  const width=40,height=16,min=Math.min(...points),max=Math.max(...points),range=(max-min)||1;
-  const d=points.map((p,i)=>{
-    const x=(i/(points.length-1))*width,y=height-((p-min)/range)*height;
-    return `${i===0?"M":"L"}${x.toFixed(1)} ${y.toFixed(1)}`;
-  }).join(" ");
-  const pathEl=document.getElementById("scoreSparklinePath");
-  pathEl.setAttribute("d",d);
-  pathEl.setAttribute("stroke",points[points.length-1]>=points[0]?"#45B69C":"#FF7E67");
 }
 document.querySelectorAll("#consistencyPeriodPicker .period-opt").forEach((btn,i)=>{
   btn.onclick=()=>{consistencyPeriodIdx=i;save("tracker:consistencyPeriodIdx",i);renderTaskConsistency();};
