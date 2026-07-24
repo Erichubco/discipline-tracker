@@ -800,6 +800,7 @@
     <div class="task-detail-label" id="taskDetailLabel"></div>
     <div class="task-detail-text hidden" id="taskDetailText"></div>
     <div class="food-log hidden" id="foodLogSection">
+      <div class="sub hidden" id="foodLogDateLabel" style="margin-bottom:6px;font-weight:700;color:var(--amber)"></div>
       <div class="food-log-total" id="foodLogTotal"></div>
       <div class="food-log-empty hidden" id="foodLogEmpty"></div>
       <div class="food-log-items" id="foodLogItems"></div>
@@ -1003,10 +1004,12 @@ const STRINGS = {
     foodLogTabPhoto:"📷 Photo", foodLogTabText:"✏️ Décrire",
     foodLogTextPlaceholder:"Ex : 200g de poulet grillé, riz, salade…", foodLogTextBtn:"Calculer",
     foodLogTextNotFood:"Texte non reconnu comme un repas — décris ce que tu as mangé.",
+    foodLogForDate:d=>`📅 Ajout pour le ${d}`,
     archiveAddTitle:"Livres déjà lus cette année", archiveAddSub:"Prends une photo de la couverture, un par un — pas besoin de suivre leur progression.", archiveAddBtn:"Ajouter un livre", archiveAddLoading:"🔍 Identification…", archiveAddUnidentified:"Livre (non identifié)",
     foodLogClarifyPlaceholder:"Ta réponse…", foodLogClarifyConfirmBtn:"Valider",
     foodLogNotFood:"Photo non reconnue comme un repas — réessaie avec une photo plus claire.",
     foodLogTotal:(n,goal)=>goal?`≈ ${n} / ${goal} kcal aujourd'hui`:`≈ ${n} kcal aujourd'hui`,
+    foodLogTotalDay:(n,goal)=>goal?`≈ ${n} / ${goal} kcal`:`≈ ${n} kcal`,
     foodLogEmpty:"Aucun repas loggé aujourd'hui.",
     foodLogApprox:"Estimation approximative par IA (±20-30%), à prendre comme repère, pas comme mesure exacte.",
     foodLogDeleteConfirm:desc=>`Supprimer "${desc}" du log du jour ?`,
@@ -1179,10 +1182,12 @@ const STRINGS = {
     foodLogTabPhoto:"📷 Photo", foodLogTabText:"✏️ Describe",
     foodLogTextPlaceholder:"E.g.: 200g grilled chicken, rice, salad…", foodLogTextBtn:"Calculate",
     foodLogTextNotFood:"Text not recognized as food — describe what you ate.",
+    foodLogForDate:d=>`📅 Adding for ${d}`,
     archiveAddTitle:"Books already read this year", archiveAddSub:"Take a photo of the cover, one at a time — no need to track their progress.", archiveAddBtn:"Add a book", archiveAddLoading:"🔍 Identifying…", archiveAddUnidentified:"Book (not identified)",
     foodLogClarifyPlaceholder:"Your answer…", foodLogClarifyConfirmBtn:"Confirm",
     foodLogNotFood:"Photo not recognized as a meal — try again with a clearer photo.",
     foodLogTotal:(n,goal)=>goal?`≈ ${n} / ${goal} kcal today`:`≈ ${n} kcal today`,
+    foodLogTotalDay:(n,goal)=>goal?`≈ ${n} / ${goal} kcal`:`≈ ${n} kcal`,
     foodLogEmpty:"No meals logged today.",
     foodLogApprox:"Approximate AI estimate (±20-30%), use it as a rough guide, not an exact measurement.",
     foodLogDeleteConfirm:desc=>`Delete "${desc}" from today's log?`,
@@ -3016,10 +3021,10 @@ document.getElementById("celebration").addEventListener("click",hideCelebration)
 function loadCalories(dateKey){return load("tracker:cal:"+dateKey,[]);}
 function saveCalories(dateKey,arr){save("tracker:cal:"+dateKey,arr);}
 function renderFoodLog(){
-  const dateKey=today();
+  const dateKey=viewedDate;
   const items=loadCalories(dateKey);
   const total=items.reduce((s,it)=>s+it.kcal,0);
-  document.getElementById("foodLogTotal").textContent=t("foodLogTotal",total,calorieGoal.value);
+  document.getElementById("foodLogTotal").textContent=isViewingToday()?t("foodLogTotal",total,calorieGoal.value):t("foodLogTotalDay",total,calorieGoal.value);
   const emptyEl=document.getElementById("foodLogEmpty");
   emptyEl.textContent=t("foodLogEmpty");
   emptyEl.classList.toggle("hidden",items.length>0);
@@ -3038,7 +3043,7 @@ function renderFoodLog(){
   });
 }
 function logFoodItem(description,kcal){
-  const dateKey=today();
+  const dateKey=viewedDate;
   const items=loadCalories(dateKey);
   items.push({id:Date.now()+"-"+Math.random().toString(36).slice(2),time:new Date().toTimeString().slice(0,5),description,kcal});
   saveCalories(dateKey,items);
@@ -3152,7 +3157,14 @@ function openTaskDetail(tk){
   if(detail){detailEl.textContent=detail;detailEl.classList.remove("hidden");}
   else{detailEl.classList.add("hidden");}
   const foodSection=document.getElementById("foodLogSection");
-  if(MEAL_TASK_IDS.has(tk.id)&&isViewingToday()){
+  if(MEAL_TASK_IDS.has(tk.id)){
+    const dateLabelEl=document.getElementById("foodLogDateLabel");
+    if(isViewingToday()){
+      dateLabelEl.classList.add("hidden");
+    }else{
+      dateLabelEl.textContent=t("foodLogForDate",dateFromKey(viewedDate).toLocaleDateString(t("dateLocale"),{weekday:"long",day:"numeric",month:"long"}));
+      dateLabelEl.classList.remove("hidden");
+    }
     document.getElementById("foodLogAddBtn").innerHTML=CAMERA_SVG+`<span>${t("foodLogAddBtn")}</span>`;
     document.getElementById("foodLogApprox").textContent=t("foodLogApprox");
     document.getElementById("foodLogClarifyConfirmBtn").textContent=t("foodLogClarifyConfirmBtn");
