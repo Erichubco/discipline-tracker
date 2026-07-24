@@ -170,6 +170,10 @@
   input:focus{border-color:var(--green);background:#fff}
   .food-log-textarea{background:var(--cardHi);border:1px solid transparent;border-radius:14px;padding:12px 14px;color:var(--text);font-size:14px;outline:none;font-family:inherit;width:100%;resize:none}
   .food-log-textarea:focus{border-color:var(--green);background:#fff}
+  .food-log-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:2px}
+  .food-log-chip{flex-shrink:0;white-space:nowrap;padding:6px 12px;border-radius:20px;background:var(--cardHi);color:var(--green);border:1px solid var(--border);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer}
+  .food-log-hint{display:flex;align-items:center;gap:5px;margin:8px 2px 0;color:var(--muted);font-size:12px}
+  .food-log-hint svg{flex-shrink:0}
   .btn{border:none;border-radius:9999px;cursor:pointer;font-weight:700;font-size:14px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
   .btn,.icon-btn,.period-opt,.task-tab,.chapter-pill-btn,.fab,.del,.task-menu{transition:transform .1s ease}
   .btn:active,.icon-btn:active,.period-opt:active,.task-tab:active,.chapter-pill-btn:active,.fab:active,.del:active,.task-menu:active{transform:scale(.94)}
@@ -825,7 +829,9 @@
         <input type="file" accept="image/*" capture="environment" class="hidden" id="foodLogInput">
       </div>
       <div class="hidden" id="foodLogModeText">
+        <div class="food-log-chips hidden" id="foodLogChips"></div>
         <textarea id="foodLogTextInput" class="food-log-textarea" rows="3"></textarea>
+        <div class="food-log-hint"><span id="foodLogHintIcon"></span><span id="foodLogHintText"></span></div>
         <button type="button" class="btn btn-amber" id="foodLogTextBtn" style="width:100%;margin-top:10px;padding:15px 18px;font-size:15px"></button>
       </div>
       <div class="food-log-approx" id="foodLogApprox"></div>
@@ -1008,6 +1014,7 @@ const STRINGS = {
     foodLogAddBtn:"Ajouter une photo", foodLogLoading:"🔍 Estimation en cours…",
     foodLogTabPhoto:"Photo", foodLogTabText:"Décrire",
     foodLogTextPlaceholder:"Ex : 200g de poulet grillé, riz, salade…", foodLogTextBtn:"Calculer", foodLogTextBtnUpdate:"Mettre à jour",
+    foodLogHint:"Précise les quantités pour une meilleure estimation",
     foodLogTextNotFood:"Texte non reconnu comme un repas — décris ce que tu as mangé.",
     foodLogForDate:d=>`📅 Ajout pour le ${d}`,
     archiveAddTitle:"Livres déjà lus cette année", archiveAddSub:"Prends une photo de la couverture, un par un — pas besoin de suivre leur progression.", archiveAddBtn:"Ajouter un livre", archiveAddLoading:"🔍 Identification…", archiveAddUnidentified:"Livre (non identifié)",
@@ -1187,6 +1194,7 @@ const STRINGS = {
     foodLogAddBtn:"Add a photo", foodLogLoading:"🔍 Estimating…",
     foodLogTabPhoto:"Photo", foodLogTabText:"Describe",
     foodLogTextPlaceholder:"E.g.: 200g grilled chicken, rice, salad…", foodLogTextBtn:"Calculate", foodLogTextBtnUpdate:"Update",
+    foodLogHint:"Add quantities for a more accurate estimate",
     foodLogTextNotFood:"Text not recognized as food — describe what you ate.",
     foodLogForDate:d=>`📅 Adding for ${d}`,
     archiveAddTitle:"Books already read this year", archiveAddSub:"Take a photo of the cover, one at a time — no need to track their progress.", archiveAddBtn:"Add a book", archiveAddLoading:"🔍 Identifying…", archiveAddUnidentified:"Book (not identified)",
@@ -1322,6 +1330,7 @@ const BOOK_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
 const DOWNLOAD_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 const FLAME_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>';
 const EDIT_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+const INFO_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
 document.getElementById("bizIconBadge").innerHTML=TRENDING_SVG;
 document.getElementById("coverPlaceholder").innerHTML=CAMERA_SVG;
 document.getElementById("unifiedStreakIcon").innerHTML=FLAME_SVG;
@@ -3036,6 +3045,39 @@ function renderFoodLog(){
     listEl.appendChild(row);
   });
 }
+// Quick-add chips from recent history — repeated meals (a daily shake, a
+// go-to lunch) become one tap instead of retyping the same description
+// every time. Scans the last 14 days, most recent first, deduped by exact
+// text so the same meal logged on different days only shows once.
+function renderFoodLogChips(){
+  const chipsEl=document.getElementById("foodLogChips");
+  const seen=new Set();
+  const suggestions=[];
+  for(let i=0;i<14&&suggestions.length<4;i++){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const items=loadCalories(keyFor(d));
+    for(let j=items.length-1;j>=0&&suggestions.length<4;j--){
+      const desc=items[j].description;
+      const key=desc.toLowerCase();
+      if(seen.has(key))continue;
+      seen.add(key);
+      suggestions.push(desc);
+    }
+  }
+  chipsEl.innerHTML="";
+  chipsEl.classList.toggle("hidden",suggestions.length===0);
+  suggestions.forEach(desc=>{
+    const chip=document.createElement("button");
+    chip.type="button";
+    chip.className="food-log-chip";
+    chip.textContent=desc;
+    chip.onclick=()=>{
+      document.getElementById("foodLogTextInput").value=desc;
+      document.getElementById("foodLogTextInput").focus();
+    };
+    chipsEl.appendChild(chip);
+  });
+}
 // Tapping a logged item re-opens it in the "Décrire" tab pre-filled with its
 // current description, so a correction (missed a side dish, wrong quantity)
 // updates the same entry in place instead of adding a duplicate.
@@ -3195,6 +3237,9 @@ function openTaskDetail(tk){
     document.getElementById("foodLogTextInput").placeholder=t("foodLogTextPlaceholder");
     document.getElementById("foodLogTextInput").value="";
     document.getElementById("foodLogTextBtn").textContent=t("foodLogTextBtn");
+    document.getElementById("foodLogHintIcon").innerHTML=INFO_SVG;
+    document.getElementById("foodLogHintText").textContent=t("foodLogHint");
+    renderFoodLogChips();
     setFoodLogMode("photo");
     pendingFoodPhoto=null;
     renderFoodLog();
