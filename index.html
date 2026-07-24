@@ -23,7 +23,8 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
   html,body{background:var(--bg);color:var(--text);
     font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-    -webkit-font-smoothing:antialiased}
+    -webkit-font-smoothing:antialiased;
+    -webkit-text-size-adjust:100%;text-size-adjust:100%}
   .display{font-family:'Quicksand',ui-sans-serif,system-ui,sans-serif}
   body{min-height:100vh}
   .app{max-width:460px;margin:0 auto}
@@ -900,9 +901,11 @@
     <div class="task-detail-label" id="reminderTimePickerTitle"></div>
     <div class="time-wheels">
       <div class="time-wheel" id="reminderHourWheel"></div>
+      <div class="time-wheel-sep">:</div>
+      <div class="time-wheel" id="reminderMinuteWheel"></div>
     </div>
     <div class="task-detail-actions">
-      <button class="btn btn-amber" id="reminderTimePickerConfirmBtn" style="flex:1"></button>
+      <button class="btn btn-amber" id="reminderTimePickerConfirmBtn" style="flex:1;padding:14px 18px"></button>
     </div>
   </div>
 </div>
@@ -982,7 +985,7 @@ const STRINGS = {
     streakHint:"Une série se construit avec des journées à 100% (toutes les tâches cochées). Coche tout en une journée pour la démarrer.",
     thisWeekLbl:d=>`Cette semaine (jour ${d}/7)`, thisMonthLbl:(d,total)=>`Ce mois (jour ${d}/${total})`,
     reminderTitle:"Rappel du soir",
-    reminderSubDefault:h=>`Une notification à ${h}h pour cocher tes tâches avant la coupure d'écran.`,
+    reminderSubDefault:t=>`Une notification à ${t} pour cocher tes tâches avant la coupure d'écran.`,
     reminderSubNeedsInstall:"Ajoute d'abord l'app à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis reviens ici pour activer les rappels.",
     reminderSubDenied:"Notifications refusées — active-les dans Réglages iOS > Notifications > Discipline.",
     reminderBtnOn:"Activer les rappels", reminderBtnOff:"Rappels activés ✓ (touche pour désactiver)", reminderHourLbl:"Heure du rappel",
@@ -1163,7 +1166,7 @@ const STRINGS = {
     streakHint:"A streak is built from 100% days (every task checked). Complete a full day to start one.",
     thisWeekLbl:d=>`This week (day ${d}/7)`, thisMonthLbl:(d,total)=>`This month (day ${d}/${total})`,
     reminderTitle:"Evening reminder",
-    reminderSubDefault:h=>`A notification at ${h}h to check off your tasks before screens go off.`,
+    reminderSubDefault:t=>`A notification at ${t} to check off your tasks before screens go off.`,
     reminderSubNeedsInstall:"Add the app to your home screen first (Share → Add to Home Screen), then come back here to enable reminders.",
     reminderSubDenied:"Notifications denied — enable them in iOS Settings > Notifications > Discipline.",
     reminderBtnOn:"Enable reminders", reminderBtnOff:"Reminders on ✓ (tap to disable)", reminderHourLbl:"Reminder time",
@@ -3342,28 +3345,38 @@ function setReminderBtnState(on){
 }
 let pushSubscribed=false;
 let reminderHour=load("tracker:reminderHour",21);
-function setReminderHour(h){
-  reminderHour=h;
-  document.getElementById("reminderHourValue").textContent=`${h}h`;
-  if(pushSubscribed)document.getElementById("reminderSub").textContent=t("reminderSubDefault",h);
+let reminderMinute=load("tracker:reminderMinute",0);
+function setReminderTime(h,m){
+  reminderHour=h;reminderMinute=m;
+  document.getElementById("reminderHourValue").textContent=formatTaskTime(`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`);
+  if(pushSubscribed)document.getElementById("reminderSub").textContent=t("reminderSubDefault",document.getElementById("reminderHourValue").textContent);
 }
-async function pickReminderHour(h){
-  setReminderHour(h);
+async function pickReminderTime(h,m){
+  setReminderTime(h,m);
   save("tracker:reminderHour",h);
+  save("tracker:reminderMinute",m);
   flashSaved(document.getElementById("reminderHourRow"));
   const reg=await navigator.serviceWorker.ready;
   const current=await reg.pushManager.getSubscription();
   if(current)apiFetch("/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:subscribePayload(current)}).catch(()=>{});
 }
-let pickedReminderHour=null;
-function buildReminderHourWheel(){
-  const wheel=document.getElementById("reminderHourWheel");
-  wheel.innerHTML="";
+let pickedReminderHour=null,pickedReminderMinute=null;
+function buildReminderTimeWheels(){
+  const hourWheel=document.getElementById("reminderHourWheel");
+  hourWheel.innerHTML="";
   for(let h=17;h<=23;h++){
     const el=document.createElement("div");
-    el.className="time-wheel-item";el.textContent=`${h}h`;
+    el.className="time-wheel-item";el.textContent=String(h).padStart(2,"0");
     el.dataset.hour=h;el.onclick=()=>selectReminderPickerHour(h);
-    wheel.appendChild(el);
+    hourWheel.appendChild(el);
+  }
+  const minuteWheel=document.getElementById("reminderMinuteWheel");
+  minuteWheel.innerHTML="";
+  for(let m=0;m<60;m+=5){
+    const el=document.createElement("div");
+    el.className="time-wheel-item";el.textContent=String(m).padStart(2,"0");
+    el.dataset.minute=m;el.onclick=()=>selectReminderPickerMinute(m);
+    minuteWheel.appendChild(el);
   }
 }
 function selectReminderPickerHour(h,instant){
@@ -3371,28 +3384,34 @@ function selectReminderPickerHour(h,instant){
   document.querySelectorAll("#reminderHourWheel .time-wheel-item").forEach(el=>el.classList.toggle("active",+el.dataset.hour===h));
   scrollWheelToActive("reminderHourWheel",instant);
 }
+function selectReminderPickerMinute(m,instant){
+  pickedReminderMinute=m;
+  document.querySelectorAll("#reminderMinuteWheel .time-wheel-item").forEach(el=>el.classList.toggle("active",+el.dataset.minute===m));
+  scrollWheelToActive("reminderMinuteWheel",instant);
+}
 function openReminderTimePicker(){
   selectReminderPickerHour(reminderHour,true);
+  selectReminderPickerMinute(reminderMinute,true);
   showSheet("reminderTimePickerSheet");
 }
 function closeReminderTimePicker(){hideSheet("reminderTimePickerSheet");}
 document.getElementById("reminderHourRow").onclick=openReminderTimePicker;
 document.getElementById("reminderTimePickerConfirmBtn").onclick=()=>{
-  if(pickedReminderHour!=null)pickReminderHour(pickedReminderHour);
+  if(pickedReminderHour!=null&&pickedReminderMinute!=null)pickReminderTime(pickedReminderHour,pickedReminderMinute);
   closeReminderTimePicker();
 };
 document.getElementById("reminderTimePickerSheet").addEventListener("click",(e)=>{if(e.target.id==="reminderTimePickerSheet")closeReminderTimePicker();});
 function subscribePayload(sub){
   const json=sub.toJSON?sub.toJSON():sub;
-  return JSON.stringify({...json,reminderHour});
+  return JSON.stringify({...json,reminderHour,reminderMinute});
 }
 async function initReminder(){
   const card=document.getElementById("reminderCard");
   const sub=document.getElementById("reminderSub");
   const btn=document.getElementById("reminderBtn");
   const hourRow=document.getElementById("reminderHourRow");
-  buildReminderHourWheel();
-  setReminderHour(reminderHour);
+  buildReminderTimeWheels();
+  setReminderTime(reminderHour,reminderMinute);
   if(!("serviceWorker"in navigator)||!("PushManager"in window)){card.classList.add("hidden");btn.classList.add("hidden");hourRow.classList.add("hidden");return;}
   const isStandalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
   if(!isStandalone){
@@ -3401,7 +3420,7 @@ async function initReminder(){
     hourRow.classList.add("hidden");
     return;
   }
-  sub.textContent=t("reminderSubDefault",reminderHour);
+  sub.textContent=t("reminderSubDefault",document.getElementById("reminderHourValue").textContent);
   const reg=await navigator.serviceWorker.ready;
   const existing=await reg.pushManager.getSubscription();
   if(existing){
