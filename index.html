@@ -84,6 +84,9 @@
   .consistency-hero{padding:14px 20px 6px;text-align:center;background:linear-gradient(to bottom,var(--cardHi),transparent)}
   .consistency-streak-badge-row{display:flex;justify-content:flex-end}
   .consistency-streak-badge{display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;background:var(--card);border:1px solid var(--border);font-size:13px;font-weight:700;color:var(--text)}
+  .consistency-streak-badge svg{color:var(--red);vertical-align:-2px}
+  .reading-streak-badge{position:absolute;top:0;right:0;display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;background:var(--cardHi);border:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text)}
+  .reading-streak-badge svg{color:var(--red);vertical-align:-2px}
   .consistency-score-lbl{display:block;margin-top:2px;font-size:12px;font-weight:700;color:var(--green);opacity:.7;text-transform:uppercase;letter-spacing:.03em}
   .consistency-score-hero{font-size:52px;font-weight:800;line-height:1;font-family:'Quicksand',sans-serif;color:var(--green);margin-top:4px;transition:opacity .2s}
   .consistency-score-caption{font-size:13px;color:var(--muted);margin:8px auto 0;max-width:260px;line-height:1.4}
@@ -194,7 +197,7 @@
   .chart-current-num{font-size:26px;font-weight:800;font-family:'Quicksand',sans-serif;color:var(--text)}
   .chart-footer-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
   .chart-footer-streak{display:flex;align-items:center;gap:10px}
-  .chart-footer-streak-icon{width:36px;height:36px;border-radius:50%;background:var(--cardHi);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+  .chart-footer-streak-icon{width:36px;height:36px;border-radius:50%;background:var(--cardHi);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:var(--red)}
   .chart-footer-streak-lbl{display:block;font-size:11px;color:var(--muted);font-weight:700}
   .chart-footer-streak-num{font-size:15px;font-weight:700;font-family:'Quicksand',sans-serif;color:var(--text)}
   .mini-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
@@ -226,27 +229,29 @@
   .book-archive-cover.placeholder{display:flex;align-items:center;justify-content:center;font-size:22px}
   .book-archive-title{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .reading-card{border-left:4px solid var(--amber)}
-  .reading-hero{display:flex;gap:14px;margin-bottom:14px}
-  .book-cover-ring-wrap{position:relative;width:124px;height:164px;flex-shrink:0}
+  .reading-hero-v2{position:relative;display:flex;flex-direction:column;align-items:center;margin-bottom:14px;padding-top:6px}
+  .book-cover-ring-wrap{position:relative;width:136px;height:180px;flex-shrink:0}
   .book-cover-ring-svg{position:absolute;inset:0;width:100%;height:100%}
   #bookCoverRingProgress{transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1)}
-  .book-cover-lg{position:absolute;top:8px;left:8px;width:108px;height:148px;border-radius:12px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:26px;box-shadow:0 10px 24px rgba(83,65,205,.18),0 2px 6px rgba(83,65,205,.12);transition:transform .1s ease}
+  .book-cover-lg{position:absolute;top:8px;left:8px;width:120px;height:164px;border-radius:12px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:26px;box-shadow:0 10px 24px rgba(83,65,205,.18),0 2px 6px rgba(83,65,205,.12);transition:transform .1s ease}
   .book-cover-lg:active{transform:scale(.96)}
   .book-cover-lg.has-cover{border-color:transparent}
   .cover-page-badge{position:absolute;left:6px;right:6px;bottom:6px;background:rgba(22,29,31,.68);color:#fff;font-size:10px;font-weight:700;padding:4px 6px;border-radius:7px;text-align:center;font-family:'Plus Jakarta Sans',sans-serif;backdrop-filter:blur(3px)}
   .book-cover-lg img{width:100%;height:100%;object-fit:cover}
-  .reading-hero-info{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
-  .book-title-input{border:none;background:transparent;font-family:'Quicksand',sans-serif;font-size:13px;font-weight:700;color:var(--text);padding:0;width:100%;letter-spacing:-.01em}
-  .book-title-input::placeholder{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:13px;color:var(--muted)}
-  .book-title-display{font-family:'Quicksand',sans-serif;font-size:13px;font-weight:700;color:var(--text);line-height:1.3;letter-spacing:-.01em;cursor:pointer;word-break:break-word}
-  .book-meta-line{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--muted);margin-top:3px}
+  .reading-book-info{text-align:center;margin-top:12px;max-width:280px}
+  .book-title-input{border:none;background:transparent;font-family:'Quicksand',sans-serif;font-size:17px;font-weight:700;color:var(--text);padding:0;width:100%;letter-spacing:-.01em;text-align:center}
+  .book-title-input::placeholder{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:15px;color:var(--muted)}
+  .book-title-display{font-family:'Quicksand',sans-serif;font-size:17px;font-weight:700;color:var(--text);line-height:1.3;letter-spacing:-.01em;cursor:pointer;word-break:break-word}
+  .book-meta-line{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--muted);margin-top:4px;font-style:italic}
   .reading-progress-summary{margin-top:14px}
   .reading-progress-summary .sub{margin-bottom:0}
-  .chapter-counter-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 10px}
-  .chapter-pill{display:flex;align-items:center;gap:14px;background:var(--cardHi);border-radius:12px;padding:5px 8px;flex-shrink:0}
-  .chapter-pill-btn{width:34px;height:34px;border-radius:9px;border:none;background:#fff;box-shadow:var(--shadow);color:var(--green);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .chapter-counter-row-v2{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;background:var(--cardHi);border-radius:16px;padding:8px 8px 8px 10px}
+  .chapter-pill{display:flex;align-items:center;gap:10px}
+  .chapter-pill-btn{width:32px;height:32px;border-radius:9px;border:none;background:#fff;box-shadow:var(--shadow);color:var(--green);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .chapter-pill-btn-primary{background:var(--green);color:#fff;box-shadow:none}
-  .chapter-pill-count{font-family:'Quicksand',sans-serif;font-weight:700;font-size:19px;min-width:32px;text-align:center;flex-shrink:0}
+  .chapter-pill-center{text-align:center;min-width:44px}
+  .chapter-pill-lbl{display:block;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+  .chapter-pill-count{font-family:'Quicksand',sans-serif;font-weight:700;font-size:18px;line-height:1.2}
   .biz-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px}
   .biz-h-title{display:block;font-size:16px;font-weight:700;color:var(--text);margin-top:2px;font-family:'Quicksand',sans-serif}
   .biz-icon-badge{width:44px;height:44px;border-radius:12px;background:var(--cardHi);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
@@ -424,7 +429,7 @@
     <div class="card consistency-module">
       <div class="consistency-hero">
         <div class="consistency-streak-badge-row">
-          <span class="consistency-streak-badge" id="unifiedStreakBadge">🔥&nbsp;<span id="unifiedStreakNum">0</span></span>
+          <span class="consistency-streak-badge" id="unifiedStreakBadge"><span id="unifiedStreakIcon"></span>&nbsp;<span id="unifiedStreakNum">0</span></span>
         </div>
         <span class="consistency-score-lbl" id="unifiedScoreLbl">score de consistance</span>
         <div class="consistency-score-hero" id="unifiedScorePct">0%</div>
@@ -550,11 +555,12 @@
     <div class="card reading-card">
       <div class="card-h"><span class="dot" style="background:var(--amber)"></span><span id="readingTitle">Lecture · 1 chapitre/jour → 1 livre/mois</span></div>
       <div class="sub" id="booksSub"></div>
-      <div class="reading-hero">
+      <div class="reading-hero-v2">
+        <span class="reading-streak-badge hidden" id="readingStreakBadge"><span id="readingStreakIcon"></span>&nbsp;<span id="readingStreakNum"></span></span>
         <div class="book-cover-ring-wrap">
-          <svg class="book-cover-ring-svg" viewBox="0 0 124 164">
-            <rect x="4" y="4" width="116" height="156" rx="16" fill="none" stroke="var(--cardHi)" stroke-width="4"/>
-            <rect id="bookCoverRingProgress" x="4" y="4" width="116" height="156" rx="16" fill="none" stroke="var(--amber)" stroke-width="4" stroke-linecap="round"/>
+          <svg class="book-cover-ring-svg" viewBox="0 0 136 180">
+            <rect x="4" y="4" width="128" height="172" rx="16" fill="none" stroke="var(--cardHi)" stroke-width="4"/>
+            <rect id="bookCoverRingProgress" x="4" y="4" width="128" height="172" rx="16" fill="none" stroke="var(--amber)" stroke-width="4" stroke-linecap="round"/>
           </svg>
           <button class="book-cover-lg" id="coverBtn" type="button">
             <img id="coverImg" class="hidden" />
@@ -563,28 +569,28 @@
           </button>
         </div>
         <input type="file" accept="image/*" capture="environment" id="coverInput" class="hidden" />
-        <div class="reading-hero-info">
-          <div>
-            <span class="stat-lbl" id="currentlyReadingLbl">En cours de lecture</span>
-            <div class="book-title-display hidden" id="bookTitleDisplay" style="margin-top:4px"></div>
-            <input id="bookInput" class="book-title-input" placeholder="Titre du livre…" style="margin-top:4px" />
-            <div class="book-meta-line hidden" id="bookMetaLine"></div>
-          </div>
-          <div class="chapter-counter-row">
-            <span class="stat-lbl" id="chaptersLbl">chapitres lus</span>
-            <div class="chapter-pill">
-              <button class="chapter-pill-btn" id="chapMinusBtn" type="button">−</button>
-              <span class="chapter-pill-count" id="chapCount">0</span>
-              <button class="chapter-pill-btn chapter-pill-btn-primary" id="chapBtn" type="button">+</button>
-            </div>
-          </div>
-          <div class="sub hidden" id="readingStreakLine" style="margin-top:2px"></div>
+        <div class="reading-book-info">
+          <span class="stat-lbl" id="currentlyReadingLbl">En cours de lecture</span>
+          <div class="book-title-display hidden" id="bookTitleDisplay" style="margin-top:4px"></div>
+          <input id="bookInput" class="book-title-input" placeholder="Titre du livre…" style="margin-top:4px" />
+          <div class="book-meta-line hidden" id="bookMetaLine"></div>
         </div>
       </div>
       <div class="sub hidden" id="bookLookupInfo" style="margin:10px 0 0"></div>
       <div class="reading-progress-summary hidden" id="readingProgressSummary">
         <div class="pbar-bg"><div class="pbar-fill" id="readingProgressFill" style="width:0%;background:var(--amber)"></div></div>
         <div class="sub" id="readingProgressText" style="margin-top:8px"></div>
+      </div>
+      <div class="chapter-counter-row-v2">
+        <div class="chapter-pill">
+          <button class="chapter-pill-btn" id="chapMinusBtn" type="button">−</button>
+          <div class="chapter-pill-center">
+            <span class="chapter-pill-lbl" id="chaptersLbl">chapitre</span>
+            <span class="chapter-pill-count" id="chapCount">0</span>
+          </div>
+          <button class="chapter-pill-btn chapter-pill-btn-primary" id="chapBtn" type="button">+</button>
+        </div>
+        <button class="btn btn-ghost" id="finishBtn">Terminé ✓</button>
       </div>
       <div class="goal-row" style="margin-top:14px">
         <span id="totalChapLbl">Total</span>
@@ -595,9 +601,6 @@
         <input id="currentPageInput" inputmode="numeric" placeholder="ex: 120" style="flex:1;text-align:left" />
       </div>
       <div class="sub hidden" id="pageToChapterHint" style="margin:-8px 0 10px"></div>
-      <div class="row" style="margin-top:14px">
-        <button class="btn btn-ghost" id="finishBtn" style="flex:1">Terminé ✓</button>
-      </div>
       <button class="archive-toggle hidden" id="archiveToggle" type="button"></button>
     </div>
 
@@ -659,7 +662,7 @@
       <svg class="weight-chart hidden" id="calorieChart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
       <div class="chart-footer-row hidden" id="calorieFooterRow">
         <div class="chart-footer-streak">
-          <span class="chart-footer-streak-icon">🔥</span>
+          <span class="chart-footer-streak-icon" id="calorieStreakIcon"></span>
           <div>
             <span class="chart-footer-streak-lbl" id="calorieStreakLbl"></span>
             <span class="chart-footer-streak-num" id="calorieStreakNum"></span>
@@ -991,8 +994,8 @@ const STRINGS = {
     currentPagePlaceholder:"ex: 120", currentPageEstimatePlaceholder:n=>`≈ ${n} (estimé)`, coverPageBadge:n=>`📄 page ≈ ${n}`,
     pageToChapterHint:n=>`≈ chapitre ${n}`,
     pagesRemaining:n=>`≈ ${n} pages restantes`,
-    chaptersLbl:"chapitres lus", chaptersRemaining:n=>`${n} restants`, addChapter:"+", finishBook:"Livre terminé ✓",
-    readingStreakLine:n=>`🔥 Série de lecture : ${n} jour${n>1?"s":""}`,
+    chaptersLbl:"chapitre", chaptersRemaining:n=>`${n} restants`, addChapter:"+", finishBook:"Livre terminé ✓",
+    readingStreakLbl:n=>`Série de lecture : ${n} jour${n>1?"s":""}`,
     paceAllDone:"Tu as fini tous les chapitres — tape Terminé ✓ !",
     bookLookupLoading:"🔍 Identification du livre…",
     bookNotIdentified:"Livre non identifié — tape le titre toi-même.",
@@ -1170,8 +1173,8 @@ const STRINGS = {
     currentPagePlaceholder:"e.g. 120", currentPageEstimatePlaceholder:n=>`≈ ${n} (estimated)`, coverPageBadge:n=>`📄 page ≈ ${n}`,
     pageToChapterHint:n=>`≈ chapter ${n}`,
     pagesRemaining:n=>`≈ ${n} pages left`,
-    chaptersLbl:"chapters read", chaptersRemaining:n=>`${n} left`, addChapter:"+", finishBook:"Book finished ✓",
-    readingStreakLine:n=>`🔥 Reading streak: ${n} day${n>1?"s":""}`,
+    chaptersLbl:"chapter", chaptersRemaining:n=>`${n} left`, addChapter:"+", finishBook:"Book finished ✓",
+    readingStreakLbl:n=>`Reading streak: ${n} day${n>1?"s":""}`,
     paceAllDone:"You've finished all the chapters — tap Done ✓!",
     bookLookupLoading:"🔍 Identifying the book…",
     bookNotIdentified:"Book not identified — type the title yourself.",
@@ -1313,8 +1316,12 @@ const CALENDAR_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none
 const DATABASE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>';
 const BOOK_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>';
 const DOWNLOAD_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+const FLAME_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>';
 document.getElementById("bizIconBadge").innerHTML=TRENDING_SVG;
 document.getElementById("coverPlaceholder").innerHTML=CAMERA_SVG;
+document.getElementById("unifiedStreakIcon").innerHTML=FLAME_SVG;
+document.getElementById("calorieStreakIcon").innerHTML=FLAME_SVG;
+document.getElementById("readingStreakIcon").innerHTML=FLAME_SVG;
 document.querySelector(".toggle-icon").innerHTML=BELL_SVG;
 document.querySelector(".bento-icon").innerHTML=LOCK_SVG;
 document.querySelector(".bento-icon-sm").innerHTML=DATABASE_SVG;
@@ -2523,12 +2530,13 @@ function renderReading(){
     if(!(pagesReadLog[keyFor(d)]>0))break;
     readingStreak++;
   }
-  const readingStreakEl=document.getElementById("readingStreakLine");
+  const readingStreakBadgeEl=document.getElementById("readingStreakBadge");
   if(readingStreak>0){
-    readingStreakEl.textContent=t("readingStreakLine",readingStreak);
-    readingStreakEl.classList.remove("hidden");
+    document.getElementById("readingStreakNum").textContent=readingStreak;
+    readingStreakBadgeEl.title=t("readingStreakLbl",readingStreak);
+    readingStreakBadgeEl.classList.remove("hidden");
   }else{
-    readingStreakEl.classList.add("hidden");
+    readingStreakBadgeEl.classList.add("hidden");
   }
   const bookInputEl=document.getElementById("bookInput");
   const bookDisplayEl=document.getElementById("bookTitleDisplay");
