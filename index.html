@@ -299,8 +299,9 @@
   .photo-thumb-date{font-size:10px;color:var(--muted)}
   @keyframes fadeIn{from{opacity:0}to{opacity:1}}
   @keyframes popIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
-  .toggle-row{display:flex;align-items:center;gap:12px;background:var(--cardHi);border-radius:14px;padding:14px}
+  .toggle-row{display:flex;align-items:center;gap:12px;background:var(--cardHi);border-radius:14px;padding:14px;border:none;font-family:inherit;text-align:left;width:100%}
   .toggle-row.hidden{display:none}
+  .reminder-hour-value{font-size:15px;font-weight:700;color:var(--green);flex-shrink:0}
   .toggle-icon{width:36px;height:36px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
   .toggle-info{flex:1}
   .toggle-info b{font-size:14px;display:block}
@@ -735,10 +736,13 @@
         </div>
         <button class="switch" id="reminderBtn" type="button" role="switch" aria-checked="false"><span class="switch-knob"></span></button>
       </div>
-      <div class="hidden" id="reminderHourRow" style="margin-top:14px">
-        <span class="stat-lbl" id="reminderHourLbl">Heure</span>
-        <div class="period-picker category-picker-scroll" id="reminderHourPicker" style="margin-top:8px"></div>
-      </div>
+      <button type="button" class="toggle-row hidden" id="reminderHourRow" style="margin-top:10px;cursor:pointer">
+        <div class="toggle-icon" id="reminderHourIcon"></div>
+        <div class="toggle-info">
+          <b id="reminderHourLbl">Heure du rappel</b>
+        </div>
+        <span class="reminder-hour-value" id="reminderHourValue"></span>
+      </button>
 
       <div class="settings-bento">
         <div class="bento-tile">
@@ -857,7 +861,7 @@
     <div class="time-trigger-row" style="margin-bottom:16px">
       <span id="addTaskTimeLbl" style="color:var(--muted);font-size:12px"></span>
       <button type="button" class="time-trigger-btn" id="newTaskTimeBtn">
-        <span class="time-trigger-icon">🕐</span>
+        <span class="time-trigger-icon" id="newTaskTimeIcon"></span>
         <span id="newTaskTimeBtnLbl"></span>
       </button>
     </div>
@@ -887,6 +891,18 @@
     <div class="task-detail-actions">
       <button class="btn btn-ghost" id="timePickerClearBtn" style="flex:1"></button>
       <button class="btn btn-amber" id="timePickerConfirmBtn" style="flex:1"></button>
+    </div>
+  </div>
+</div>
+
+<div class="celebration hidden" id="reminderTimePickerSheet">
+  <div class="task-detail-card">
+    <div class="task-detail-label" id="reminderTimePickerTitle"></div>
+    <div class="time-wheels">
+      <div class="time-wheel" id="reminderHourWheel"></div>
+    </div>
+    <div class="task-detail-actions">
+      <button class="btn btn-amber" id="reminderTimePickerConfirmBtn" style="flex:1"></button>
     </div>
   </div>
 </div>
@@ -969,7 +985,8 @@ const STRINGS = {
     reminderSubDefault:h=>`Une notification à ${h}h pour cocher tes tâches avant la coupure d'écran.`,
     reminderSubNeedsInstall:"Ajoute d'abord l'app à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis reviens ici pour activer les rappels.",
     reminderSubDenied:"Notifications refusées — active-les dans Réglages iOS > Notifications > Discipline.",
-    reminderBtnOn:"Activer les rappels", reminderBtnOff:"Rappels activés ✓ (touche pour désactiver)", reminderHourLbl:"Heure",
+    reminderBtnOn:"Activer les rappels", reminderBtnOff:"Rappels activés ✓ (touche pour désactiver)", reminderHourLbl:"Heure du rappel",
+    reminderTimePickerTitle:"Choisir l'heure du rappel", reminderTimePickerConfirmBtn:"Valider",
     weightTitle:"Poids", weightSub:"Pèse-toi chaque matin. On calcule une moyenne sur 7 jours pour lisser les variations normales (eau, sel, digestion) — c'est elle qui compte, pas le chiffre du jour.",
     weightGoalLbl:"Objectif",
     weightCurrent:"actuel", weightGoal:"objectif", weightRemaining:"reste à faire", weightRate:"kg/semaine", weightSinceStart:"depuis le début",
@@ -1149,7 +1166,8 @@ const STRINGS = {
     reminderSubDefault:h=>`A notification at ${h}h to check off your tasks before screens go off.`,
     reminderSubNeedsInstall:"Add the app to your home screen first (Share → Add to Home Screen), then come back here to enable reminders.",
     reminderSubDenied:"Notifications denied — enable them in iOS Settings > Notifications > Discipline.",
-    reminderBtnOn:"Enable reminders", reminderBtnOff:"Reminders on ✓ (tap to disable)", reminderHourLbl:"Time",
+    reminderBtnOn:"Enable reminders", reminderBtnOff:"Reminders on ✓ (tap to disable)", reminderHourLbl:"Reminder time",
+    reminderTimePickerTitle:"Choose reminder time", reminderTimePickerConfirmBtn:"Confirm",
     weightTitle:"Weight", weightSub:"Weigh yourself every morning. We compute a 7-day average to smooth out normal swings (water, salt, digestion) — that's what matters, not the day's raw number.",
     weightGoalLbl:"Goal",
     weightCurrent:"current", weightGoal:"goal", weightRemaining:"remaining", weightRate:"kg/week", weightSinceStart:"since start",
@@ -1325,6 +1343,7 @@ const DOWNLOAD_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none
 const FLAME_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>';
 const EDIT_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
 const INFO_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+const CLOCK_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
 document.getElementById("bizIconBadge").innerHTML=TRENDING_SVG;
 document.getElementById("coverPlaceholder").innerHTML=CAMERA_SVG;
 document.getElementById("unifiedStreakIcon").innerHTML=FLAME_SVG;
@@ -1788,6 +1807,10 @@ function applyStaticI18n(){
   document.getElementById("byCategoryLbl").textContent=t("byCategoryLbl");
   document.getElementById("reminderTitle").textContent=t("reminderTitle");
   document.getElementById("reminderHourLbl").textContent=t("reminderHourLbl");
+  document.getElementById("reminderHourIcon").innerHTML=CLOCK_SVG;
+  document.getElementById("newTaskTimeIcon").innerHTML=CLOCK_SVG;
+  document.getElementById("reminderTimePickerTitle").textContent=t("reminderTimePickerTitle");
+  document.getElementById("reminderTimePickerConfirmBtn").textContent=t("reminderTimePickerConfirmBtn");
   document.getElementById("weightTitle").textContent=t("weightTitle");
   document.getElementById("weightSub").textContent=t("weightSub");
   document.getElementById("weightGoalLbl").textContent=t("weightGoalLbl");
@@ -3321,29 +3344,44 @@ let pushSubscribed=false;
 let reminderHour=load("tracker:reminderHour",21);
 function setReminderHour(h){
   reminderHour=h;
-  document.querySelectorAll("#reminderHourPicker .period-opt").forEach(b=>b.classList.toggle("active",+b.dataset.hour===h));
+  document.getElementById("reminderHourValue").textContent=`${h}h`;
   if(pushSubscribed)document.getElementById("reminderSub").textContent=t("reminderSubDefault",h);
 }
 async function pickReminderHour(h){
   setReminderHour(h);
   save("tracker:reminderHour",h);
-  flashSaved(document.querySelector(`#reminderHourPicker .period-opt[data-hour="${h}"]`));
+  flashSaved(document.getElementById("reminderHourRow"));
   const reg=await navigator.serviceWorker.ready;
   const current=await reg.pushManager.getSubscription();
   if(current)apiFetch("/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:subscribePayload(current)}).catch(()=>{});
 }
-function populateReminderHourSelect(){
-  const picker=document.getElementById("reminderHourPicker");
-  picker.innerHTML="";
+let pickedReminderHour=null;
+function buildReminderHourWheel(){
+  const wheel=document.getElementById("reminderHourWheel");
+  wheel.innerHTML="";
   for(let h=17;h<=23;h++){
-    const btn=document.createElement("button");
-    btn.type="button";btn.className="period-opt";btn.dataset.hour=h;
-    btn.textContent=`${h}h`;
-    btn.onclick=()=>pickReminderHour(h);
-    picker.appendChild(btn);
+    const el=document.createElement("div");
+    el.className="time-wheel-item";el.textContent=`${h}h`;
+    el.dataset.hour=h;el.onclick=()=>selectReminderPickerHour(h);
+    wheel.appendChild(el);
   }
-  setReminderHour(reminderHour);
 }
+function selectReminderPickerHour(h,instant){
+  pickedReminderHour=h;
+  document.querySelectorAll("#reminderHourWheel .time-wheel-item").forEach(el=>el.classList.toggle("active",+el.dataset.hour===h));
+  scrollWheelToActive("reminderHourWheel",instant);
+}
+function openReminderTimePicker(){
+  selectReminderPickerHour(reminderHour,true);
+  showSheet("reminderTimePickerSheet");
+}
+function closeReminderTimePicker(){hideSheet("reminderTimePickerSheet");}
+document.getElementById("reminderHourRow").onclick=openReminderTimePicker;
+document.getElementById("reminderTimePickerConfirmBtn").onclick=()=>{
+  if(pickedReminderHour!=null)pickReminderHour(pickedReminderHour);
+  closeReminderTimePicker();
+};
+document.getElementById("reminderTimePickerSheet").addEventListener("click",(e)=>{if(e.target.id==="reminderTimePickerSheet")closeReminderTimePicker();});
 function subscribePayload(sub){
   const json=sub.toJSON?sub.toJSON():sub;
   return JSON.stringify({...json,reminderHour});
@@ -3353,7 +3391,8 @@ async function initReminder(){
   const sub=document.getElementById("reminderSub");
   const btn=document.getElementById("reminderBtn");
   const hourRow=document.getElementById("reminderHourRow");
-  populateReminderHourSelect();
+  buildReminderHourWheel();
+  setReminderHour(reminderHour);
   if(!("serviceWorker"in navigator)||!("PushManager"in window)){card.classList.add("hidden");btn.classList.add("hidden");hourRow.classList.add("hidden");return;}
   const isStandalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
   if(!isStandalone){
