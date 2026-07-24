@@ -1007,7 +1007,7 @@ const STRINGS = {
     pageCountBadge:n=>`📄 ${n} pages (Open Library)`,
     foodLogAddBtn:"Ajouter une photo", foodLogLoading:"🔍 Estimation en cours…",
     foodLogTabPhoto:"Photo", foodLogTabText:"Décrire",
-    foodLogTextPlaceholder:"Ex : 200g de poulet grillé, riz, salade…", foodLogTextBtn:"Calculer",
+    foodLogTextPlaceholder:"Ex : 200g de poulet grillé, riz, salade…", foodLogTextBtn:"Calculer", foodLogTextBtnUpdate:"Mettre à jour",
     foodLogTextNotFood:"Texte non reconnu comme un repas — décris ce que tu as mangé.",
     foodLogForDate:d=>`📅 Ajout pour le ${d}`,
     archiveAddTitle:"Livres déjà lus cette année", archiveAddSub:"Prends une photo de la couverture, un par un — pas besoin de suivre leur progression.", archiveAddBtn:"Ajouter un livre", archiveAddLoading:"🔍 Identification…", archiveAddUnidentified:"Livre (non identifié)",
@@ -1186,7 +1186,7 @@ const STRINGS = {
     pageCountBadge:n=>`📄 ${n} pages (Open Library)`,
     foodLogAddBtn:"Add a photo", foodLogLoading:"🔍 Estimating…",
     foodLogTabPhoto:"Photo", foodLogTabText:"Describe",
-    foodLogTextPlaceholder:"E.g.: 200g grilled chicken, rice, salad…", foodLogTextBtn:"Calculate",
+    foodLogTextPlaceholder:"E.g.: 200g grilled chicken, rice, salad…", foodLogTextBtn:"Calculate", foodLogTextBtnUpdate:"Update",
     foodLogTextNotFood:"Text not recognized as food — describe what you ate.",
     foodLogForDate:d=>`📅 Adding for ${d}`,
     archiveAddTitle:"Books already read this year", archiveAddSub:"Take a photo of the cover, one at a time — no need to track their progress.", archiveAddBtn:"Add a book", archiveAddLoading:"🔍 Identifying…", archiveAddUnidentified:"Book (not identified)",
@@ -3025,14 +3025,27 @@ function renderFoodLog(){
   items.forEach(it=>{
     const row=document.createElement("div");
     row.className="food-log-item";
-    row.innerHTML=`<span class="food-log-item-desc">${it.description}</span><span class="food-log-item-kcal">${it.kcal} kcal</span>`;
-    row.onclick=async()=>{
+    row.innerHTML=`<span class="food-log-item-desc">${it.description}</span><span class="food-log-item-kcal">${it.kcal} kcal</span><button class="del" type="button">✕</button>`;
+    row.onclick=()=>startEditFoodItem(it);
+    row.querySelector(".del").onclick=async(e)=>{
+      e.stopPropagation();
       if(!(await showConfirmModal(t("foodLogDeleteConfirm",it.description),t("confirmModalDeleteBtn"))))return;
       saveCalories(dateKey,loadCalories(dateKey).filter(x=>x.id!==it.id));
       renderFoodLog();renderCalories();
     };
     listEl.appendChild(row);
   });
+}
+// Tapping a logged item re-opens it in the "Décrire" tab pre-filled with its
+// current description, so a correction (missed a side dish, wrong quantity)
+// updates the same entry in place instead of adding a duplicate.
+let editingFoodItemId=null;
+function startEditFoodItem(it){
+  editingFoodItemId=it.id;
+  document.getElementById("foodLogTextInput").value=it.description;
+  setFoodLogMode("text");
+  document.getElementById("foodLogTextInput").focus();
+  document.getElementById("foodLogTextBtn").textContent=t("foodLogTextBtnUpdate");
 }
 function logFoodItem(description,kcal){
   const dateKey=viewedDate;
@@ -3112,6 +3125,11 @@ function setFoodLogMode(mode){
   document.getElementById("foodLogTabText").classList.toggle("active",mode==="text");
   document.getElementById("foodLogModePhoto").classList.toggle("hidden",mode!=="photo");
   document.getElementById("foodLogModeText").classList.toggle("hidden",mode!=="text");
+  if(mode==="photo"&&editingFoodItemId!=null){
+    editingFoodItemId=null;
+    document.getElementById("foodLogTextInput").value="";
+    document.getElementById("foodLogTextBtn").textContent=t("foodLogTextBtn");
+  }
 }
 document.querySelectorAll("#foodLogTabs .food-log-tab").forEach(btn=>{
   btn.onclick=()=>setFoodLogMode(btn.dataset.mode);
@@ -3128,7 +3146,15 @@ async function estimateFoodFromText(){
     const res=await apiFetch("/food-lookup-text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({description})});
     const data=await res.json();
     if(data.description&&data.kcal){
-      logFoodItem(data.description,data.kcal);
+      if(editingFoodItemId!=null){
+        const items=loadCalories(viewedDate);
+        const item=items.find(x=>x.id===editingFoodItemId);
+        if(item){item.description=data.description;item.kcal=data.kcal;saveCalories(viewedDate,items);renderFoodLog();renderCalories();}
+        editingFoodItemId=null;
+        document.getElementById("foodLogTextBtn").textContent=t("foodLogTextBtn");
+      }else{
+        logFoodItem(data.description,data.kcal);
+      }
       input.value="";
     }else{
       alert(t("foodLogTextNotFood"));
