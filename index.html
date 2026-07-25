@@ -1895,6 +1895,11 @@ const PERIOD_KEYS={morning:"periodMorning",day:"periodDay",evening:"periodEvenin
 // second helping can be logged from any of the three meal tasks — so all
 // three (ex-"meals", now split) surface the same shared daily calorie log.
 const MEAL_TASK_IDS=new Set(["breakfast","lunch","dinner"]);
+// Separate from MEAL_TASK_IDS on purpose: this set only gates which tasks
+// show the calorie-logging UI (shake counts toward calories too). Keeping
+// it distinct from MEAL_TASK_IDS means adding the shake here doesn't change
+// what mealsConsistency() below counts as "the 3 meals."
+const CALORIE_LOG_TASK_IDS=new Set([...MEAL_TASK_IDS,"shake"]);
 function renderTaskRow(tk){
   const d=document.createElement("div");
   const viewedDone=getViewedDone();
@@ -1909,10 +1914,10 @@ function renderTaskRow(tk){
     d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==tk.id);save("tracker:template",tasks);renderTasks();renderScore();};
   }else{
     const missed=!viewedDone[tk.id]&&wasTaskMissedRecently(tk);
-    const cameraBtn=(MEAL_TASK_IDS.has(tk.id)||tk.hasPhoto)?`<button class="task-camera" type="button" title="${t("foodLogAddBtn")}">${CAMERA_SVG}</button>`:"";
+    const cameraBtn=(CALORIE_LOG_TASK_IDS.has(tk.id)||tk.hasPhoto)?`<button class="task-camera" type="button" title="${t("foodLogAddBtn")}">${CAMERA_SVG}</button>`:"";
     d.innerHTML=`<div class="check${missed?" missed":""}">${CHECK_SVG}</div><span class="task-label"><span class="task-label-text">${taskDisplayLabel(tk)}</span>${timeBadge}${missed?`<span class="missed-hint">${t("missedHint")}</span>`:""}</span>${cameraBtn}<button class="task-menu" type="button">⋮</button>`;
     d.querySelector(".task-menu").onclick=(e)=>{e.stopPropagation();openTaskDetail(tk);};
-    if(MEAL_TASK_IDS.has(tk.id)){
+    if(CALORIE_LOG_TASK_IDS.has(tk.id)){
       d.querySelector(".task-camera").onclick=(e)=>{
         e.stopPropagation();
         openTaskDetail(tk);
@@ -2455,7 +2460,7 @@ function renderCalories(){
   }
 }
 document.getElementById("calorieLogMealBtn").onclick=()=>{
-  const mealTasks=tasks.filter(tk=>MEAL_TASK_IDS.has(tk.id));
+  const mealTasks=tasks.filter(tk=>CALORIE_LOG_TASK_IDS.has(tk.id));
   openTaskDetail(mealTasks.find(tk=>!done[tk.id])||mealTasks[0]);
 };
 function renderProgressPhotos(){
@@ -3242,7 +3247,7 @@ function openTaskDetail(tk){
   if(detail){detailEl.textContent=detail;detailEl.classList.remove("hidden");}
   else{detailEl.classList.add("hidden");}
   const foodSection=document.getElementById("foodLogSection");
-  if(MEAL_TASK_IDS.has(tk.id)){
+  if(CALORIE_LOG_TASK_IDS.has(tk.id)){
     const dateLabelEl=document.getElementById("foodLogDateLabel");
     if(isViewingToday()){
       dateLabelEl.classList.add("hidden");
