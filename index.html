@@ -3496,6 +3496,22 @@ function createWheelController(wheelId,values,formatFn,onSettle){
   let itemCenters=[],wheelHeight=0;
   function cachePositions(){
     wheelHeight=wheel.clientHeight;
+    // The CSS padding-top/bottom is only an estimate of "half the wheel
+    // height minus half an item" — if it's even a couple px short, the
+    // first/last item can never actually reach the center of the selection
+    // band: the browser clamps scrollTop right before it gets there. Drag
+    // past that point (rubber-band overscroll) and scrollTop stops
+    // changing entirely, so no more scroll events fire and the live fade
+    // effect just sits there until the bounce-back animation on release
+    // fires events again — exactly the "frozen for a few seconds, then
+    // catches up" report, and exactly why it only happened at the very
+    // first/last hour. Compute the exact padding from real measurements
+    // instead of a guessed CSS value, so every item — including the edges
+    // — can genuinely reach true center.
+    const itemHeight=items[0].offsetHeight;
+    const exactPadding=Math.max(0,wheelHeight/2-itemHeight/2);
+    wheel.style.paddingTop=exactPadding+"px";
+    wheel.style.paddingBottom=exactPadding+"px";
     itemCenters=items.map(item=>item.offsetTop+item.offsetHeight/2);
   }
   function styleByDistance(){
@@ -3529,7 +3545,10 @@ function createWheelController(wheelId,values,formatFn,onSettle){
       this.value=v;
       if(!wheelHeight)cachePositions(); // first call happens right after showSheet(), now visible/measurable
       const item=items[values.indexOf(v)];
-      if(item)wheel.scrollTo({top:item.offsetTop-wheelHeight/2+item.offsetHeight/2,behavior:instant?"auto":"smooth"});
+      // "auto" defers to the element's CSS scroll-behavior, which is
+      // "smooth" here — it does NOT mean instant. Only the literal
+      // "instant" value actually bypasses that and jumps immediately.
+      if(item)wheel.scrollTo({top:item.offsetTop-wheelHeight/2+item.offsetHeight/2,behavior:instant?"instant":"smooth"});
       styleByDistance();
       if(onSettle)onSettle(this.value);
     },
