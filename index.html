@@ -1103,7 +1103,8 @@ const STRINGS = {
       "Repos. Ton corps récupère et se reconstruit — la récup fait partie du programme. Pas de séance aujourd'hui.",
       "Repos. Profite du week-end, la prochaine séance (PUSH) reprend lundi.",
     ],
-    shakeDetail:"🕐 15h30 – 15h40\n\n🥤 Collation de l'après-midi, tous les jours :\n\n• Whey ISO100\n• Lait (ou lait fermenté)\n• + ta créatine dedans (dose du pot)\n\nBien après le déjeuner = léger, pas lourd. Parfait pour étaler tes calories et garantir tes protéines même les jours sans faim, sans te couper l'appétit du dîner.",
+    shakeDetail:"🕐 15h30 – 15h40\n\n🥤 Collation de l'après-midi, tous les jours :\n\n• 500 ml de lait (ou lait fermenté)\n• 30 g de whey ISO\n• 5 g de créatine\n\nBien après le déjeuner = léger, pas lourd. Parfait pour étaler tes calories et garantir tes protéines même les jours sans faim, sans te couper l'appétit du dîner.",
+    shakeDefaultText:"500 ml lait, 30 g whey ISO, 5 g créatine",
     wakeDetail:"🕐 06h00 – 06h40\n\nLève-toi, grand verre d'eau.\n\n🌞 Sors prendre la lumière du soleil + marche 30-45 min (≈3,5-5 km).\nC'est le meilleur anti-stress naturel : ça règle ton horloge interne, ton énergie et ton humeur pour toute la journée.\n\n📵 Toujours pas de téléphone — il reste dans l'autre pièce.",
     weighInDetail:"⚖️ Une fois par semaine, le matin, si possible à jeun, toujours dans les mêmes conditions.\n\nPas besoin de plus souvent — le poids varie ±1kg d'un jour à l'autre selon l'eau, le sel, la digestion. Une pesée hebdo au même moment donne une tendance bien plus fiable que des pesées quotidiennes.",
     faceCareMorningDetail:"🕐 08h15 – 08h20\n\n🧼 Nettoie avec ton savon riz/algues.\n💧 Hydratation légère « jour » : jojoba ou squalane (non gras), ou un peu de gel d'aloe vera.\n\nRapide, peau fraîche pour la journée.",
@@ -1284,7 +1285,8 @@ const STRINGS = {
       "Rest. Your body recovers and rebuilds — recovery is part of the program. No session today.",
       "Rest. Enjoy the weekend, next session (PUSH) starts Monday.",
     ],
-    shakeDetail:"🕐 3:30pm – 3:40pm\n\n🥤 Afternoon snack, every day:\n\n• Whey ISO100\n• Milk (or fermented milk)\n• + your creatine mixed in (scoop from the tub)\n\nWell after lunch = light, not heavy. Perfect for spreading out your calories and guaranteeing your protein even on low-appetite days, without killing your dinner appetite.",
+    shakeDetail:"🕐 3:30pm – 3:40pm\n\n🥤 Afternoon snack, every day:\n\n• 500 ml milk (or fermented milk)\n• 30 g whey ISO\n• 5 g creatine\n\nWell after lunch = light, not heavy. Perfect for spreading out your calories and guaranteeing your protein even on low-appetite days, without killing your dinner appetite.",
+    shakeDefaultText:"500 ml milk, 30 g whey ISO, 5 g creatine",
     wakeDetail:"🕐 6:00am – 6:40am\n\nGet up, big glass of water.\n\n🌞 Go get sunlight + walk 30-45 min (≈3.5-5 km).\nThe best natural anti-stress: it sets your internal clock, energy and mood for the whole day.\n\n📵 Still no phone — it stays in the other room.",
     weighInDetail:"⚖️ Once a week, in the morning, ideally fasted, always under the same conditions.\n\nNo need for more often — weight swings ±1kg day to day with water, salt, digestion. A weekly weigh-in at the same time gives a far more reliable trend than daily ones.",
     faceCareMorningDetail:"🕐 8:15am – 8:20am\n\n🧼 Cleanse with your rice/seaweed soap.\n💧 Light \"day\" hydration: jojoba or squalane (non-greasy), or a bit of aloe vera gel.\n\nQuick, fresh skin for the day.",
@@ -3265,12 +3267,16 @@ function openTaskDetail(tk){
     document.getElementById("foodLogTabPhotoLbl").textContent=t("foodLogTabPhoto");
     document.getElementById("foodLogTabTextLbl").textContent=t("foodLogTabText");
     document.getElementById("foodLogTextInput").placeholder=t("foodLogTextPlaceholder");
-    document.getElementById("foodLogTextInput").value="";
+    // The shake is always the same fixed recipe (500ml milk, 30g whey ISO,
+    // 5g creatine) — prefill it and open straight to the text tab so
+    // logging it is a single "Calculer" tap instead of typing it out or
+    // switching tabs from the photo default.
+    document.getElementById("foodLogTextInput").value=tk.id==="shake"?t("shakeDefaultText"):"";
     document.getElementById("foodLogTextBtn").textContent=t("foodLogTextBtn");
     document.getElementById("foodLogHintIcon").innerHTML=INFO_SVG;
     document.getElementById("foodLogHintText").textContent=t("foodLogHint");
     renderFoodLogChips();
-    setFoodLogMode("photo");
+    setFoodLogMode(tk.id==="shake"?"text":"photo");
     pendingFoodPhoto=null;
     renderFoodLog();
     foodSection.classList.remove("hidden");
