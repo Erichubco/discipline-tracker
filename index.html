@@ -3366,13 +3366,13 @@ async function pickReminderTime(h,m){
 }
 let reminderHourWheel=null,reminderMinuteWheel=null;
 function openReminderTimePicker(){
+  showSheet("reminderTimePickerSheet");
   if(!reminderHourWheel){
     reminderHourWheel=createWheelController("reminderHourWheel",HOURS_17_23,pad2);
     reminderMinuteWheel=createWheelController("reminderMinuteWheel",MINUTES_STEP5,pad2);
   }
   reminderHourWheel.select(reminderHour,true);
   reminderMinuteWheel.select(reminderMinute,true);
-  showSheet("reminderTimePickerSheet");
 }
 function closeReminderTimePicker(){hideSheet("reminderTimePickerSheet");}
 document.getElementById("reminderHourRow").onclick=openReminderTimePicker;
@@ -3485,37 +3485,55 @@ function createWheelController(wheelId,values,formatFn,onSettle){
     wheel.appendChild(el);
   });
   const items=[...wheel.querySelectorAll(".time-wheel-item")];
+  // Item positions are static once laid out (nothing here reflows the list),
+  // so read offsetTop for all of them ONCE instead of inside the scroll
+  // handler. Re-reading layout on every scroll event — which a real fast
+  // touch-scroll fling fires far more often than Puppeteer's synthetic
+  // scrollTo ever does, which is why this didn't show up in testing — forces
+  // a layout recalc each time right after the previous pass just wrote new
+  // styles, i.e. layout thrashing. That's what read as "freezes for a
+  // second, then catches up" on a real phone.
+  let itemCenters=[],wheelHeight=0;
+  function cachePositions(){
+    wheelHeight=wheel.clientHeight;
+    itemCenters=items.map(item=>item.offsetTop+item.offsetHeight/2);
+  }
   function styleByDistance(){
-    const centerY=wheel.scrollTop+wheel.clientHeight/2;
+    const centerY=wheel.scrollTop+wheelHeight/2;
     let nearestIdx=0,nearestDist=Infinity;
-    items.forEach((item,i)=>{
-      const dist=Math.abs((item.offsetTop+item.offsetHeight/2)-centerY);
+    for(let i=0;i<items.length;i++){
+      const dist=Math.abs(itemCenters[i]-centerY);
       if(dist<nearestDist){nearestDist=dist;nearestIdx=i;}
-      item.style.opacity=dist<20?1:dist<48?0.55:0.25;
-      item.classList.toggle("active",dist<20);
-    });
+      items[i].style.opacity=dist<20?1:dist<48?0.55:0.25;
+      items[i].classList.toggle("active",dist<20);
+    }
     return nearestIdx;
   }
-  let settleTimer=null;
+  let settleTimer=null,ticking=false;
   wheel.addEventListener("scroll",()=>{
-    const nearestIdx=styleByDistance();
-    clearTimeout(settleTimer);
-    settleTimer=setTimeout(()=>{
-      controller.value=values[nearestIdx];
-      if(onSettle)onSettle(controller.value);
-    },120);
+    if(ticking)return;
+    ticking=true;
+    requestAnimationFrame(()=>{
+      const nearestIdx=styleByDistance();
+      ticking=false;
+      clearTimeout(settleTimer);
+      settleTimer=setTimeout(()=>{
+        controller.value=values[nearestIdx];
+        if(onSettle)onSettle(controller.value);
+      },120);
+    });
   },{passive:true});
   const controller={
     value:values[0],
     select(v,instant){
       this.value=v;
+      if(!wheelHeight)cachePositions(); // first call happens right after showSheet(), now visible/measurable
       const item=items[values.indexOf(v)];
-      if(item)wheel.scrollTo({top:item.offsetTop-wheel.clientHeight/2+item.offsetHeight/2,behavior:instant?"auto":"smooth"});
+      if(item)wheel.scrollTo({top:item.offsetTop-wheelHeight/2+item.offsetHeight/2,behavior:instant?"auto":"smooth"});
       styleByDistance();
       if(onSettle)onSettle(this.value);
     },
   };
-  styleByDistance();
   return controller;
 }
 const HOURS_17_23=[17,18,19,20,21,22,23];
@@ -3538,12 +3556,12 @@ function openTimePicker(){
     const now=new Date();h=now.getHours();m=Math.round(now.getMinutes()/5)*5;
     if(m===60){m=0;h=(h+1)%24;}
   }
+  showSheet("timePickerSheet");
   if(!taskHourWheel){
     taskHourWheel=createWheelController("hourWheel",HOURS_0_23,pad2);
     taskMinuteWheel=createWheelController("minuteWheel",MINUTES_STEP5,pad2);
   }
   taskHourWheel.select(h,true);taskMinuteWheel.select(m,true);
-  showSheet("timePickerSheet");
 }
 function closeTimePicker(){hideSheet("timePickerSheet");}
 document.getElementById("newTaskTimeBtn").onclick=openTimePicker;
