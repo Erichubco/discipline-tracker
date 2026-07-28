@@ -3514,16 +3514,27 @@ function setNewTaskHasPhoto(v){
 // (no click needed) commits the centered value, like a real iOS picker
 // wheel. One shared controller factory backs every wheel in the app (task
 // hour/minute, reminder hour/minute) instead of four near-duplicate copies.
+// Rendered WHEEL_COPIES times back-to-back so the wheel can scroll like a
+// native iOS picker (past 23h it keeps going, landing back on 0h) instead of
+// stopping dead at the first/last value. 5 copies means a single real flick
+// has 2 full lists of buffer in every direction before it could ever reach
+// a true DOM edge — recenterIfDrifted() below silently snaps back to the
+// middle copy once scrolling has fully settled, so in practice the edge is
+// never seen.
+const WHEEL_COPIES=5,WHEEL_MID_COPY=2;
 function createWheelController(wheelId,values,formatFn,onSettle){
   const wheel=document.getElementById(wheelId);
   wheel.innerHTML="";
-  values.forEach(v=>{
-    const el=document.createElement("div");
-    el.className="time-wheel-item";
-    el.textContent=formatFn(v);
-    el.onclick=()=>controller.select(v);
-    wheel.appendChild(el);
-  });
+  const N=values.length;
+  for(let c=0;c<WHEEL_COPIES;c++){
+    values.forEach(v=>{
+      const el=document.createElement("div");
+      el.className="time-wheel-item";
+      el.textContent=formatFn(v);
+      el.onclick=()=>controller.select(v);
+      wheel.appendChild(el);
+    });
+  }
   const items=[...wheel.querySelectorAll(".time-wheel-item")];
   // Item positions are static once laid out (nothing here reflows the list),
   // so read offsetTop for all of them ONCE instead of inside the scroll
@@ -3533,7 +3544,7 @@ function createWheelController(wheelId,values,formatFn,onSettle){
   // a layout recalc each time right after the previous pass just wrote new
   // styles, i.e. layout thrashing. That's what read as "freezes for a
   // second, then catches up" on a real phone.
-  let itemCenters=[],wheelHeight=0;
+  let itemCenters=[],wheelHeight=0,itemHeight=0;
   function cachePositions(){
     wheelHeight=wheel.clientHeight;
     // The CSS padding-top/bottom is only an estimate of "half the wheel
@@ -3548,7 +3559,7 @@ function createWheelController(wheelId,values,formatFn,onSettle){
     // first/last hour. Compute the exact padding from real measurements
     // instead of a guessed CSS value, so every item — including the edges
     // — can genuinely reach true center.
-    const itemHeight=items[0].offsetHeight;
+    itemHeight=items[0].offsetHeight;
     const exactPadding=Math.max(0,wheelHeight/2-itemHeight/2);
     wheel.style.paddingTop=exactPadding+"px";
     wheel.style.paddingBottom=exactPadding+"px";
@@ -3565,6 +3576,20 @@ function createWheelController(wheelId,values,formatFn,onSettle){
     }
     return nearestIdx;
   }
+  // Once scrolling has fully stopped, silently jump back onto the middle
+  // copy if the settled position drifted into a neighboring one — every
+  // copy renders identical text, so the jump is a visual no-op. Doing this
+  // only at settle (never mid-gesture) means it can't fight the browser's
+  // own touch/momentum/snap handling, which is exactly what caused the
+  // freeze bug before: this never touches scrollTop while a real gesture
+  // could still be changing it.
+  function recenterIfDrifted(nearestIdx){
+    const copyIdx=Math.floor(nearestIdx/N);
+    if(copyIdx===WHEEL_MID_COPY)return nearestIdx;
+    wheel.scrollTo({top:wheel.scrollTop+(WHEEL_MID_COPY-copyIdx)*N*itemHeight,behavior:"instant"});
+    styleByDistance();
+    return WHEEL_MID_COPY*N+(nearestIdx%N);
+  }
   let settleTimer=null,ticking=false;
   wheel.addEventListener("scroll",()=>{
     if(ticking)return;
@@ -3574,7 +3599,8 @@ function createWheelController(wheelId,values,formatFn,onSettle){
       ticking=false;
       clearTimeout(settleTimer);
       settleTimer=setTimeout(()=>{
-        controller.value=values[nearestIdx];
+        const settledIdx=recenterIfDrifted(nearestIdx);
+        controller.value=values[settledIdx%N];
         if(onSettle)onSettle(controller.value);
       },120);
     });
@@ -3584,7 +3610,7 @@ function createWheelController(wheelId,values,formatFn,onSettle){
     select(v,instant){
       this.value=v;
       if(!wheelHeight)cachePositions(); // first call happens right after showSheet(), now visible/measurable
-      const item=items[values.indexOf(v)];
+      const item=items[WHEEL_MID_COPY*N+values.indexOf(v)];
       // "auto" defers to the element's CSS scroll-behavior, which is
       // "smooth" here — it does NOT mean instant. Only the literal
       // "instant" value actually bypasses that and jumps immediately.
