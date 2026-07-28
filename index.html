@@ -746,6 +746,14 @@
         </div>
         <span class="reminder-hour-value" id="reminderHourValue"></span>
       </button>
+      <div class="toggle-row hidden" id="taskUpdateNotifsRow" style="margin-top:10px">
+        <div class="toggle-icon" id="taskUpdateNotifsIcon"></div>
+        <div class="toggle-info">
+          <b id="taskUpdateNotifsTitle">Notifs mise à jour tâches</b>
+          <span id="taskUpdateNotifsSub">Te prévenir quand la synchro calendrier modifie une tâche.</span>
+        </div>
+        <button class="switch" id="taskUpdateNotifsBtn" type="button" role="switch" aria-checked="false"><span class="switch-knob"></span></button>
+      </div>
 
       <div class="settings-bento">
         <div class="bento-tile">
@@ -994,6 +1002,7 @@ const STRINGS = {
     reminderSubDenied:"Notifications refusées — active-les dans Réglages iOS > Notifications > Discipline.",
     reminderBtnOn:"Activer les rappels", reminderBtnOff:"Rappels activés ✓ (touche pour désactiver)", reminderHourLbl:"Heure du rappel",
     reminderTimePickerTitle:"Choisir l'heure du rappel", reminderTimePickerConfirmBtn:"Valider",
+    taskUpdateNotifsTitle:"Notifs mise à jour tâches", taskUpdateNotifsSub:"Te prévenir quand la synchro calendrier modifie une tâche.",
     weightTitle:"Poids", weightSub:"Pèse-toi chaque matin. On calcule une moyenne sur 7 jours pour lisser les variations normales (eau, sel, digestion) — c'est elle qui compte, pas le chiffre du jour.",
     weightGoalLbl:"Objectif",
     weightCurrent:"actuel", weightGoal:"objectif", weightRemaining:"reste à faire", weightRate:"kg/semaine", weightSinceStart:"depuis le début",
@@ -1176,6 +1185,7 @@ const STRINGS = {
     reminderSubDenied:"Notifications denied — enable them in iOS Settings > Notifications > Discipline.",
     reminderBtnOn:"Enable reminders", reminderBtnOff:"Reminders on ✓ (tap to disable)", reminderHourLbl:"Reminder time",
     reminderTimePickerTitle:"Choose reminder time", reminderTimePickerConfirmBtn:"Confirm",
+    taskUpdateNotifsTitle:"Task update notifications", taskUpdateNotifsSub:"Notify you when the calendar sync changes a task.",
     weightTitle:"Weight", weightSub:"Weigh yourself every morning. We compute a 7-day average to smooth out normal swings (water, salt, digestion) — that's what matters, not the day's raw number.",
     weightGoalLbl:"Goal",
     weightCurrent:"current", weightGoal:"goal", weightRemaining:"remaining", weightRate:"kg/week", weightSinceStart:"since start",
@@ -1817,6 +1827,9 @@ function applyStaticI18n(){
   document.getElementById("reminderTitle").textContent=t("reminderTitle");
   document.getElementById("reminderHourLbl").textContent=t("reminderHourLbl");
   document.getElementById("reminderHourIcon").innerHTML=CLOCK_SVG;
+  document.getElementById("taskUpdateNotifsTitle").textContent=t("taskUpdateNotifsTitle");
+  document.getElementById("taskUpdateNotifsSub").textContent=t("taskUpdateNotifsSub");
+  document.getElementById("taskUpdateNotifsIcon").innerHTML=BELL_SVG;
   document.getElementById("newTaskTimeIcon").innerHTML=CLOCK_SVG;
   document.getElementById("reminderTimePickerTitle").textContent=t("reminderTimePickerTitle");
   document.getElementById("reminderTimePickerConfirmBtn").textContent=t("reminderTimePickerConfirmBtn");
@@ -3361,6 +3374,7 @@ function setReminderBtnState(on){
 let pushSubscribed=false;
 let reminderHour=load("tracker:reminderHour",21);
 let reminderMinute=load("tracker:reminderMinute",0);
+let taskUpdateNotifs=load("tracker:taskUpdateNotifs",false);
 function setReminderTime(h,m){
   reminderHour=h;reminderMinute=m;
   document.getElementById("reminderHourValue").textContent=formatTaskTime(`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`);
@@ -3396,18 +3410,30 @@ function subscribePayload(sub){
   const json=sub.toJSON?sub.toJSON():sub;
   return JSON.stringify({...json,reminderHour,reminderMinute});
 }
+function setTaskUpdateNotifsBtnState(on){
+  document.getElementById("taskUpdateNotifsBtn").setAttribute("aria-checked",on?"true":"false");
+}
+document.getElementById("taskUpdateNotifsBtn").onclick=()=>{
+  taskUpdateNotifs=!taskUpdateNotifs;
+  save("tracker:taskUpdateNotifs",taskUpdateNotifs);
+  setTaskUpdateNotifsBtnState(taskUpdateNotifs);
+  syncFullBackup();
+};
 async function initReminder(){
   const card=document.getElementById("reminderCard");
   const sub=document.getElementById("reminderSub");
   const btn=document.getElementById("reminderBtn");
   const hourRow=document.getElementById("reminderHourRow");
+  const taskUpdateRow=document.getElementById("taskUpdateNotifsRow");
   setReminderTime(reminderHour,reminderMinute);
-  if(!("serviceWorker"in navigator)||!("PushManager"in window)){card.classList.add("hidden");btn.classList.add("hidden");hourRow.classList.add("hidden");return;}
+  setTaskUpdateNotifsBtnState(taskUpdateNotifs);
+  if(!("serviceWorker"in navigator)||!("PushManager"in window)){card.classList.add("hidden");btn.classList.add("hidden");hourRow.classList.add("hidden");taskUpdateRow.classList.add("hidden");return;}
   const isStandalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
   if(!isStandalone){
     sub.textContent=t("reminderSubNeedsInstall");
     btn.classList.add("hidden");
     hourRow.classList.add("hidden");
+    taskUpdateRow.classList.add("hidden");
     return;
   }
   sub.textContent=t("reminderSubDefault",document.getElementById("reminderHourValue").textContent);
@@ -3419,6 +3445,7 @@ async function initReminder(){
   pushSubscribed=!!existing;
   setReminderBtnState(pushSubscribed);
   hourRow.classList.toggle("hidden",!pushSubscribed);
+  taskUpdateRow.classList.toggle("hidden",!pushSubscribed);
   btn.onclick=async()=>{
     const reg=await navigator.serviceWorker.ready;
     const current=await reg.pushManager.getSubscription();
@@ -3428,6 +3455,7 @@ async function initReminder(){
       pushSubscribed=false;
       setReminderBtnState(false);
       hourRow.classList.add("hidden");
+      taskUpdateRow.classList.add("hidden");
       return;
     }
     const perm=await Notification.requestPermission();
@@ -3437,6 +3465,7 @@ async function initReminder(){
     pushSubscribed=true;
     setReminderBtnState(true);
     hourRow.classList.remove("hidden");
+    taskUpdateRow.classList.remove("hidden");
   };
 }
 
