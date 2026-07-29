@@ -150,7 +150,6 @@
   .task-panel-empty{color:var(--muted);font-size:13px;text-align:center;padding:24px 0}
   .task{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff;border-radius:14px;cursor:pointer;border:1px solid var(--border);transition:all .15s;margin-bottom:8px;box-shadow:var(--shadow)}
   .task.done{background:#ede9ff;border-color:var(--greenDim)}
-  .task.readonly{cursor:default}
   .check{position:relative;width:24px;height:24px;border-radius:8px;flex-shrink:0;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;transition:all .15s}
   .task.done .check{background:var(--green);border-color:var(--green)}
   .check.missed{border-color:var(--red)}
@@ -1917,14 +1916,13 @@ const MEAL_TASK_IDS=new Set(["breakfast","lunch","dinner"]);
 const CALORIE_LOG_TASK_IDS=new Set([...MEAL_TASK_IDS,"shake"]);
 function renderTaskRow(tk){
   const d=document.createElement("div");
+  const dateKey=viewedDate;
+  const viewingToday=isViewingToday();
   const viewedDone=getViewedDone();
-  const readOnly=!isViewingToday();
-  d.className="task"+(viewedDone[tk.id]&&!editMode?" done":"")+(readOnly?" readonly":"");
+  d.className="task"+(viewedDone[tk.id]&&!editMode?" done":"");
   d.dataset.taskId=tk.id;
   const timeBadge=taskTimeLabel(tk)?`<span class="task-time">${taskTimeLabel(tk)}</span>`:"";
-  if(readOnly){
-    d.innerHTML=`<div class="check">${CHECK_SVG}</div><span class="task-label"><span class="task-label-text">${taskDisplayLabel(tk)}</span>${timeBadge}</span>`;
-  }else if(editMode){
+  if(editMode){
     d.innerHTML=`<button class="del">✕</button><span class="task-label"><span class="task-label-text">${taskDisplayLabel(tk)}</span>${timeBadge}</span>`;
     d.querySelector(".del").onclick=()=>{tasks=tasks.filter(x=>x.id!==tk.id);save("tracker:template",tasks);renderTasks();renderScore();};
   }else{
@@ -1945,9 +1943,14 @@ function renderTaskRow(tk){
       };
     }
     d.onclick=()=>{
-      done[tk.id]=!done[tk.id];
-      save("tracker:day:"+today(),done);
-      const wasCompleted=done[tk.id];
+      // Checking off a past day (opened via the day strip) writes to THAT
+      // day's own record, not today's — `done` is only the live in-memory
+      // object for today, so a past day needs its own fresh load+save
+      // round-trip instead of mutating `done` directly.
+      const dayRecord=viewingToday?done:load("tracker:day:"+dateKey,{});
+      dayRecord[tk.id]=!dayRecord[tk.id];
+      save("tracker:day:"+dateKey,dayRecord);
+      const wasCompleted=dayRecord[tk.id];
       d.classList.toggle("done",wasCompleted);
       const freshCheck=d.querySelector(".check");
       const hintEl=d.querySelector(".missed-hint");
@@ -1956,7 +1959,7 @@ function renderTaskRow(tk){
         if(hintEl)hintEl.remove();
       }
       renderScore();renderHeatmap();renderPeriodStats();renderTaskConsistency();
-      if(isViewingToday())document.getElementById("greetingSub").textContent=motivationalSub();
+      if(viewingToday)document.getElementById("greetingSub").textContent=motivationalSub();
       if(tk.id==="read"){
         if(wasCompleted)reading.chapters++;
         else if(reading.chapters>0)reading.chapters--;
@@ -3313,6 +3316,12 @@ function openTaskDetail(tk){
   }
   renderTaskPhotoGallery(tk);
   const delBtn=document.getElementById("taskDetailDeleteBtn");
+  // Deleting a task removes it from the template going forward, regardless
+  // of which day is open — now that past days are checkable again (see
+  // renderTaskRow), this button must stay out of reach while browsing
+  // history, or fixing yesterday's checkboxes could accidentally wipe a
+  // task out of every future day too.
+  delBtn.classList.toggle("hidden",!isViewingToday());
   delBtn.textContent=t("taskDetailDelete");
   delBtn.onclick=async()=>{
     if(!(await showConfirmModal(t("taskDetailDeleteConfirm",taskDisplayLabel(tk)),t("confirmModalDeleteBtn"))))return;
