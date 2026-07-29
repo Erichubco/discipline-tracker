@@ -3144,6 +3144,19 @@ function logFoodItem(description,kcal){
   saveCalories(dateKey,items);
   renderFoodLog();renderCalories();
 }
+// Snapping a photo (food or a generic hasPhoto task) already tells the app
+// the task happened — no reason to also make him tap the checkbox
+// separately afterward. Targets whichever day is currently open (same
+// isolation as the manual checkbox toggle in renderTaskRow), so logging a
+// photo for a past day marks THAT day done, not today.
+function markTaskDoneForViewedDate(taskId){
+  const dateKey=viewedDate;
+  const dayRecord=isViewingToday()?done:load("tracker:day:"+dateKey,{});
+  if(dayRecord[taskId])return; // already done, avoid a redundant re-render
+  dayRecord[taskId]=true;
+  save("tracker:day:"+dateKey,dayRecord);
+  renderTasks();renderScore();renderHeatmap();renderPeriodStats();renderTaskConsistency();
+}
 let pendingFoodPhoto=null;
 async function uploadFoodPhoto(dataUrl){
   const loadingEl=document.getElementById("foodLogLoading");
@@ -3163,6 +3176,7 @@ async function uploadFoodPhoto(dataUrl){
     }
     if(data.description&&data.kcal){
       logFoodItem(data.description,data.kcal);
+      if(currentDetailTaskId)markTaskDoneForViewedDate(currentDetailTaskId);
     }else{
       alert(t("foodLogNotFood"));
     }
@@ -3187,6 +3201,7 @@ async function confirmFoodClarification(){
     const data=await res.json();
     if(data.description&&data.kcal){
       logFoodItem(data.description,data.kcal);
+      if(currentDetailTaskId)markTaskDoneForViewedDate(currentDetailTaskId);
     }else{
       alert(t("foodLogNotFood"));
     }
@@ -3258,7 +3273,9 @@ async function estimateFoodFromText(){
 document.getElementById("foodLogTextBtn").onclick=estimateFoodFromText;
 
 function closeTaskDetail(){hideSheet("taskDetailSheet");}
+let currentDetailTaskId=null;
 function openTaskDetail(tk){
+  currentDetailTaskId=tk.id;
   document.getElementById("taskDetailLabel").textContent=taskDisplayLabel(tk);
   const detail=taskDetailText(tk);
   const detailEl=document.getElementById("taskDetailText");
@@ -4106,11 +4123,9 @@ document.getElementById("taskPhotoInput").addEventListener("change",e=>{
     img.onload=()=>{
       const photo=resizeToDataUrl(img,480,0.8);
       if(!taskPhotos[taskId])taskPhotos[taskId]=[];
-      taskPhotos[taskId].push({date:today(),photo});
+      taskPhotos[taskId].push({date:viewedDate,photo});
       save("tracker:taskPhotos",taskPhotos);
-      done[taskId]=true;
-      save("tracker:day:"+today(),done);
-      renderTasks();renderScore();
+      markTaskDoneForViewedDate(taskId);
     };
     img.src=ev.target.result;
   };

@@ -1,4 +1,4 @@
-const CACHE = "discipline-v120";
+const CACHE = "discipline-v121";
 const ASSETS = ["./", "./index.html", "./manifest.json",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/avatar.png"];
 
