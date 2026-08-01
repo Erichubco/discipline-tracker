@@ -225,6 +225,8 @@
   .read-box{display:flex;align-items:center;justify-content:space-between;background:var(--cardHi);border-radius:12px;padding:12px 14px}
   .icon-btn{background:var(--cardHi);border:1px solid var(--border);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;color:var(--muted);flex-shrink:0;padding:0}
   .gym-note{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--green);background:var(--cardHi);border-radius:12px;padding:10px 12px;margin-bottom:12px;line-height:1.5}
+  .gym-test-banner{align-items:center;justify-content:space-between;color:#fff;background:var(--amber)}
+  .gym-test-exit-btn{background:rgba(255,255,255,.25);border:none;border-radius:8px;color:#fff;font-size:11px;padding:6px 10px;flex-shrink:0;cursor:pointer}
   .gym-sticky-session{position:sticky;top:8px;z-index:31;display:flex;align-items:center;gap:8px;background:var(--text);color:#fff;border-radius:9999px;padding:6px 16px 6px 6px;margin:0 0 8px;box-shadow:0 4px 14px rgba(22,29,31,.35);width:fit-content}
   .gym-sticky-timer{position:sticky;top:56px;z-index:30;display:flex;align-items:center;gap:8px;background:var(--green);color:#fff;border-radius:9999px;padding:8px 16px 8px 8px;margin:0 0 12px;box-shadow:0 4px 14px rgba(83,65,205,.35);width:fit-content}
   .hidden{display:none}
@@ -798,11 +800,16 @@
 
     <div class="card hidden" id="gymRestDayCard">
       <div class="sub" id="gymRestDayText" style="margin:0"></div>
+      <button type="button" class="btn btn-ghost" id="gymTestModeBtn" style="width:100%;margin-top:14px"></button>
     </div>
 
     <div class="hidden" id="gymPreviewList"></div>
 
     <div class="hidden" id="gymWorkoutSection">
+      <div class="gym-note gym-test-banner hidden" id="gymTestBanner">
+        <span id="gymTestBannerText"></span>
+        <button type="button" class="gym-test-exit-btn" id="gymTestExitBtn"></button>
+      </div>
       <div class="gym-note hidden" id="gymAdditionNote"></div>
       <div id="gymExerciseList"></div>
       <div class="gym-active-card">
@@ -1298,6 +1305,9 @@ const STRINGS = {
     gymEquipLbl:"Matériel",
     gymSessionLbl:"Séance", gymSessionPauseBtn:"Mettre en pause", gymSessionResumeBtn:"Reprendre",
     gymSessionStartLbl:"Démarrer la séance",
+    gymTestModeBtn:"Essayer le chronomètre (test)",
+    gymTestBannerText:"Mode test — les séries ne comptent pas dans ton programme",
+    gymTestExitBtn:"Quitter",
     defaultTasks:[
       {id:"wake",label:"🌞 Réveil sans téléphone + marche",period:"morning",category:"dev"},
       {id:"weighIn",label:"⚖️ Se peser",period:"morning",category:"dev",days:[0]},
@@ -1525,6 +1535,9 @@ const STRINGS = {
     gymEquipLbl:"Equipment",
     gymSessionLbl:"Session", gymSessionPauseBtn:"Pause", gymSessionResumeBtn:"Resume",
     gymSessionStartLbl:"Start session",
+    gymTestModeBtn:"Try the timer (test)",
+    gymTestBannerText:"Test mode — sets here don't count toward your program",
+    gymTestExitBtn:"Exit",
     defaultTasks:[
       {id:"wake",label:"🌞 Wake up phone-free + walk",period:"morning",category:"dev"},
       {id:"weighIn",label:"⚖️ Weigh yourself",period:"morning",category:"dev",days:[0]},
@@ -3504,14 +3517,24 @@ function closeTaskDetail(){hideSheet("taskDetailSheet");}
 // iOS suspends/evicts backgrounded PWAs aggressively — resumes exactly
 // where it left off. restEndsAt is stored as an absolute timestamp rather
 // than a countdown, so it's still correct no matter how long the gap was.
+// True while trying out the live guided session on a day that isn't really
+// today — e.g. verifying the timer/sound actually work during a real rest
+// day, when the normal UI correctly shows nothing because there's nothing
+// scheduled. Never persisted (resets on reload) and always reads/writes a
+// separate "test" key below, so it can never overwrite a real day's saved
+// progress. gymEffectiveDow() pins the displayed content to Monday (a real
+// training day) whenever this is on.
+let gymTestMode=false;
+function gymEffectiveDow(){return gymTestMode?0:dowOf(new Date());}
+function workoutStateKey(){return gymTestMode?"tracker:workout:test":"tracker:workout:"+today();}
 function getWorkoutState(day){
-  const stored=load("tracker:workout:"+today(),null);
+  const stored=load(workoutStateKey(),null);
   if(stored)return stored;
   return{activeIdx:0,setsDone:day.exercises.map(ex=>Array(ex.sets).fill(false)),restEndsAt:null,restDurationSec:null,
     sessionElapsedMs:0,sessionRunningSince:null,sessionGoalAlerted:false,sessionMaxAlerted:false};
 }
 function saveWorkoutState(state){
-  save("tracker:workout:"+today(),state);
+  save(workoutStateKey(),state);
 }
 let audioCtx=null;
 function getAudioCtx(){
@@ -3573,7 +3596,7 @@ function currentSessionElapsedMs(state){
 }
 function renderGymSessionTimer(){
   clearInterval(gymSessionInterval);
-  const day=t("gymWorkouts")[dowOf(new Date())];
+  const day=t("gymWorkouts")[gymEffectiveDow()];
   const state=getWorkoutState(day);
   const box=document.getElementById("gymStickySession");
   const timeEl=document.getElementById("gymSessionTime");
@@ -3638,7 +3661,7 @@ const GYM_REST_RING_CIRC=2*Math.PI*52;
 const GYM_STICKY_RING_CIRC=2*Math.PI*16;
 function renderGymRestTimer(){
   clearInterval(gymRestInterval);
-  const day=t("gymWorkouts")[dowOf(new Date())];
+  const day=t("gymWorkouts")[gymEffectiveDow()];
   const state=getWorkoutState(day);
   const box=document.getElementById("gymRestBox");
   const ringFg=document.getElementById("gymRestRingFg");
@@ -3685,7 +3708,7 @@ function renderGymRestTimer(){
   gymRestInterval=setInterval(tick,250);
 }
 function startGymRestTimer(sec){
-  const day=t("gymWorkouts")[dowOf(new Date())];
+  const day=t("gymWorkouts")[gymEffectiveDow()];
   const state=getWorkoutState(day);
   state.restEndsAt=Date.now()+sec*1000;
   state.restDurationSec=sec;
@@ -3694,7 +3717,7 @@ function startGymRestTimer(sec){
   renderGymRestTimer();
 }
 function adjustGymRestTimer(deltaSec){
-  const day=t("gymWorkouts")[dowOf(new Date())];
+  const day=t("gymWorkouts")[gymEffectiveDow()];
   const state=getWorkoutState(day);
   if(!state.restEndsAt)return;
   state.restEndsAt=Math.max(Date.now(),state.restEndsAt+deltaSec*1000);
@@ -3704,7 +3727,7 @@ function adjustGymRestTimer(deltaSec){
 document.getElementById("gymRestMinus").onclick=()=>adjustGymRestTimer(-15);
 document.getElementById("gymRestPlus").onclick=()=>adjustGymRestTimer(15);
 document.getElementById("gymRestSkip").onclick=()=>{
-  const day=t("gymWorkouts")[dowOf(new Date())];
+  const day=t("gymWorkouts")[gymEffectiveDow()];
   const state=getWorkoutState(day);
   state.restEndsAt=null;state.restDurationSec=null;
   saveWorkoutState(state);
@@ -3746,7 +3769,7 @@ function renderGymWorkout(){
   if(musculationBrowseDow==null)musculationBrowseDow=dowOf(new Date());
   const dow=musculationBrowseDow;
   const day=t("gymWorkouts")[dow];
-  const isToday=dow===dowOf(new Date());
+  const isToday=dow===gymEffectiveDow();
   document.getElementById("musculationTitle").textContent=t("musculationTitle");
   document.getElementById("gymDayPickerTitle").textContent=t("musculationDayPickerTitle");
   renderGymDayTabs(dow);
@@ -3756,6 +3779,13 @@ function renderGymWorkout(){
   if(day.rest){
     document.getElementById("musculationSub").textContent=t("musculationSubRest");
     document.getElementById("gymRestDayText").textContent=day.text;
+    const testBtn=document.getElementById("gymTestModeBtn");
+    testBtn.textContent=t("gymTestModeBtn");
+    testBtn.onclick=()=>{
+      gymTestMode=true;
+      musculationBrowseDow=0;
+      renderGymWorkout();
+    };
     restCard.classList.remove("hidden");
     workoutSection.classList.add("hidden");
     previewList.classList.add("hidden");
@@ -3772,6 +3802,21 @@ function renderGymWorkout(){
   document.getElementById("musculationSub").textContent=t("musculationSubFmt",day.title);
   previewList.classList.add("hidden");
   workoutSection.classList.remove("hidden");
+  const testBanner=document.getElementById("gymTestBanner");
+  if(gymTestMode){
+    document.getElementById("gymTestBannerText").textContent=t("gymTestBannerText");
+    const exitBtn=document.getElementById("gymTestExitBtn");
+    exitBtn.textContent=t("gymTestExitBtn");
+    exitBtn.onclick=()=>{
+      gymTestMode=false;
+      localStorage.removeItem("tracker:workout:test");
+      musculationBrowseDow=dowOf(new Date());
+      renderGymWorkout();
+    };
+    testBanner.classList.remove("hidden");
+  }else{
+    testBanner.classList.add("hidden");
+  }
   const state=getWorkoutState(day);
   document.getElementById("gymRestLbl").textContent=t("gymRestLbl");
   document.getElementById("gymRestMinus").textContent=t("gymRestMinus");
@@ -3825,6 +3870,13 @@ function renderGymWorkout(){
   nextBtn.textContent=isLast?t("gymFinishBtn"):t("gymNextBtn");
   nextBtn.onclick=()=>{
     if(isLast){
+      if(gymTestMode){
+        gymTestMode=false;
+        localStorage.removeItem("tracker:workout:test");
+        musculationBrowseDow=dowOf(new Date());
+        renderGymWorkout();
+        return;
+      }
       // Always today's own record — this tab is deliberately decoupled
       // from the Home tab's day strip (see getWorkoutState above), so it
       // must not go through the viewedDate-scoped helper other "mark done"
@@ -4072,7 +4124,7 @@ function switchView(view){
   document.querySelectorAll(".tab").forEach(tb=>tb.classList.toggle("active",tb.dataset.view===view));
   document.getElementById("fabAdd").classList.toggle("hidden",view!=="home"||!isViewingToday());
   if(view==="settings")checkCalendarStatus();
-  if(view==="musculation"){musculationBrowseDow=dowOf(new Date());renderGymWorkout();}
+  if(view==="musculation"){musculationBrowseDow=dowOf(new Date());gymTestMode=false;renderGymWorkout();}
 }
 document.querySelectorAll(".tab").forEach(btn=>{
   btn.onclick=()=>switchView(btn.dataset.view);
