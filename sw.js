@@ -1,4 +1,4 @@
-const CACHE = "discipline-v130";
+const CACHE = "discipline-v131";
 const ASSETS = ["./", "./index.html", "./manifest.json",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/avatar.png",
   "./exercise-images/bench-press-barbell.jpg",
@@ -32,13 +32,30 @@ self.addEventListener("activate", e => {
 
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
+
+  // Exercise images and icons are static — they only ever change when this
+  // file's CACHE version is bumped, which already wipes the old cache in
+  // "activate" below. Serving them cache-first means repeat views are
+  // instant with zero network round-trip, instead of re-fetching every image
+  // on every single tab switch.
+  if (e.request.url.includes("/exercise-images/") || e.request.url.includes("/icons/")) {
+    e.respondWith(
+      caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
+        caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+        return res;
+      }))
+    );
+    return;
+  }
+
   // GitHub Pages serves everything with Cache-Control: max-age=600. A plain
   // fetch() here respects that and can get silently satisfied from the
   // browser's own HTTP cache instead of hitting the network — meaning this
   // "network-first" handler can serve a stale deploy for up to 10+ minutes
   // (longer in practice for installed iOS PWAs) even right after a fresh
   // push. cache:"no-store" forces every request to actually go to the
-  // network so updates show up immediately.
+  // network so updates show up immediately. Only the app shell (HTML/JS/
+  // manifest) needs this — images are handled above.
   e.respondWith(
     fetch(e.request, { cache: "no-store" }).then(res => {
       caches.open(CACHE).then(c => c.put(e.request, res.clone()));
