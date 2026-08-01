@@ -1,21 +1,19 @@
-const CACHE = "discipline-v126";
+const CACHE = "discipline-v127";
 const ASSETS = ["./", "./index.html", "./manifest.json",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/avatar.png",
-  "./exercise-images/bench-press-dumbbell.jpg",
-  "./exercise-images/incline-press-dumbbell.jpg",
-  "./exercise-images/shoulder-press-dumbbell.jpg",
+  "./exercise-images/bench-press-barbell.jpg",
+  "./exercise-images/overhead-press-barbell.jpg",
   "./exercise-images/lateral-raise.jpg",
   "./exercise-images/pullup.jpg",
+  "./exercise-images/bent-over-row-barbell.jpg",
   "./exercise-images/single-arm-row.jpg",
-  "./exercise-images/face-pull-band.jpg",
-  "./exercise-images/biceps-curl-dumbbell.jpg",
+  "./exercise-images/biceps-curl-barbell.jpg",
   "./exercise-images/hammer-curl.jpg",
   "./exercise-images/goblet-squat.jpg",
   "./exercise-images/walking-lunge-dumbbell.jpg",
   "./exercise-images/romanian-deadlift-dumbbell.jpg",
   "./exercise-images/hip-thrust-dumbbell.jpg",
   "./exercise-images/standing-calf-raise.jpg",
-  "./exercise-images/bent-over-row-dumbbell.jpg",
   "./exercise-images/bulgarian-split-squat-dumbbell.jpg",
   "./exercise-images/plank.jpg"];
 
