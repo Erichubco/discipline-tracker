@@ -297,6 +297,7 @@
   .gym-active-card{background:#fff;border:1px solid var(--border);border-radius:20px;padding:22px 18px;margin-top:14px;text-align:center}
   .gym-active-title{font-size:19px;font-weight:700;color:var(--green);font-family:'Quicksand',sans-serif;line-height:1.25}
   .gym-active-target{display:inline-block;background:var(--cardHi);color:var(--green);font-weight:700;font-size:13px;padding:6px 14px;border-radius:9999px;margin:10px 0}
+  .gym-active-img{max-width:220px;max-height:220px;width:auto;height:auto;border-radius:12px;margin:4px 0 14px;object-fit:contain}
   .gym-active-cue{background:var(--bg);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--muted);font-style:italic;line-height:1.5;margin-bottom:18px;text-align:left}
   .gym-set-pills{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-bottom:18px}
   .gym-set-pill{width:38px;height:38px;border-radius:9999px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-weight:700;font-size:14px;font-family:inherit;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
@@ -767,6 +768,7 @@
       <div class="gym-active-card">
         <div class="gym-active-title" id="gymActiveTitle"></div>
         <div class="gym-active-target" id="gymActiveTarget"></div>
+        <img class="gym-active-img hidden" id="gymActiveImg" alt="">
         <div class="gym-active-cue" id="gymActiveCue"></div>
         <div class="gym-set-pills" id="gymSetPills"></div>
         <div class="hidden" id="gymRestBox">
@@ -860,6 +862,7 @@
       </div>
 
     </div>
+    <div class="sub" id="exerciseImgCredit" style="text-align:center;margin-top:14px"></div>
   </div>
 
   <!-- Tab bar -->
@@ -1091,6 +1094,7 @@ const STRINGS = {
     progressionTitle:"Progression", progressionSub:"Ta progression, jour après jour.",
     musculationTitle:"Musculation", musculationSubRest:"Jour de repos.",
     musculationSubFmt:day=>`Aujourd'hui : ${day}`,
+    exerciseImgCredit:'Illustrations exercices : <a href="https://wger.de" target="_blank" rel="noopener">wger.de</a> (CC BY-SA)',
     bizTitle:"Chiffre d'affaires mensuel", bizEyebrow:"Objectif business", bizGoalLbl:"Objectif CA", bizPlaceholder:"CA actuel (€)",
     bizPctCompleted:pct=>`${pct}% complété`, bizRemainingAmt:amt=>`${amt} restant`,
     bizVsLastMonth:(prev,sign,diff,pct)=>`Mois dernier : ${prev}€ → ${sign}${diff}€${pct!=null?` (${sign}${pct}%)`:""}`,
@@ -1182,39 +1186,39 @@ const STRINGS = {
     // squats on leg day get a longer rest than everything else that day.
     gymWorkouts:[
       {title:"Pec / Épaules / Triceps", exercises:[
-        {name:"Développé couché haltères", sets:4, reps:"8-10", cue:"Couché sur le dos, descends les haltères jusqu'à la poitrine, pousse en explosif", restSec:90},
-        {name:"Développé incliné haltères", sets:3, reps:"10", cue:"Banc (ou dossier de chaise) à 30-45°, travaille le haut de la poitrine, descends lentement", restSec:90},
-        {name:"Développé militaire (épaules)", sets:3, reps:"10", cue:"Debout ou assis, pousse les haltères au-dessus de la tête, coudes à 90° en bas", restSec:90},
-        {name:"Élévations latérales", sets:3, reps:"15", cue:"Bras tendus sur les côtés, monte jusqu'à l'horizontal, descends lentement", restSec:90},
+        {name:"Développé couché haltères", sets:4, reps:"8-10", cue:"Couché sur le dos, descends les haltères jusqu'à la poitrine, pousse en explosif", restSec:90, img:"bench-press-dumbbell.png"},
+        {name:"Développé incliné haltères", sets:3, reps:"10", cue:"Banc (ou dossier de chaise) à 30-45°, travaille le haut de la poitrine, descends lentement", restSec:90, img:"incline-press-dumbbell.png"},
+        {name:"Développé militaire (épaules)", sets:3, reps:"10", cue:"Debout ou assis, pousse les haltères au-dessus de la tête, coudes à 90° en bas", restSec:90, img:"shoulder-press-dumbbell.jpg"},
+        {name:"Élévations latérales", sets:3, reps:"15", cue:"Bras tendus sur les côtés, monte jusqu'à l'horizontal, descends lentement", restSec:90, img:"lateral-raise.jpg"},
         {name:"Extensions triceps", sets:3, reps:"12", cue:"Haltère au-dessus de la tête, descends derrière la nuque, coudes fixes", restSec:90},
       ], restNote:"Repos 90 sec.", note:"Charge progressive : vise à ajouter un peu chaque semaine."},
       {title:"Dos / Biceps", exercises:[
-        {name:"Tractions ou rowing barre", sets:4, reps:"8", cue:"Tractions : barre fixe, tirer jusqu'au menton. Sinon rowing penché à 45°", restSec:90},
-        {name:"Rowing haltère unilatéral", sets:4, reps:"10", cue:"Genou et main sur une chaise/banc, tire l'haltère vers la hanche, coude collé au corps", restSec:90},
-        {name:"Tirage / face pull élastique", sets:3, reps:"15", cue:"Élastique fixé en hauteur, tire vers le ventre ou le visage en serrant les omoplates", restSec:90},
-        {name:"Curl biceps haltères", sets:3, reps:"12", cue:"Coudes fixes contre le corps, monte lentement, descends encore plus lentement", restSec:90},
-        {name:"Curl marteau", sets:3, reps:"12", cue:"Prise marteau (paumes face à face), coudes fixes, monte et descends contrôlé", restSec:90},
+        {name:"Tractions ou rowing barre", sets:4, reps:"8", cue:"Tractions : barre fixe, tirer jusqu'au menton. Sinon rowing penché à 45°", restSec:90, img:"pullup.jpg"},
+        {name:"Rowing haltère unilatéral", sets:4, reps:"10", cue:"Genou et main sur une chaise/banc, tire l'haltère vers la hanche, coude collé au corps", restSec:90, img:"single-arm-row.jpg"},
+        {name:"Tirage / face pull élastique", sets:3, reps:"15", cue:"Élastique fixé en hauteur, tire vers le ventre ou le visage en serrant les omoplates", restSec:90, img:"face-pull-band.jpg"},
+        {name:"Curl biceps haltères", sets:3, reps:"12", cue:"Coudes fixes contre le corps, monte lentement, descends encore plus lentement", restSec:90, img:"biceps-curl-dumbbell.png"},
+        {name:"Curl marteau", sets:3, reps:"12", cue:"Prise marteau (paumes face à face), coudes fixes, monte et descends contrôlé", restSec:90, img:"hammer-curl.png"},
       ], restNote:"Repos 90 sec.", note:"Serre bien les omoplates sur le tirage."},
       {title:"Quadris / Ischios / Fessiers / Mollets", exercises:[
-        {name:"Squats", sets:4, reps:"10", cue:"Pieds largeur épaules, descends cuisses parallèles au sol, dos droit, genoux dans l'axe des pieds", restSec:120},
-        {name:"Fentes marchées", sets:3, reps:"12 / jambe", cue:"Grand pas en avant, genou arrière proche du sol, alterne en avançant", restSec:90},
-        {name:"Soulevé de terre jambes tendues", sets:4, reps:"10", cue:"Haltères devant les cuisses, penche le buste dos droit, sens l'étirement des ischio", restSec:90},
-        {name:"Hip thrust", sets:3, reps:"12", cue:"Dos sur le bord d'une chaise, monte les fesses en serrant fort en haut, descends lentement", restSec:90},
-        {name:"Mollets debout", sets:4, reps:"20", cue:"Sur une marche ou au sol, monte sur la pointe des pieds, tiens 1 sec en haut", restSec:90},
+        {name:"Squats", sets:4, reps:"10", cue:"Pieds largeur épaules, descends cuisses parallèles au sol, dos droit, genoux dans l'axe des pieds", restSec:120, img:"goblet-squat.jpg"},
+        {name:"Fentes marchées", sets:3, reps:"12 / jambe", cue:"Grand pas en avant, genou arrière proche du sol, alterne en avançant", restSec:90, img:"walking-lunge-dumbbell.jpg"},
+        {name:"Soulevé de terre jambes tendues", sets:4, reps:"10", cue:"Haltères devant les cuisses, penche le buste dos droit, sens l'étirement des ischio", restSec:90, img:"romanian-deadlift-dumbbell.jpg"},
+        {name:"Hip thrust", sets:3, reps:"12", cue:"Dos sur le bord d'une chaise, monte les fesses en serrant fort en haut, descends lentement", restSec:90, img:"hip-thrust-dumbbell.jpg"},
+        {name:"Mollets debout", sets:4, reps:"20", cue:"Sur une marche ou au sol, monte sur la pointe des pieds, tiens 1 sec en haut", restSec:90, img:"standing-calf-raise.jpg"},
       ], restNote:"Repos 2 min sur les squats, 90 sec le reste.", note:"Les jambes = grosse prise de masse globale."},
       {title:"Haut du corps complet", exercises:[
-        {name:"Développé incliné haltères", sets:4, reps:"10", cue:"Banc (ou dossier de chaise) à 30-45°, descends lentement", restSec:90},
-        {name:"Rowing haltères", sets:4, reps:"10", cue:"Penché à 45°, tire les haltères vers le ventre, coudes collés au corps", restSec:90},
-        {name:"Développé militaire", sets:3, reps:"10", cue:"Debout ou assis, pousse les haltères au-dessus de la tête", restSec:90},
-        {name:"Curl biceps", sets:3, reps:"12", cue:"Coudes fixes contre le corps, monte lentement, descends encore plus lentement", restSec:90},
+        {name:"Développé incliné haltères", sets:4, reps:"10", cue:"Banc (ou dossier de chaise) à 30-45°, descends lentement", restSec:90, img:"incline-press-dumbbell.png"},
+        {name:"Rowing haltères", sets:4, reps:"10", cue:"Penché à 45°, tire les haltères vers le ventre, coudes collés au corps", restSec:90, img:"bent-over-row-dumbbell.jpg"},
+        {name:"Développé militaire", sets:3, reps:"10", cue:"Debout ou assis, pousse les haltères au-dessus de la tête", restSec:90, img:"shoulder-press-dumbbell.jpg"},
+        {name:"Curl biceps", sets:3, reps:"12", cue:"Coudes fixes contre le corps, monte lentement, descends encore plus lentement", restSec:90, img:"biceps-curl-dumbbell.png"},
         {name:"Extensions triceps", sets:3, reps:"12", cue:"Haltère au-dessus de la tête, descends derrière la nuque, coudes fixes", restSec:90},
       ], restNote:"Repos 90 sec.", note:"Deuxième passage sur le haut du corps dans la semaine = plus de volume = plus de muscle."},
       {title:"Bas du corps et gainage", exercises:[
-        {name:"Squats bulgares", sets:4, reps:"10 / jambe", cue:"Pied arrière sur une chaise, descends buste droit, genou avant ne dépasse pas le pied", restSec:90},
-        {name:"Hip thrust", sets:4, reps:"12", cue:"Dos sur le bord d'une chaise, monte les fesses en serrant fort en haut", restSec:90},
-        {name:"Soulevé de terre jambes tendues", sets:3, reps:"12", cue:"Haltères devant les cuisses, penche le buste dos droit", restSec:90},
-        {name:"Mollets debout", sets:4, reps:"20", cue:"Sur une marche ou au sol, monte sur la pointe des pieds", restSec:90},
-        {name:"Gainage (planche)", sets:3, reps:"45 sec + relevés de jambes 3×15", cue:"Planche : corps aligné, gainage serré. Relevés : allongé, jambes tendues, sans cambrer le dos", restSec:90},
+        {name:"Squats bulgares", sets:4, reps:"10 / jambe", cue:"Pied arrière sur une chaise, descends buste droit, genou avant ne dépasse pas le pied", restSec:90, img:"bulgarian-split-squat-dumbbell.jpg"},
+        {name:"Hip thrust", sets:4, reps:"12", cue:"Dos sur le bord d'une chaise, monte les fesses en serrant fort en haut", restSec:90, img:"hip-thrust-dumbbell.jpg"},
+        {name:"Soulevé de terre jambes tendues", sets:3, reps:"12", cue:"Haltères devant les cuisses, penche le buste dos droit", restSec:90, img:"romanian-deadlift-dumbbell.jpg"},
+        {name:"Mollets debout", sets:4, reps:"20", cue:"Sur une marche ou au sol, monte sur la pointe des pieds", restSec:90, img:"standing-calf-raise.jpg"},
+        {name:"Gainage (planche)", sets:3, reps:"45 sec + relevés de jambes 3×15", cue:"Planche : corps aligné, gainage serré. Relevés : allongé, jambes tendues, sans cambrer le dos", restSec:90, img:"plank.png"},
       ], restNote:"Repos 90 sec.", note:"Dernière séance de la semaine — donne tout, puis repos bien mérité."},
       {rest:true, text:"Repos. Ton corps récupère et se reconstruit — la récup fait partie du programme. Pas de séance aujourd'hui."},
       {rest:true, text:"Repos. Profite du week-end, la prochaine séance (PUSH) reprend lundi."},
@@ -1315,6 +1319,7 @@ const STRINGS = {
     progressionTitle:"Progress", progressionSub:"Your progress, day by day.",
     musculationTitle:"Weightlifting", musculationSubRest:"Rest day.",
     musculationSubFmt:day=>`Today: ${day}`,
+    exerciseImgCredit:'Exercise illustrations: <a href="https://wger.de" target="_blank" rel="noopener">wger.de</a> (CC BY-SA)',
     bizTitle:"Monthly revenue", bizEyebrow:"Business goal", bizGoalLbl:"Revenue goal", bizPlaceholder:"Current revenue (€)",
     bizPctCompleted:pct=>`${pct}% completed`, bizRemainingAmt:amt=>`${amt} remaining`,
     bizVsLastMonth:(prev,sign,diff,pct)=>`Last month: €${prev} → ${sign}€${diff}${pct!=null?` (${sign}${pct}%)`:""}`,
@@ -1401,39 +1406,39 @@ const STRINGS = {
     gymSplitLbl:["PUSH","PULL","LEGS","UPPER","LOWER + abs","Rest","Rest"],
     gymWorkouts:[
       {title:"Chest / Shoulders / Triceps", exercises:[
-        {name:"Dumbbell bench press", sets:4, reps:"8-10", cue:"Lying on your back, lower the dumbbells to your chest, push up explosively", restSec:90},
-        {name:"Incline dumbbell press", sets:3, reps:"10", cue:"Bench (or chair back) at 30-45°, targets upper chest, lower slowly", restSec:90},
-        {name:"Overhead press (shoulders)", sets:3, reps:"10", cue:"Standing or seated, push dumbbells overhead, elbows at 90° at the bottom", restSec:90},
-        {name:"Lateral raises", sets:3, reps:"15", cue:"Arms straight at your sides, raise to horizontal, lower slowly", restSec:90},
+        {name:"Dumbbell bench press", sets:4, reps:"8-10", cue:"Lying on your back, lower the dumbbells to your chest, push up explosively", restSec:90, img:"bench-press-dumbbell.png"},
+        {name:"Incline dumbbell press", sets:3, reps:"10", cue:"Bench (or chair back) at 30-45°, targets upper chest, lower slowly", restSec:90, img:"incline-press-dumbbell.png"},
+        {name:"Overhead press (shoulders)", sets:3, reps:"10", cue:"Standing or seated, push dumbbells overhead, elbows at 90° at the bottom", restSec:90, img:"shoulder-press-dumbbell.jpg"},
+        {name:"Lateral raises", sets:3, reps:"15", cue:"Arms straight at your sides, raise to horizontal, lower slowly", restSec:90, img:"lateral-raise.jpg"},
         {name:"Triceps extensions", sets:3, reps:"12", cue:"Dumbbell overhead, lower behind your head, elbows fixed", restSec:90},
       ], restNote:"Rest 90 sec.", note:"Progressive overload: aim to add a bit each week."},
       {title:"Back / Biceps", exercises:[
-        {name:"Pull-ups or barbell rows", sets:4, reps:"8", cue:"Pull-ups: fixed bar, pull to your chin. Otherwise row bent at 45°", restSec:90},
-        {name:"Single-arm dumbbell row", sets:4, reps:"10", cue:"Knee and hand on a chair/bench, pull the dumbbell to your hip, elbow close to body", restSec:90},
-        {name:"Band pull / face pull", sets:3, reps:"15", cue:"Band anchored high, pull toward your belly or face, squeeze shoulder blades", restSec:90},
-        {name:"Dumbbell biceps curl", sets:3, reps:"12", cue:"Elbows fixed against your body, curl up slowly, lower even slower", restSec:90},
-        {name:"Hammer curl", sets:3, reps:"12", cue:"Neutral grip (palms facing in), elbows fixed, controlled up and down", restSec:90},
+        {name:"Pull-ups or barbell rows", sets:4, reps:"8", cue:"Pull-ups: fixed bar, pull to your chin. Otherwise row bent at 45°", restSec:90, img:"pullup.jpg"},
+        {name:"Single-arm dumbbell row", sets:4, reps:"10", cue:"Knee and hand on a chair/bench, pull the dumbbell to your hip, elbow close to body", restSec:90, img:"single-arm-row.jpg"},
+        {name:"Band pull / face pull", sets:3, reps:"15", cue:"Band anchored high, pull toward your belly or face, squeeze shoulder blades", restSec:90, img:"face-pull-band.jpg"},
+        {name:"Dumbbell biceps curl", sets:3, reps:"12", cue:"Elbows fixed against your body, curl up slowly, lower even slower", restSec:90, img:"biceps-curl-dumbbell.png"},
+        {name:"Hammer curl", sets:3, reps:"12", cue:"Neutral grip (palms facing in), elbows fixed, controlled up and down", restSec:90, img:"hammer-curl.png"},
       ], restNote:"Rest 90 sec.", note:"Squeeze your shoulder blades on the row."},
       {title:"Quads / Hamstrings / Glutes / Calves", exercises:[
-        {name:"Squats", sets:4, reps:"10", cue:"Feet shoulder-width, lower until thighs are parallel to the floor, back straight, knees tracking toes", restSec:120},
-        {name:"Walking lunges", sets:3, reps:"12 / leg", cue:"Big step forward, back knee close to the ground, alternate legs as you move", restSec:90},
-        {name:"Stiff-leg deadlift", sets:4, reps:"10", cue:"Dumbbells in front of thighs, hinge forward with a straight back, feel the hamstring stretch", restSec:90},
-        {name:"Hip thrust", sets:3, reps:"12", cue:"Back against the edge of a chair, drive hips up squeezing hard at the top, lower slowly", restSec:90},
-        {name:"Standing calf raises", sets:4, reps:"20", cue:"On a step or the floor, rise onto your toes, hold 1 sec at the top", restSec:90},
+        {name:"Squats", sets:4, reps:"10", cue:"Feet shoulder-width, lower until thighs are parallel to the floor, back straight, knees tracking toes", restSec:120, img:"goblet-squat.jpg"},
+        {name:"Walking lunges", sets:3, reps:"12 / leg", cue:"Big step forward, back knee close to the ground, alternate legs as you move", restSec:90, img:"walking-lunge-dumbbell.jpg"},
+        {name:"Stiff-leg deadlift", sets:4, reps:"10", cue:"Dumbbells in front of thighs, hinge forward with a straight back, feel the hamstring stretch", restSec:90, img:"romanian-deadlift-dumbbell.jpg"},
+        {name:"Hip thrust", sets:3, reps:"12", cue:"Back against the edge of a chair, drive hips up squeezing hard at the top, lower slowly", restSec:90, img:"hip-thrust-dumbbell.jpg"},
+        {name:"Standing calf raises", sets:4, reps:"20", cue:"On a step or the floor, rise onto your toes, hold 1 sec at the top", restSec:90, img:"standing-calf-raise.jpg"},
       ], restNote:"Rest 2 min on squats, 90 sec the rest.", note:"Legs = biggest overall mass builder."},
       {title:"Full upper body", exercises:[
-        {name:"Incline dumbbell press", sets:4, reps:"10", cue:"Bench (or chair back) at 30-45°, lower slowly", restSec:90},
-        {name:"Dumbbell rows", sets:4, reps:"10", cue:"Bent at 45°, pull dumbbells to your belly, elbows close to body", restSec:90},
-        {name:"Overhead press", sets:3, reps:"10", cue:"Standing or seated, push dumbbells overhead", restSec:90},
-        {name:"Biceps curl", sets:3, reps:"12", cue:"Elbows fixed against your body, curl up slowly, lower even slower", restSec:90},
+        {name:"Incline dumbbell press", sets:4, reps:"10", cue:"Bench (or chair back) at 30-45°, lower slowly", restSec:90, img:"incline-press-dumbbell.png"},
+        {name:"Dumbbell rows", sets:4, reps:"10", cue:"Bent at 45°, pull dumbbells to your belly, elbows close to body", restSec:90, img:"bent-over-row-dumbbell.jpg"},
+        {name:"Overhead press", sets:3, reps:"10", cue:"Standing or seated, push dumbbells overhead", restSec:90, img:"shoulder-press-dumbbell.jpg"},
+        {name:"Biceps curl", sets:3, reps:"12", cue:"Elbows fixed against your body, curl up slowly, lower even slower", restSec:90, img:"biceps-curl-dumbbell.png"},
         {name:"Triceps extensions", sets:3, reps:"12", cue:"Dumbbell overhead, lower behind your head, elbows fixed", restSec:90},
       ], restNote:"Rest 90 sec.", note:"Second upper-body pass this week = more volume = more muscle."},
       {title:"Lower body and core", exercises:[
-        {name:"Bulgarian split squats", sets:4, reps:"10 / leg", cue:"Back foot on a chair, lower with a straight torso, front knee doesn't pass your toes", restSec:90},
-        {name:"Hip thrust", sets:4, reps:"12", cue:"Back against the edge of a chair, drive hips up squeezing hard at the top", restSec:90},
-        {name:"Stiff-leg deadlift", sets:3, reps:"12", cue:"Dumbbells in front of thighs, hinge forward with a straight back", restSec:90},
-        {name:"Standing calf raises", sets:4, reps:"20", cue:"On a step or the floor, rise onto your toes", restSec:90},
-        {name:"Plank", sets:3, reps:"45 sec + leg raises 3×15", cue:"Plank: body aligned, core tight. Leg raises: lying down, legs straight, no arching your back", restSec:90},
+        {name:"Bulgarian split squats", sets:4, reps:"10 / leg", cue:"Back foot on a chair, lower with a straight torso, front knee doesn't pass your toes", restSec:90, img:"bulgarian-split-squat-dumbbell.jpg"},
+        {name:"Hip thrust", sets:4, reps:"12", cue:"Back against the edge of a chair, drive hips up squeezing hard at the top", restSec:90, img:"hip-thrust-dumbbell.jpg"},
+        {name:"Stiff-leg deadlift", sets:3, reps:"12", cue:"Dumbbells in front of thighs, hinge forward with a straight back", restSec:90, img:"romanian-deadlift-dumbbell.jpg"},
+        {name:"Standing calf raises", sets:4, reps:"20", cue:"On a step or the floor, rise onto your toes", restSec:90, img:"standing-calf-raise.jpg"},
+        {name:"Plank", sets:3, reps:"45 sec + leg raises 3×15", cue:"Plank: body aligned, core tight. Leg raises: lying down, legs straight, no arching your back", restSec:90, img:"plank.png"},
       ], restNote:"Rest 90 sec.", note:"Last session of the week — give it everything, then well-earned rest."},
       {rest:true, text:"Rest. Your body recovers and rebuilds — recovery is part of the program. No session today."},
       {rest:true, text:"Rest. Enjoy the weekend, next session (PUSH) starts Monday."},
@@ -2039,6 +2044,7 @@ function applyStaticI18n(){
   document.getElementById("tabHomeLbl").textContent=t("tabHome");
   document.getElementById("tabProgressionLbl").textContent=t("tabProgression");
   document.getElementById("tabMusculationLbl").textContent=t("tabMusculation");
+  document.getElementById("exerciseImgCredit").innerHTML=t("exerciseImgCredit");
   document.getElementById("tabSettingsLbl").textContent=t("tabSettings");
   document.getElementById("langIconBtn").textContent=lang.toUpperCase();
   renderGreeting();
@@ -3592,6 +3598,9 @@ function renderGymWorkout(){
   const activeEx=day.exercises[state.activeIdx];
   document.getElementById("gymActiveTitle").textContent=activeEx.name;
   document.getElementById("gymActiveTarget").textContent=`${activeEx.sets}×${activeEx.reps}`;
+  const imgEl=document.getElementById("gymActiveImg");
+  if(activeEx.img){imgEl.src="exercise-images/"+activeEx.img;imgEl.alt=activeEx.name;imgEl.classList.remove("hidden");}
+  else{imgEl.classList.add("hidden");imgEl.src="";}
   document.getElementById("gymActiveCue").textContent=activeEx.cue;
   const pillsEl=document.getElementById("gymSetPills");
   pillsEl.innerHTML="";

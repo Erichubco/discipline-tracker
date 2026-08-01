@@ -1,6 +1,23 @@
-const CACHE = "discipline-v123";
+const CACHE = "discipline-v124";
 const ASSETS = ["./", "./index.html", "./manifest.json",
-  "./icons/icon-192.png", "./icons/icon-512.png", "./icons/avatar.png"];
+  "./icons/icon-192.png", "./icons/icon-512.png", "./icons/avatar.png",
+  "./exercise-images/bench-press-dumbbell.png",
+  "./exercise-images/incline-press-dumbbell.png",
+  "./exercise-images/shoulder-press-dumbbell.jpg",
+  "./exercise-images/lateral-raise.jpg",
+  "./exercise-images/pullup.jpg",
+  "./exercise-images/single-arm-row.jpg",
+  "./exercise-images/face-pull-band.jpg",
+  "./exercise-images/biceps-curl-dumbbell.png",
+  "./exercise-images/hammer-curl.png",
+  "./exercise-images/goblet-squat.jpg",
+  "./exercise-images/walking-lunge-dumbbell.jpg",
+  "./exercise-images/romanian-deadlift-dumbbell.jpg",
+  "./exercise-images/hip-thrust-dumbbell.jpg",
+  "./exercise-images/standing-calf-raise.jpg",
+  "./exercise-images/bent-over-row-dumbbell.jpg",
+  "./exercise-images/bulgarian-split-squat-dumbbell.jpg",
+  "./exercise-images/plank.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
