@@ -284,6 +284,34 @@
   .task-detail-label{font-size:19px;font-weight:700;font-family:'Quicksand',sans-serif;line-height:1.3;margin-bottom:12px}
   .task-detail-text{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:20px;white-space:pre-line}
   .task-detail-actions{display:flex;gap:10px;margin-top:16px}
+  .gym-note{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--green);background:var(--cardHi);border-radius:12px;padding:10px 12px;margin-bottom:12px;line-height:1.5}
+  .gym-exercise-row{display:flex;align-items:center;gap:12px;padding:11px 12px;background:#fff;border-radius:14px;border:1px solid var(--border);margin-bottom:8px;cursor:pointer}
+  .gym-exercise-row.active{background:var(--cardHi);border-color:var(--greenDim)}
+  .gym-exercise-row.complete{opacity:.6}
+  .gym-exercise-icon{width:34px;height:34px;border-radius:50%;background:var(--cardHi);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--green)}
+  .gym-exercise-row.active .gym-exercise-icon{background:var(--green);color:#fff}
+  .gym-exercise-info{flex:1;min-width:0}
+  .gym-exercise-name{font-weight:700;font-size:13.5px;color:var(--text)}
+  .gym-exercise-meta{font-size:12px;color:var(--muted);margin-top:2px}
+  .gym-exercise-check{color:var(--green);flex-shrink:0;display:flex}
+  .gym-active-card{background:#fff;border:1px solid var(--border);border-radius:20px;padding:22px 18px;margin-top:14px;text-align:center}
+  .gym-active-title{font-size:19px;font-weight:700;color:var(--green);font-family:'Quicksand',sans-serif;line-height:1.25}
+  .gym-active-target{display:inline-block;background:var(--cardHi);color:var(--green);font-weight:700;font-size:13px;padding:6px 14px;border-radius:9999px;margin:10px 0}
+  .gym-active-cue{background:var(--bg);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--muted);font-style:italic;line-height:1.5;margin-bottom:18px;text-align:left}
+  .gym-set-pills{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+  .gym-set-pill{width:38px;height:38px;border-radius:9999px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-weight:700;font-size:14px;font-family:inherit;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+  .gym-set-pill.done{background:var(--green);border-color:var(--green);color:#fff}
+  .gym-rest-ring-wrap{position:relative;width:172px;height:172px;margin:4px auto}
+  .gym-rest-ring{width:100%;height:100%;transform:rotate(-90deg)}
+  .gym-rest-ring-bg{fill:none;stroke:var(--border);stroke-width:8}
+  .gym-rest-ring-fg{fill:none;stroke:var(--green);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .25s linear,stroke .3s}
+  .gym-rest-ring-fg.rest-flash{stroke:#2fbf71}
+  .gym-rest-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .gym-rest-time{font-family:'Quicksand',sans-serif;font-size:34px;font-weight:700;color:var(--green)}
+  .gym-rest-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:700;margin-top:2px}
+  .gym-rest-controls{display:flex;justify-content:center;gap:10px;margin-top:14px}
+  .gym-rest-adj{border:1px solid var(--border);background:#fff;border-radius:9999px;padding:8px 16px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit}
+  .gym-rest-skip{display:block;margin:12px auto 0;background:none;border:none;color:var(--green);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
   .book-clarify-icon{font-size:34px;text-align:center;margin-bottom:10px}
   .food-log{border-top:1px solid var(--border);margin-top:4px;padding-top:16px;margin-bottom:16px}
   .food-log-total{font-size:15px;font-weight:700;font-family:'Quicksand',sans-serif;margin-bottom:8px}
@@ -815,6 +843,34 @@
   <div class="task-detail-card">
     <div class="task-detail-label" id="taskDetailLabel"></div>
     <div class="task-detail-text hidden" id="taskDetailText"></div>
+    <div class="hidden" id="gymWorkoutSection" style="margin-bottom:16px">
+      <div class="gym-note hidden" id="gymAdditionNote"></div>
+      <div id="gymExerciseList"></div>
+      <div class="gym-active-card">
+        <div class="gym-active-title" id="gymActiveTitle"></div>
+        <div class="gym-active-target" id="gymActiveTarget"></div>
+        <div class="gym-active-cue" id="gymActiveCue"></div>
+        <div class="gym-set-pills" id="gymSetPills"></div>
+        <div class="hidden" id="gymRestBox">
+          <div class="gym-rest-ring-wrap">
+            <svg class="gym-rest-ring" viewBox="0 0 120 120">
+              <circle class="gym-rest-ring-bg" cx="60" cy="60" r="52"/>
+              <circle class="gym-rest-ring-fg" id="gymRestRingFg" cx="60" cy="60" r="52"/>
+            </svg>
+            <div class="gym-rest-ring-center">
+              <div class="gym-rest-time" id="gymRestTime"></div>
+              <div class="gym-rest-lbl" id="gymRestLbl"></div>
+            </div>
+          </div>
+          <div class="gym-rest-controls">
+            <button type="button" class="gym-rest-adj" id="gymRestMinus"></button>
+            <button type="button" class="gym-rest-adj" id="gymRestPlus"></button>
+          </div>
+          <button type="button" class="gym-rest-skip" id="gymRestSkip"></button>
+        </div>
+        <button type="button" class="btn btn-green" id="gymNextBtn" style="width:100%;margin-top:16px;padding:15px 18px"></button>
+      </div>
+    </div>
     <div class="food-log hidden" id="foodLogSection">
       <div class="sub hidden" id="foodLogDateLabel" style="margin-bottom:6px;font-weight:700;color:var(--amber)"></div>
       <div class="food-log-total" id="foodLogTotal"></div>
@@ -1102,15 +1158,54 @@ const STRINGS = {
     ecomSprintTestingLbl:"test en cours",
     ecomSprintFinishBtn:"✅ J4 terminé → passer en phase de test",
     gymSplitLbl:["PUSH","PULL","JAMBES","UPPER","LOWER + abdos","Repos","Repos"],
-    gymDetail:[
-      "Pec / Épaules / Triceps\n\n1. Développé couché haltères — 4×8-10\n   → Couché sur le dos, descends les haltères jusqu'à la poitrine, pousse en explosif\n\n2. Développé incliné haltères — 3×10\n   → Banc (ou dossier de chaise) à 30-45°, travaille le haut de la poitrine, descends lentement\n\n3. Développé militaire (épaules) — 3×10\n   → Debout ou assis, pousse les haltères au-dessus de la tête, coudes à 90° en bas\n\n4. Élévations latérales — 3×15\n   → Bras tendus sur les côtés, monte jusqu'à l'horizontal, descends lentement\n\n5. Extensions triceps — 3×12\n   → Haltère au-dessus de la tête, descends derrière la nuque, coudes fixes\n\n⏱️ Repos 90 sec. Charge progressive : vise à ajouter un peu chaque semaine.\n🥤 Shake whey juste après.",
-      "Dos / Biceps\n\n1. Tractions ou rowing barre — 4×8\n   → Tractions : barre fixe, tirer jusqu'au menton. Sinon rowing penché à 45°\n\n2. Rowing haltère unilatéral — 4×10\n   → Genou et main sur une chaise/banc, tire l'haltère vers la hanche, coude collé au corps\n\n3. Tirage / face pull élastique — 3×15\n   → Élastique fixé en hauteur, tire vers le ventre ou le visage en serrant les omoplates\n\n4. Curl biceps haltères — 3×12\n   → Coudes fixes contre le corps, monte lentement, descends encore plus lentement\n\n5. Curl marteau — 3×12\n   → Prise marteau (paumes face à face), coudes fixes, monte et descends contrôlé\n\n⏱️ Repos 90 sec. Serre bien les omoplates sur le tirage.\n🥤 Shake whey juste après.",
-      "Quadris / Ischios / Fessiers / Mollets\n\n1. Squats — 4×10\n   → Pieds largeur épaules, descends cuisses parallèles au sol, dos droit, genoux dans l'axe des pieds\n\n2. Fentes marchées — 3×12 / jambe\n   → Grand pas en avant, genou arrière proche du sol, alterne en avançant\n\n3. Soulevé de terre jambes tendues — 4×10\n   → Haltères devant les cuisses, penche le buste dos droit, sens l'étirement des ischio\n\n4. Hip thrust — 3×12\n   → Dos sur le bord d'une chaise, monte les fesses en serrant fort en haut, descends lentement\n\n5. Mollets debout — 4×20\n   → Sur une marche ou au sol, monte sur la pointe des pieds, tiens 1 sec en haut\n\n⏱️ Repos 2 min sur les squats, 90 sec le reste. Les jambes = grosse prise de masse globale.\n🥤 Shake whey juste après.",
-      "Haut du corps complet\n\n1. Développé incliné haltères — 4×10\n   → Banc (ou dossier de chaise) à 30-45°, descends lentement\n\n2. Rowing haltères — 4×10\n   → Penché à 45°, tire les haltères vers le ventre, coudes collés au corps\n\n3. Développé militaire — 3×10\n   → Debout ou assis, pousse les haltères au-dessus de la tête\n\n4. Curl biceps — 3×12\n   → Coudes fixes contre le corps, monte lentement, descends encore plus lentement\n\n5. Extensions triceps — 3×12\n   → Haltère au-dessus de la tête, descends derrière la nuque, coudes fixes\n\n⏱️ Repos 90 sec. Deuxième passage sur le haut du corps dans la semaine = plus de volume = plus de muscle.\n🥤 Shake whey juste après.",
-      "Bas du corps et gainage\n\n1. Squats bulgares — 4×10 / jambe\n   → Pied arrière sur une chaise, descends buste droit, genou avant ne dépasse pas le pied\n\n2. Hip thrust — 4×12\n   → Dos sur le bord d'une chaise, monte les fesses en serrant fort en haut\n\n3. Soulevé de terre jambes tendues — 3×12\n   → Haltères devant les cuisses, penche le buste dos droit\n\n4. Mollets debout — 4×20\n   → Sur une marche ou au sol, monte sur la pointe des pieds\n\n5. Gainage (planche) — 3×45 sec + relevés de jambes 3×15\n   → Planche : corps aligné, gainage serré. Relevés : allongé, jambes tendues, sans cambrer le dos\n\n⏱️ Repos 90 sec. Dernière séance de la semaine — donne tout, puis repos bien mérité.\n🥤 Shake whey juste après.",
-      "Repos. Ton corps récupère et se reconstruit — la récup fait partie du programme. Pas de séance aujourd'hui.",
-      "Repos. Profite du week-end, la prochaine séance (PUSH) reprend lundi.",
+    // Structured replacement for the old plain-text gymDetail — single
+    // source of truth for both the guided workout UI (exercise list, set
+    // pills, rest timer) and the plain-text fallback shown on past days /
+    // rest days (see formatGymWorkoutText). restSec is per-exercise since
+    // squats on leg day get a longer rest than everything else that day.
+    gymWorkouts:[
+      {title:"Pec / Épaules / Triceps", exercises:[
+        {name:"Développé couché haltères", sets:4, reps:"8-10", cue:"Couché sur le dos, descends les haltères jusqu'à la poitrine, pousse en explosif", restSec:90},
+        {name:"Développé incliné haltères", sets:3, reps:"10", cue:"Banc (ou dossier de chaise) à 30-45°, travaille le haut de la poitrine, descends lentement", restSec:90},
+        {name:"Développé militaire (épaules)", sets:3, reps:"10", cue:"Debout ou assis, pousse les haltères au-dessus de la tête, coudes à 90° en bas", restSec:90},
+        {name:"Élévations latérales", sets:3, reps:"15", cue:"Bras tendus sur les côtés, monte jusqu'à l'horizontal, descends lentement", restSec:90},
+        {name:"Extensions triceps", sets:3, reps:"12", cue:"Haltère au-dessus de la tête, descends derrière la nuque, coudes fixes", restSec:90},
+      ], restNote:"Repos 90 sec.", note:"Charge progressive : vise à ajouter un peu chaque semaine."},
+      {title:"Dos / Biceps", exercises:[
+        {name:"Tractions ou rowing barre", sets:4, reps:"8", cue:"Tractions : barre fixe, tirer jusqu'au menton. Sinon rowing penché à 45°", restSec:90},
+        {name:"Rowing haltère unilatéral", sets:4, reps:"10", cue:"Genou et main sur une chaise/banc, tire l'haltère vers la hanche, coude collé au corps", restSec:90},
+        {name:"Tirage / face pull élastique", sets:3, reps:"15", cue:"Élastique fixé en hauteur, tire vers le ventre ou le visage en serrant les omoplates", restSec:90},
+        {name:"Curl biceps haltères", sets:3, reps:"12", cue:"Coudes fixes contre le corps, monte lentement, descends encore plus lentement", restSec:90},
+        {name:"Curl marteau", sets:3, reps:"12", cue:"Prise marteau (paumes face à face), coudes fixes, monte et descends contrôlé", restSec:90},
+      ], restNote:"Repos 90 sec.", note:"Serre bien les omoplates sur le tirage."},
+      {title:"Quadris / Ischios / Fessiers / Mollets", exercises:[
+        {name:"Squats", sets:4, reps:"10", cue:"Pieds largeur épaules, descends cuisses parallèles au sol, dos droit, genoux dans l'axe des pieds", restSec:120},
+        {name:"Fentes marchées", sets:3, reps:"12 / jambe", cue:"Grand pas en avant, genou arrière proche du sol, alterne en avançant", restSec:90},
+        {name:"Soulevé de terre jambes tendues", sets:4, reps:"10", cue:"Haltères devant les cuisses, penche le buste dos droit, sens l'étirement des ischio", restSec:90},
+        {name:"Hip thrust", sets:3, reps:"12", cue:"Dos sur le bord d'une chaise, monte les fesses en serrant fort en haut, descends lentement", restSec:90},
+        {name:"Mollets debout", sets:4, reps:"20", cue:"Sur une marche ou au sol, monte sur la pointe des pieds, tiens 1 sec en haut", restSec:90},
+      ], restNote:"Repos 2 min sur les squats, 90 sec le reste.", note:"Les jambes = grosse prise de masse globale."},
+      {title:"Haut du corps complet", exercises:[
+        {name:"Développé incliné haltères", sets:4, reps:"10", cue:"Banc (ou dossier de chaise) à 30-45°, descends lentement", restSec:90},
+        {name:"Rowing haltères", sets:4, reps:"10", cue:"Penché à 45°, tire les haltères vers le ventre, coudes collés au corps", restSec:90},
+        {name:"Développé militaire", sets:3, reps:"10", cue:"Debout ou assis, pousse les haltères au-dessus de la tête", restSec:90},
+        {name:"Curl biceps", sets:3, reps:"12", cue:"Coudes fixes contre le corps, monte lentement, descends encore plus lentement", restSec:90},
+        {name:"Extensions triceps", sets:3, reps:"12", cue:"Haltère au-dessus de la tête, descends derrière la nuque, coudes fixes", restSec:90},
+      ], restNote:"Repos 90 sec.", note:"Deuxième passage sur le haut du corps dans la semaine = plus de volume = plus de muscle."},
+      {title:"Bas du corps et gainage", exercises:[
+        {name:"Squats bulgares", sets:4, reps:"10 / jambe", cue:"Pied arrière sur une chaise, descends buste droit, genou avant ne dépasse pas le pied", restSec:90},
+        {name:"Hip thrust", sets:4, reps:"12", cue:"Dos sur le bord d'une chaise, monte les fesses en serrant fort en haut", restSec:90},
+        {name:"Soulevé de terre jambes tendues", sets:3, reps:"12", cue:"Haltères devant les cuisses, penche le buste dos droit", restSec:90},
+        {name:"Mollets debout", sets:4, reps:"20", cue:"Sur une marche ou au sol, monte sur la pointe des pieds", restSec:90},
+        {name:"Gainage (planche)", sets:3, reps:"45 sec + relevés de jambes 3×15", cue:"Planche : corps aligné, gainage serré. Relevés : allongé, jambes tendues, sans cambrer le dos", restSec:90},
+      ], restNote:"Repos 90 sec.", note:"Dernière séance de la semaine — donne tout, puis repos bien mérité."},
+      {rest:true, text:"Repos. Ton corps récupère et se reconstruit — la récup fait partie du programme. Pas de séance aujourd'hui."},
+      {rest:true, text:"Repos. Profite du week-end, la prochaine séance (PUSH) reprend lundi."},
     ],
+    shakeReminder:"🥤 Shake whey juste après.",
+    gymRestLbl:"REPOS", gymRestMinus:"-15s", gymRestPlus:"+15s", gymRestSkip:"Passer",
+    gymNextBtn:"Exercice suivant", gymFinishBtn:"Terminer la séance",
+    gymSetsDoneFmt:(done,total)=>`${done}/${total} séries`,
     shakeDetail:"🕐 15h30 – 15h40\n\n🥤 Collation de l'après-midi, tous les jours :\n\n• 500 ml de lait (ou lait fermenté)\n• 30 g de whey ISO\n• 5 g de créatine\n\nBien après le déjeuner = léger, pas lourd. Parfait pour étaler tes calories et garantir tes protéines même les jours sans faim, sans te couper l'appétit du dîner.",
     shakeDefaultText:"500 ml lait, 30 g whey ISO, 5 g créatine",
     wakeDetail:"🕐 06h00 – 06h40\n\nLève-toi, grand verre d'eau.\n\n🌞 Sors prendre la lumière du soleil + marche 30-45 min (≈3,5-5 km).\nC'est le meilleur anti-stress naturel : ça règle ton horloge interne, ton énergie et ton humeur pour toute la journée.\n\n📵 Toujours pas de téléphone — il reste dans l'autre pièce.",
@@ -1285,15 +1380,49 @@ const STRINGS = {
     ecomSprintTestingLbl:"testing in progress",
     ecomSprintFinishBtn:"✅ Day 4 done → move to testing phase",
     gymSplitLbl:["PUSH","PULL","LEGS","UPPER","LOWER + abs","Rest","Rest"],
-    gymDetail:[
-      "Chest / Shoulders / Triceps\n\n1. Dumbbell bench press — 4×8-10\n   → Lying on your back, lower the dumbbells to your chest, push up explosively\n\n2. Incline dumbbell press — 3×10\n   → Bench (or chair back) at 30-45°, targets upper chest, lower slowly\n\n3. Overhead press (shoulders) — 3×10\n   → Standing or seated, push dumbbells overhead, elbows at 90° at the bottom\n\n4. Lateral raises — 3×15\n   → Arms straight at your sides, raise to horizontal, lower slowly\n\n5. Triceps extensions — 3×12\n   → Dumbbell overhead, lower behind your head, elbows fixed\n\n⏱️ Rest 90 sec. Progressive overload: aim to add a bit each week.\n🥤 Whey shake right after.",
-      "Back / Biceps\n\n1. Pull-ups or barbell rows — 4×8\n   → Pull-ups: fixed bar, pull to your chin. Otherwise row bent at 45°\n\n2. Single-arm dumbbell row — 4×10\n   → Knee and hand on a chair/bench, pull the dumbbell to your hip, elbow close to body\n\n3. Band pull / face pull — 3×15\n   → Band anchored high, pull toward your belly or face, squeeze shoulder blades\n\n4. Dumbbell biceps curl — 3×12\n   → Elbows fixed against your body, curl up slowly, lower even slower\n\n5. Hammer curl — 3×12\n   → Neutral grip (palms facing in), elbows fixed, controlled up and down\n\n⏱️ Rest 90 sec. Squeeze your shoulder blades on the row.\n🥤 Whey shake right after.",
-      "Quads / Hamstrings / Glutes / Calves\n\n1. Squats — 4×10\n   → Feet shoulder-width, lower until thighs are parallel to the floor, back straight, knees tracking toes\n\n2. Walking lunges — 3×12 / leg\n   → Big step forward, back knee close to the ground, alternate legs as you move\n\n3. Stiff-leg deadlift — 4×10\n   → Dumbbells in front of thighs, hinge forward with a straight back, feel the hamstring stretch\n\n4. Hip thrust — 3×12\n   → Back against the edge of a chair, drive hips up squeezing hard at the top, lower slowly\n\n5. Standing calf raises — 4×20\n   → On a step or the floor, rise onto your toes, hold 1 sec at the top\n\n⏱️ Rest 2 min on squats, 90 sec the rest. Legs = biggest overall mass builder.\n🥤 Whey shake right after.",
-      "Full upper body\n\n1. Incline dumbbell press — 4×10\n   → Bench (or chair back) at 30-45°, lower slowly\n\n2. Dumbbell rows — 4×10\n   → Bent at 45°, pull dumbbells to your belly, elbows close to body\n\n3. Overhead press — 3×10\n   → Standing or seated, push dumbbells overhead\n\n4. Biceps curl — 3×12\n   → Elbows fixed against your body, curl up slowly, lower even slower\n\n5. Triceps extensions — 3×12\n   → Dumbbell overhead, lower behind your head, elbows fixed\n\n⏱️ Rest 90 sec. Second upper-body pass this week = more volume = more muscle.\n🥤 Whey shake right after.",
-      "Lower body and core\n\n1. Bulgarian split squats — 4×10 / leg\n   → Back foot on a chair, lower with a straight torso, front knee doesn't pass your toes\n\n2. Hip thrust — 4×12\n   → Back against the edge of a chair, drive hips up squeezing hard at the top\n\n3. Stiff-leg deadlift — 3×12\n   → Dumbbells in front of thighs, hinge forward with a straight back\n\n4. Standing calf raises — 4×20\n   → On a step or the floor, rise onto your toes\n\n5. Plank — 3×45 sec + leg raises 3×15\n   → Plank: body aligned, core tight. Leg raises: lying down, legs straight, no arching your back\n\n⏱️ Rest 90 sec. Last session of the week — give it everything, then well-earned rest.\n🥤 Whey shake right after.",
-      "Rest. Your body recovers and rebuilds — recovery is part of the program. No session today.",
-      "Rest. Enjoy the weekend, next session (PUSH) starts Monday.",
+    gymWorkouts:[
+      {title:"Chest / Shoulders / Triceps", exercises:[
+        {name:"Dumbbell bench press", sets:4, reps:"8-10", cue:"Lying on your back, lower the dumbbells to your chest, push up explosively", restSec:90},
+        {name:"Incline dumbbell press", sets:3, reps:"10", cue:"Bench (or chair back) at 30-45°, targets upper chest, lower slowly", restSec:90},
+        {name:"Overhead press (shoulders)", sets:3, reps:"10", cue:"Standing or seated, push dumbbells overhead, elbows at 90° at the bottom", restSec:90},
+        {name:"Lateral raises", sets:3, reps:"15", cue:"Arms straight at your sides, raise to horizontal, lower slowly", restSec:90},
+        {name:"Triceps extensions", sets:3, reps:"12", cue:"Dumbbell overhead, lower behind your head, elbows fixed", restSec:90},
+      ], restNote:"Rest 90 sec.", note:"Progressive overload: aim to add a bit each week."},
+      {title:"Back / Biceps", exercises:[
+        {name:"Pull-ups or barbell rows", sets:4, reps:"8", cue:"Pull-ups: fixed bar, pull to your chin. Otherwise row bent at 45°", restSec:90},
+        {name:"Single-arm dumbbell row", sets:4, reps:"10", cue:"Knee and hand on a chair/bench, pull the dumbbell to your hip, elbow close to body", restSec:90},
+        {name:"Band pull / face pull", sets:3, reps:"15", cue:"Band anchored high, pull toward your belly or face, squeeze shoulder blades", restSec:90},
+        {name:"Dumbbell biceps curl", sets:3, reps:"12", cue:"Elbows fixed against your body, curl up slowly, lower even slower", restSec:90},
+        {name:"Hammer curl", sets:3, reps:"12", cue:"Neutral grip (palms facing in), elbows fixed, controlled up and down", restSec:90},
+      ], restNote:"Rest 90 sec.", note:"Squeeze your shoulder blades on the row."},
+      {title:"Quads / Hamstrings / Glutes / Calves", exercises:[
+        {name:"Squats", sets:4, reps:"10", cue:"Feet shoulder-width, lower until thighs are parallel to the floor, back straight, knees tracking toes", restSec:120},
+        {name:"Walking lunges", sets:3, reps:"12 / leg", cue:"Big step forward, back knee close to the ground, alternate legs as you move", restSec:90},
+        {name:"Stiff-leg deadlift", sets:4, reps:"10", cue:"Dumbbells in front of thighs, hinge forward with a straight back, feel the hamstring stretch", restSec:90},
+        {name:"Hip thrust", sets:3, reps:"12", cue:"Back against the edge of a chair, drive hips up squeezing hard at the top, lower slowly", restSec:90},
+        {name:"Standing calf raises", sets:4, reps:"20", cue:"On a step or the floor, rise onto your toes, hold 1 sec at the top", restSec:90},
+      ], restNote:"Rest 2 min on squats, 90 sec the rest.", note:"Legs = biggest overall mass builder."},
+      {title:"Full upper body", exercises:[
+        {name:"Incline dumbbell press", sets:4, reps:"10", cue:"Bench (or chair back) at 30-45°, lower slowly", restSec:90},
+        {name:"Dumbbell rows", sets:4, reps:"10", cue:"Bent at 45°, pull dumbbells to your belly, elbows close to body", restSec:90},
+        {name:"Overhead press", sets:3, reps:"10", cue:"Standing or seated, push dumbbells overhead", restSec:90},
+        {name:"Biceps curl", sets:3, reps:"12", cue:"Elbows fixed against your body, curl up slowly, lower even slower", restSec:90},
+        {name:"Triceps extensions", sets:3, reps:"12", cue:"Dumbbell overhead, lower behind your head, elbows fixed", restSec:90},
+      ], restNote:"Rest 90 sec.", note:"Second upper-body pass this week = more volume = more muscle."},
+      {title:"Lower body and core", exercises:[
+        {name:"Bulgarian split squats", sets:4, reps:"10 / leg", cue:"Back foot on a chair, lower with a straight torso, front knee doesn't pass your toes", restSec:90},
+        {name:"Hip thrust", sets:4, reps:"12", cue:"Back against the edge of a chair, drive hips up squeezing hard at the top", restSec:90},
+        {name:"Stiff-leg deadlift", sets:3, reps:"12", cue:"Dumbbells in front of thighs, hinge forward with a straight back", restSec:90},
+        {name:"Standing calf raises", sets:4, reps:"20", cue:"On a step or the floor, rise onto your toes", restSec:90},
+        {name:"Plank", sets:3, reps:"45 sec + leg raises 3×15", cue:"Plank: body aligned, core tight. Leg raises: lying down, legs straight, no arching your back", restSec:90},
+      ], restNote:"Rest 90 sec.", note:"Last session of the week — give it everything, then well-earned rest."},
+      {rest:true, text:"Rest. Your body recovers and rebuilds — recovery is part of the program. No session today."},
+      {rest:true, text:"Rest. Enjoy the weekend, next session (PUSH) starts Monday."},
     ],
+    shakeReminder:"🥤 Whey shake right after.",
+    gymRestLbl:"REST", gymRestMinus:"-15s", gymRestPlus:"+15s", gymRestSkip:"Skip",
+    gymNextBtn:"Next exercise", gymFinishBtn:"Finish workout",
+    gymSetsDoneFmt:(done,total)=>`${done}/${total} sets`,
     shakeDetail:"🕐 3:30pm – 3:40pm\n\n🥤 Afternoon snack, every day:\n\n• 500 ml milk (or fermented milk)\n• 30 g whey ISO\n• 5 g creatine\n\nWell after lunch = light, not heavy. Perfect for spreading out your calories and guaranteeing your protein even on low-appetite days, without killing your dinner appetite.",
     shakeDefaultText:"500 ml milk, 30 g whey ISO, 5 g creatine",
     wakeDetail:"🕐 6:00am – 6:40am\n\nGet up, big glass of water.\n\n🌞 Go get sunlight + walk 30-45 min (≈3.5-5 km).\nThe best natural anti-stress: it sets your internal clock, energy and mood for the whole day.\n\n📵 Still no phone — it stays in the other room.",
@@ -1702,6 +1831,14 @@ function taskDisplayLabel(tk){
   return tk.label;
 }
 const SIMPLE_TASK_DETAIL_KEYS={wake:"wakeDetail",weighIn:"weighInDetail",faceCareMorning:"faceCareMorningDetail",faceCareEvening:"faceCareEveningDetail",suppsMorning:"suppsMorningDetail",suppsEvening:"suppsEveningDetail",minoxidilMorning:"minoxidilMorningDetail",minoxidilEvening:"minoxidilEveningDetail",read:"readDetail",screens:"screensDetail"};
+// Reconstructs the old plain-text gym detail from the structured
+// gymWorkouts data (used for rest days and past-day viewing, where the
+// live guided workout UI doesn't apply — see openTaskDetail).
+function formatGymWorkoutText(day){
+  if(day.rest)return day.text;
+  const lines=day.exercises.map((ex,i)=>`${i+1}. ${ex.name} — ${ex.sets}×${ex.reps}\n   → ${ex.cue}`).join("\n\n");
+  return `${day.title}\n\n${lines}\n\n⏱️ ${day.restNote} ${day.note}\n${t("shakeReminder")}`;
+}
 function taskDetailText(tk){
   // ecom/gym rotate by day of week — never let a static AI-generated
   // override (from the calendar-sync pipeline) freeze them on one day's
@@ -1710,7 +1847,7 @@ function taskDetailText(tk){
   if(tk.id==="ecom")return ecomSprintDay>4?t("ecomSprintDoneMsg"):t("ecomSprintDetail")[ecomSprintDay-1];
   if(tk.id==="gym"){
     const dow=dowOf(new Date());
-    const base=t("gymDetail")[dow];
+    const base=formatGymWorkoutText(t("gymWorkouts")[dow]);
     const addition=bodyAnalysis&&bodyAnalysis.exerciseAdditions&&bodyAnalysis.exerciseAdditions[dow];
     return addition?`${base}\n\n🎯 ${t("gymFocusAdditionLbl")} :\n${addition}`:base;
   }
@@ -3273,14 +3410,203 @@ async function estimateFoodFromText(){
 document.getElementById("foodLogTextBtn").onclick=estimateFoodFromText;
 
 function closeTaskDetail(){hideSheet("taskDetailSheet");}
+// ===== Guided gym workout: set tracking + rest timer =====
+// State persists per calendar day (tracker:workout:<dateKey>) so leaving
+// mid-workout and coming back — even after the app was fully closed, since
+// iOS suspends/evicts backgrounded PWAs aggressively — resumes exactly
+// where it left off. restEndsAt is stored as an absolute timestamp rather
+// than a countdown, so it's still correct no matter how long the gap was.
+function getWorkoutState(day){
+  const stored=load("tracker:workout:"+viewedDate,null);
+  if(stored)return stored;
+  return{activeIdx:0,setsDone:day.exercises.map(ex=>Array(ex.sets).fill(false)),restEndsAt:null,restDurationSec:null};
+}
+function saveWorkoutState(state){
+  save("tracker:workout:"+viewedDate,state);
+}
+let audioCtx=null;
+function getAudioCtx(){
+  if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+// iOS Safari only allows audio to play if it traces back to a direct user
+// gesture — resume() has to be called from inside an actual tap/touch/key
+// event at least once, after which programmatic play() calls (like the one
+// a setInterval fires when the rest timer hits zero) keep working for the
+// rest of the page's life. Hooking this at the body level means it's
+// unlocked from the very first tap anywhere in the app, long before the
+// user could reach a running timer.
+(function setupAudioUnlock(){
+  const events=["touchstart","touchend","mousedown","keydown"];
+  function unlock(){
+    const ctx=getAudioCtx();
+    if(ctx.state==="suspended")ctx.resume();
+    events.forEach(e=>document.body.removeEventListener(e,unlock));
+  }
+  events.forEach(e=>document.body.addEventListener(e,unlock,{passive:true}));
+})();
+function playRestDoneAlert(){
+  const ctx=getAudioCtx();
+  if(ctx.state==="suspended")ctx.resume();
+  const now=ctx.currentTime;
+  // Three short sine beeps, the last one a step higher — clearly reads as
+  // "done" without being harsh. Gain ramps up/down instead of a hard on/off
+  // to avoid the click/pop a Web Audio oscillator makes at a sharp edge.
+  [0,0.18,0.36].forEach((offset,i)=>{
+    const osc=ctx.createOscillator(),gain=ctx.createGain();
+    osc.type="sine";
+    osc.frequency.value=i===2?1046.5:880;
+    gain.gain.setValueAtTime(0,now+offset);
+    gain.gain.linearRampToValueAtTime(0.35,now+offset+0.015);
+    gain.gain.linearRampToValueAtTime(0,now+offset+0.15);
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.start(now+offset);osc.stop(now+offset+0.16);
+  });
+  if(navigator.vibrate)navigator.vibrate([120,60,120]);
+}
+let gymRestInterval=null;
+const GYM_REST_RING_CIRC=2*Math.PI*52;
+function renderGymRestTimer(){
+  clearInterval(gymRestInterval);
+  const day=t("gymWorkouts")[dowOf(new Date())];
+  const state=getWorkoutState(day);
+  const box=document.getElementById("gymRestBox");
+  const ringFg=document.getElementById("gymRestRingFg");
+  const timeEl=document.getElementById("gymRestTime");
+  ringFg.style.strokeDasharray=GYM_REST_RING_CIRC;
+  if(!state.restEndsAt){
+    box.classList.add("hidden");
+    return;
+  }
+  box.classList.remove("hidden");
+  function tick(){
+    const remainingMs=state.restEndsAt-Date.now();
+    if(remainingMs<=0){
+      clearInterval(gymRestInterval);
+      timeEl.textContent="0:00";
+      ringFg.style.strokeDashoffset=0;
+      ringFg.classList.add("rest-flash");
+      playRestDoneAlert();
+      setTimeout(()=>{
+        state.restEndsAt=null;state.restDurationSec=null;
+        saveWorkoutState(state);
+        renderGymRestTimer();
+      },1200);
+      return;
+    }
+    const remainingSec=Math.ceil(remainingMs/1000);
+    timeEl.textContent=`${Math.floor(remainingSec/60)}:${String(remainingSec%60).padStart(2,"0")}`;
+    const pct=Math.max(0,Math.min(1,remainingMs/(state.restDurationSec*1000)));
+    ringFg.style.strokeDashoffset=GYM_REST_RING_CIRC*(1-pct);
+  }
+  tick();
+  gymRestInterval=setInterval(tick,250);
+}
+function startGymRestTimer(sec){
+  const day=t("gymWorkouts")[dowOf(new Date())];
+  const state=getWorkoutState(day);
+  state.restEndsAt=Date.now()+sec*1000;
+  state.restDurationSec=sec;
+  saveWorkoutState(state);
+  document.getElementById("gymRestRingFg").classList.remove("rest-flash");
+  renderGymRestTimer();
+}
+function adjustGymRestTimer(deltaSec){
+  const day=t("gymWorkouts")[dowOf(new Date())];
+  const state=getWorkoutState(day);
+  if(!state.restEndsAt)return;
+  state.restEndsAt=Math.max(Date.now(),state.restEndsAt+deltaSec*1000);
+  saveWorkoutState(state);
+  renderGymRestTimer();
+}
+document.getElementById("gymRestMinus").onclick=()=>adjustGymRestTimer(-15);
+document.getElementById("gymRestPlus").onclick=()=>adjustGymRestTimer(15);
+document.getElementById("gymRestSkip").onclick=()=>{
+  const day=t("gymWorkouts")[dowOf(new Date())];
+  const state=getWorkoutState(day);
+  state.restEndsAt=null;state.restDurationSec=null;
+  saveWorkoutState(state);
+  renderGymRestTimer();
+};
+function renderGymWorkout(){
+  const dow=dowOf(new Date());
+  const day=t("gymWorkouts")[dow];
+  const state=getWorkoutState(day);
+  document.getElementById("gymRestLbl").textContent=t("gymRestLbl");
+  document.getElementById("gymRestMinus").textContent=t("gymRestMinus");
+  document.getElementById("gymRestPlus").textContent=t("gymRestPlus");
+  document.getElementById("gymRestSkip").textContent=t("gymRestSkip");
+  const addition=bodyAnalysis&&bodyAnalysis.exerciseAdditions&&bodyAnalysis.exerciseAdditions[dow];
+  const noteEl=document.getElementById("gymAdditionNote");
+  if(addition){noteEl.textContent=`🎯 ${t("gymFocusAdditionLbl")} : ${addition}`;noteEl.classList.remove("hidden");}
+  else noteEl.classList.add("hidden");
+  const listEl=document.getElementById("gymExerciseList");
+  listEl.innerHTML="";
+  day.exercises.forEach((ex,i)=>{
+    const doneCount=state.setsDone[i].filter(Boolean).length;
+    const complete=doneCount===ex.sets;
+    const row=document.createElement("div");
+    row.className="gym-exercise-row"+(i===state.activeIdx?" active":"")+(complete?" complete":"");
+    row.innerHTML=`<div class="gym-exercise-icon">${complete?CHECK_SVG:(i+1)}</div><div class="gym-exercise-info"><div class="gym-exercise-name">${ex.name}</div><div class="gym-exercise-meta">${ex.sets}×${ex.reps} • ${t("gymSetsDoneFmt",doneCount,ex.sets)}</div></div>`;
+    row.onclick=()=>{state.activeIdx=i;saveWorkoutState(state);renderGymWorkout();};
+    listEl.appendChild(row);
+  });
+  const activeEx=day.exercises[state.activeIdx];
+  document.getElementById("gymActiveTitle").textContent=activeEx.name;
+  document.getElementById("gymActiveTarget").textContent=`${activeEx.sets}×${activeEx.reps}`;
+  document.getElementById("gymActiveCue").textContent=activeEx.cue;
+  const pillsEl=document.getElementById("gymSetPills");
+  pillsEl.innerHTML="";
+  state.setsDone[state.activeIdx].forEach((setDone,i)=>{
+    const pill=document.createElement("button");
+    pill.type="button";
+    pill.className="gym-set-pill"+(setDone?" done":"");
+    pill.textContent=i+1;
+    pill.onclick=()=>{
+      const wasDone=state.setsDone[state.activeIdx][i];
+      state.setsDone[state.activeIdx][i]=!wasDone;
+      saveWorkoutState(state);
+      if(!wasDone)startGymRestTimer(activeEx.restSec);
+      renderGymWorkout();
+    };
+    pillsEl.appendChild(pill);
+  });
+  const isLast=state.activeIdx===day.exercises.length-1;
+  const nextBtn=document.getElementById("gymNextBtn");
+  nextBtn.textContent=isLast?t("gymFinishBtn"):t("gymNextBtn");
+  nextBtn.onclick=()=>{
+    if(isLast){
+      markTaskDoneForViewedDate("gym");
+      closeTaskDetail();
+    }else{
+      state.activeIdx+=1;
+      saveWorkoutState(state);
+      renderGymWorkout();
+    }
+  };
+  renderGymRestTimer();
+}
 let currentDetailTaskId=null;
 function openTaskDetail(tk){
   currentDetailTaskId=tk.id;
   document.getElementById("taskDetailLabel").textContent=taskDisplayLabel(tk);
   const detail=taskDetailText(tk);
   const detailEl=document.getElementById("taskDetailText");
-  if(detail){detailEl.textContent=detail;detailEl.classList.remove("hidden");}
-  else{detailEl.classList.add("hidden");}
+  const gymSection=document.getElementById("gymWorkoutSection");
+  // The guided workout (exercise list, set tracking, rest timer) only makes
+  // sense live, for today, on an actual training day — a rest day has
+  // nothing to guide, and a past day just needs the plain read-back text
+  // (its checkbox is already independently toggleable, see renderTaskRow).
+  const isGymLiveToday=tk.id==="gym"&&isViewingToday()&&!t("gymWorkouts")[dowOf(new Date())].rest;
+  if(isGymLiveToday){
+    detailEl.classList.add("hidden");
+    gymSection.classList.remove("hidden");
+    renderGymWorkout();
+  }else{
+    gymSection.classList.add("hidden");
+    if(detail){detailEl.textContent=detail;detailEl.classList.remove("hidden");}
+    else{detailEl.classList.add("hidden");}
+  }
   const foodSection=document.getElementById("foodLogSection");
   if(CALORIE_LOG_TASK_IDS.has(tk.id)){
     const dateLabelEl=document.getElementById("foodLogDateLabel");
