@@ -301,7 +301,8 @@
   .gym-active-card{background:#fff;border:1px solid var(--border);border-radius:20px;padding:22px 18px;margin-top:14px;text-align:center}
   .gym-active-title{font-size:19px;font-weight:700;color:var(--green);font-family:'Quicksand',sans-serif;line-height:1.25}
   .gym-active-target{display:inline-block;background:var(--cardHi);color:var(--green);font-weight:700;font-size:13px;padding:6px 14px;border-radius:9999px;margin:10px 0}
-  .gym-active-img{max-width:220px;max-height:220px;width:auto;height:auto;border-radius:12px;margin:4px 0 14px;object-fit:contain}
+  .gym-active-img{max-width:220px;max-height:220px;width:auto;height:auto;border-radius:12px;margin:4px 0 14px;object-fit:contain;animation:gymImgBreathe 2.4s ease-in-out infinite}
+  @keyframes gymImgBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
   .gym-day-picker-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:18px 0 8px}
   .gym-day-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px}
   .gym-day-tab{flex-shrink:0;padding:8px 14px;border-radius:9999px;border:1px solid var(--border);background:#fff;color:var(--muted);font-weight:700;font-size:13px;font-family:inherit;cursor:pointer}
