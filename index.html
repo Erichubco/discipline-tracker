@@ -1232,6 +1232,7 @@ const STRINGS = {
         {name:"Élévations latérales unilatérales", sets:3, reps:"15 / bras", cue:"Bras tendu sur le côté avec le kettlebell, monte jusqu'à l'horizontal, descends lentement, change de bras. Fais un côté puis l'autre, ça compte comme UNE série.", restSec:90, img:"lateral-raise-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
         {name:"Développé serré à la barre", sets:3, reps:"10", cue:"Mains rapprochées sur la barre, coudes proches du corps, descends jusqu'à la poitrine, pousse", restSec:90, img:"bench-press-barbell.jpg", equip:"Barre 70 kg + banc"},
         {name:"Extensions triceps nuque avec le kettlebell", sets:3, reps:"12", cue:"Kettlebell tenu à deux mains au-dessus de la tête, descends derrière la nuque, coudes fixes, remonte", restSec:90, img:"triceps-extension-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
+        {name:"Gainage (planche)", sets:3, reps:"45 sec + relevés de jambes 3×15", cue:"Planche : corps aligné, gainage serré. Relevés : allongé, jambes tendues, sans cambrer le dos", restSec:90, img:"plank.jpg", equip:"Aucun (poids du corps)"},
       ], restNote:"Repos 90 sec.", note:"Charge progressive : vise à ajouter un peu chaque semaine."},
       {title:"Dos / Biceps", exercises:[
         {name:"Tractions", sets:4, reps:"8", cue:"Suspendu à la barre fixe, tire jusqu'à ce que le menton passe la barre, redescends contrôlé", restSec:90, img:"pullup.jpg", equip:"Barre de traction"},
@@ -1246,6 +1247,7 @@ const STRINGS = {
         {name:"Soulevé de terre à la barre", sets:4, reps:"10", cue:"Barre devant les cuisses, penche le buste dos droit, sens l'étirement des ischio", restSec:90, img:"romanian-deadlift-barbell.jpg", equip:"Barre 15-17 kg"},
         {name:"Hip thrust à la barre", sets:3, reps:"12", cue:"Dos calé contre le banc, barre sur les hanches (coussin recommandé), monte en serrant fort en haut, descends lentement", restSec:90, img:"hip-thrust-barbell.jpg", equip:"Barre 15-17 kg + banc"},
         {name:"Mollets debout avec le kettlebell", sets:4, reps:"20", cue:"Kettlebell en main, monte sur la pointe des pieds, tiens 1 sec en haut. Les deux jambes travaillent ensemble, pas besoin de changer de main.", restSec:90, img:"standing-calf-raise-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
+        {name:"Gainage (planche)", sets:3, reps:"45 sec + relevés de jambes 3×15", cue:"Planche : corps aligné, gainage serré. Relevés : allongé, jambes tendues, sans cambrer le dos", restSec:90, img:"plank.jpg", equip:"Aucun (poids du corps)"},
       ], restNote:"Repos 2 min sur le squat, 90 sec le reste.", note:"Les jambes = grosse prise de masse globale."},
       {title:"Haut du corps complet", exercises:[
         {name:"Développé couché à la barre", sets:4, reps:"10", cue:"Allongé sur le banc, la barre au-dessus de la poitrine, descends lentement, pousse", restSec:90, img:"bench-press-barbell.jpg", equip:"Barre 70 kg + banc"},
@@ -1457,6 +1459,7 @@ const STRINGS = {
         {name:"Single-arm lateral raise", sets:3, reps:"15 / arm", cue:"Arm straight at your side with the kettlebell, raise to horizontal, lower slowly, switch arms. Do one side then the other — that's ONE set.", restSec:90, img:"lateral-raise-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
         {name:"Close-grip barbell bench press", sets:3, reps:"10", cue:"Hands close together on the bar, elbows tucked in, lower to your chest, push up", restSec:90, img:"bench-press-barbell.jpg", equip:"70kg barbell + bench"},
         {name:"Kettlebell overhead triceps extension", sets:3, reps:"12", cue:"Kettlebell held with both hands overhead, lower behind your head, elbows fixed, extend back up", restSec:90, img:"triceps-extension-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
+        {name:"Plank", sets:3, reps:"45 sec + leg raises 3×15", cue:"Plank: body aligned, core tight. Leg raises: lying down, legs straight, no arching your back", restSec:90, img:"plank.jpg", equip:"None (bodyweight)"},
       ], restNote:"Rest 90 sec.", note:"Progressive overload: aim to add a bit each week."},
       {title:"Back / Biceps", exercises:[
         {name:"Pull-ups", sets:4, reps:"8", cue:"Hanging from the fixed bar, pull until your chin clears the bar, lower with control", restSec:90, img:"pullup.jpg", equip:"Pull-up bar"},
@@ -1471,6 +1474,7 @@ const STRINGS = {
         {name:"Barbell Romanian deadlift", sets:4, reps:"10", cue:"Bar in front of your thighs, hinge forward with a straight back, feel the hamstring stretch, stand back up", restSec:90, img:"romanian-deadlift-barbell.jpg", equip:"15-17kg barbell"},
         {name:"Barbell hip thrust", sets:3, reps:"12", cue:"Back against the edge of the bench, bar across your hips (pad recommended), drive hips up squeezing hard at the top, lower slowly", restSec:90, img:"hip-thrust-barbell.jpg", equip:"15-17kg barbell + bench"},
         {name:"Standing kettlebell calf raise", sets:4, reps:"20", cue:"Kettlebell in hand, rise onto your toes, hold 1 sec at the top, lower back down. Both legs work together, no need to switch hands.", restSec:90, img:"standing-calf-raise-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
+        {name:"Plank", sets:3, reps:"45 sec + leg raises 3×15", cue:"Plank: body aligned, core tight. Leg raises: lying down, legs straight, no arching your back", restSec:90, img:"plank.jpg", equip:"None (bodyweight)"},
       ], restNote:"Rest 2 min on the squat, 90 sec the rest.", note:"Legs = biggest overall mass builder."},
       {title:"Full upper body", exercises:[
         {name:"Barbell bench press", sets:4, reps:"10", cue:"Lying on the bench, bar above your chest, lower slowly, push up", restSec:90, img:"bench-press-barbell.jpg", equip:"70kg barbell + bench"},
@@ -3504,7 +3508,7 @@ function getWorkoutState(day){
   const stored=load("tracker:workout:"+today(),null);
   if(stored)return stored;
   return{activeIdx:0,setsDone:day.exercises.map(ex=>Array(ex.sets).fill(false)),restEndsAt:null,restDurationSec:null,
-    sessionElapsedMs:0,sessionRunningSince:null,sessionGoalAlerted:false};
+    sessionElapsedMs:0,sessionRunningSince:null,sessionGoalAlerted:false,sessionMaxAlerted:false};
 }
 function saveWorkoutState(state){
   save("tracker:workout:"+today(),state);
@@ -3562,6 +3566,7 @@ function formatMMSS(totalSec){
 // when paused, elapsed time is frozen into sessionElapsedMs and
 // sessionRunningSince goes null, so no interval needs to run at all.
 const GYM_SESSION_GOAL_MS=45*60*1000;
+const GYM_SESSION_GOAL_MAX_MS=60*60*1000;
 let gymSessionInterval=null;
 function currentSessionElapsedMs(state){
   return state.sessionElapsedMs+(state.sessionRunningSince?Date.now()-state.sessionRunningSince:0);
@@ -3608,9 +3613,14 @@ function renderGymSessionTimer(){
   };
   function tick(){
     const elapsedMs=currentSessionElapsedMs(state);
-    timeEl.textContent=`${formatMMSS(Math.floor(elapsedMs/1000))} / 45:00`;
+    timeEl.textContent=`${formatMMSS(Math.floor(elapsedMs/1000))} / 45-60 min`;
     if(elapsedMs>=GYM_SESSION_GOAL_MS&&!state.sessionGoalAlerted){
       state.sessionGoalAlerted=true;
+      saveWorkoutState(state);
+      playRestDoneAlert();
+    }
+    if(elapsedMs>=GYM_SESSION_GOAL_MAX_MS&&!state.sessionMaxAlerted){
+      state.sessionMaxAlerted=true;
       saveWorkoutState(state);
       playRestDoneAlert();
     }
