@@ -919,7 +919,6 @@
       </div>
 
     </div>
-    <div class="sub" id="exerciseImgCredit" style="text-align:center;margin-top:14px"></div>
   </div>
 
   <!-- Tab bar -->
@@ -1151,7 +1150,6 @@ const STRINGS = {
     progressionTitle:"Progression", progressionSub:"Ta progression, jour après jour.",
     musculationTitle:"Musculation", musculationSubRest:"Jour de repos.",
     musculationSubFmt:day=>`Aujourd'hui : ${day}`,
-    exerciseImgCredit:'Illustrations exercices : <a href="https://wger.de" target="_blank" rel="noopener">wger.de</a> (CC BY-SA)',
     bizTitle:"Chiffre d'affaires mensuel", bizEyebrow:"Objectif business", bizGoalLbl:"Objectif CA", bizPlaceholder:"CA actuel (€)",
     bizPctCompleted:pct=>`${pct}% complété`, bizRemainingAmt:amt=>`${amt} restant`,
     bizVsLastMonth:(prev,sign,diff,pct)=>`Mois dernier : ${prev}€ → ${sign}${diff}€${pct!=null?` (${sign}${pct}%)`:""}`,
@@ -1386,7 +1384,6 @@ const STRINGS = {
     progressionTitle:"Progress", progressionSub:"Your progress, day by day.",
     musculationTitle:"Weightlifting", musculationSubRest:"Rest day.",
     musculationSubFmt:day=>`Today: ${day}`,
-    exerciseImgCredit:'Exercise illustrations: <a href="https://wger.de" target="_blank" rel="noopener">wger.de</a> (CC BY-SA)',
     bizTitle:"Monthly revenue", bizEyebrow:"Business goal", bizGoalLbl:"Revenue goal", bizPlaceholder:"Current revenue (€)",
     bizPctCompleted:pct=>`${pct}% completed`, bizRemainingAmt:amt=>`${amt} remaining`,
     bizVsLastMonth:(prev,sign,diff,pct)=>`Last month: €${prev} → ${sign}€${diff}${pct!=null?` (${sign}${pct}%)`:""}`,
@@ -2123,7 +2120,6 @@ function applyStaticI18n(){
   document.getElementById("tabHomeLbl").textContent=t("tabHome");
   document.getElementById("tabProgressionLbl").textContent=t("tabProgression");
   document.getElementById("tabMusculationLbl").textContent=t("tabMusculation");
-  document.getElementById("exerciseImgCredit").innerHTML=t("exerciseImgCredit");
   document.getElementById("tabSettingsLbl").textContent=t("tabSettings");
   document.getElementById("langIconBtn").textContent=lang.toUpperCase();
   renderGreeting();
