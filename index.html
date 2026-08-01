@@ -298,6 +298,15 @@
   .gym-active-title{font-size:19px;font-weight:700;color:var(--green);font-family:'Quicksand',sans-serif;line-height:1.25}
   .gym-active-target{display:inline-block;background:var(--cardHi);color:var(--green);font-weight:700;font-size:13px;padding:6px 14px;border-radius:9999px;margin:10px 0}
   .gym-active-img{max-width:220px;max-height:220px;width:auto;height:auto;border-radius:12px;margin:4px 0 14px;object-fit:contain}
+  .gym-day-picker-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:18px 0 8px}
+  .gym-day-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px}
+  .gym-day-tab{flex-shrink:0;padding:8px 14px;border-radius:9999px;border:1px solid var(--border);background:#fff;color:var(--muted);font-weight:700;font-size:13px;font-family:inherit;cursor:pointer}
+  .gym-day-tab.active{background:var(--green);border-color:var(--green);color:#fff}
+  .gym-preview-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:10px;text-align:center}
+  .gym-preview-name{font-weight:700;font-size:15px;color:var(--green);font-family:'Quicksand',sans-serif}
+  .gym-preview-target{display:inline-block;background:var(--cardHi);color:var(--green);font-weight:700;font-size:12px;padding:4px 10px;border-radius:9999px;margin:8px 0}
+  .gym-preview-img{max-width:160px;max-height:160px;width:auto;height:auto;border-radius:10px;object-fit:contain;margin:6px 0}
+  .gym-preview-cue{font-size:12.5px;color:var(--muted);font-style:italic;line-height:1.5;text-align:left;background:var(--bg);border-radius:10px;padding:10px 12px;margin-top:8px}
   .gym-active-cue{background:var(--bg);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--muted);font-style:italic;line-height:1.5;margin-bottom:18px;text-align:left}
   .gym-set-pills{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-bottom:18px}
   .gym-set-pill{width:38px;height:38px;border-radius:9999px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-weight:700;font-size:14px;font-family:inherit;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
@@ -758,9 +767,14 @@
     <div class="greeting-title display" id="musculationTitle">Musculation</div>
     <div class="greeting-sub" id="musculationSub"></div>
 
+    <div class="gym-day-picker-title" id="gymDayPickerTitle"></div>
+    <div class="gym-day-tabs" id="gymDayTabs"></div>
+
     <div class="card hidden" id="gymRestDayCard">
       <div class="sub" id="gymRestDayText" style="margin:0"></div>
     </div>
+
+    <div class="hidden" id="gymPreviewList"></div>
 
     <div class="hidden" id="gymWorkoutSection">
       <div class="gym-note hidden" id="gymAdditionNote"></div>
@@ -1250,6 +1264,8 @@ const STRINGS = {
     backToTodayBtn:"Aujourd'hui",
     tabHome:"Accueil", tabProgression:"Progression", tabMusculation:"Musculation", tabSettings:"Réglages",
     dayShort:["L","M","M","J","V","S","D"], todayLbl:"Auj.",
+    dayAbbrev:["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"],
+    musculationDayPickerTitle:"Quels exercices",
     defaultTasks:[
       {id:"wake",label:"🌞 Réveil sans téléphone + marche",period:"morning",category:"dev"},
       {id:"weighIn",label:"⚖️ Se peser",period:"morning",category:"dev",days:[0]},
@@ -1470,6 +1486,8 @@ const STRINGS = {
     backToTodayBtn:"Today",
     tabHome:"Home", tabProgression:"Progress", tabMusculation:"Weightlifting", tabSettings:"Settings",
     dayShort:["M","T","W","T","F","S","S"], todayLbl:"Today",
+    dayAbbrev:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+    musculationDayPickerTitle:"Which exercises",
     defaultTasks:[
       {id:"wake",label:"🌞 Wake up phone-free + walk",period:"morning",category:"dev"},
       {id:"weighIn",label:"⚖️ Weigh yourself",period:"morning",category:"dev",days:[0]},
@@ -3559,21 +3577,67 @@ document.getElementById("gymRestSkip").onclick=()=>{
   saveWorkoutState(state);
   renderGymRestTimer();
 };
+// Which weekday's split is currently BROWSED in the Musculation tab — only
+// ever equals "today" when the live guided session (timer, set pills) is
+// what's shown. Any other day is a read-only preview of that day's exercise
+// list, no tracking involved. Reset to today whenever the tab is opened
+// fresh (see switchView), but preserved across in-tab re-renders (set
+// completion, language switch) so browsing position isn't lost.
+let musculationBrowseDow=null;
+function renderGymDayTabs(selectedDow){
+  const el=document.getElementById("gymDayTabs");
+  el.innerHTML="";
+  const labels=t("dayAbbrev");
+  const todayDow=dowOf(new Date());
+  labels.forEach((label,i)=>{
+    const btn=document.createElement("button");
+    btn.type="button";
+    btn.className="gym-day-tab"+(i===selectedDow?" active":"");
+    btn.textContent=i===todayDow?t("todayLbl"):label;
+    btn.onclick=()=>{musculationBrowseDow=i;renderGymWorkout();};
+    el.appendChild(btn);
+  });
+}
+function renderGymPreview(day){
+  const listEl=document.getElementById("gymPreviewList");
+  listEl.innerHTML="";
+  day.exercises.forEach(ex=>{
+    const card=document.createElement("div");
+    card.className="gym-preview-card";
+    const imgHtml=ex.img?`<img class="gym-preview-img" src="exercise-images/${ex.img}" alt="${ex.name}">`:"";
+    card.innerHTML=`<div class="gym-preview-name">${ex.name}</div><div class="gym-preview-target">${ex.sets}×${ex.reps}</div>${imgHtml}<div class="gym-preview-cue">${ex.cue}</div>`;
+    listEl.appendChild(card);
+  });
+}
 function renderGymWorkout(){
-  const dow=dowOf(new Date());
+  if(musculationBrowseDow==null)musculationBrowseDow=dowOf(new Date());
+  const dow=musculationBrowseDow;
   const day=t("gymWorkouts")[dow];
+  const isToday=dow===dowOf(new Date());
   document.getElementById("musculationTitle").textContent=t("musculationTitle");
+  document.getElementById("gymDayPickerTitle").textContent=t("musculationDayPickerTitle");
+  renderGymDayTabs(dow);
   const restCard=document.getElementById("gymRestDayCard");
   const workoutSection=document.getElementById("gymWorkoutSection");
+  const previewList=document.getElementById("gymPreviewList");
   if(day.rest){
     document.getElementById("musculationSub").textContent=t("musculationSubRest");
     document.getElementById("gymRestDayText").textContent=day.text;
     restCard.classList.remove("hidden");
     workoutSection.classList.add("hidden");
+    previewList.classList.add("hidden");
+    return;
+  }
+  restCard.classList.add("hidden");
+  if(!isToday){
+    document.getElementById("musculationSub").textContent=day.title;
+    workoutSection.classList.add("hidden");
+    previewList.classList.remove("hidden");
+    renderGymPreview(day);
     return;
   }
   document.getElementById("musculationSub").textContent=t("musculationSubFmt",day.title);
-  restCard.classList.add("hidden");
+  previewList.classList.add("hidden");
   workoutSection.classList.remove("hidden");
   const state=getWorkoutState(day);
   document.getElementById("gymRestLbl").textContent=t("gymRestLbl");
@@ -3869,7 +3933,7 @@ function switchView(view){
   document.querySelectorAll(".tab").forEach(tb=>tb.classList.toggle("active",tb.dataset.view===view));
   document.getElementById("fabAdd").classList.toggle("hidden",view!=="home"||!isViewingToday());
   if(view==="settings")checkCalendarStatus();
-  if(view==="musculation")renderGymWorkout();
+  if(view==="musculation"){musculationBrowseDow=dowOf(new Date());renderGymWorkout();}
 }
 document.querySelectorAll(".tab").forEach(btn=>{
   btn.onclick=()=>switchView(btn.dataset.view);
