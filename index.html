@@ -224,6 +224,7 @@
   .streak-best{display:flex;align-items:baseline;gap:6px;font-size:20px;font-weight:700;font-family:'Quicksand',sans-serif}
   .read-box{display:flex;align-items:center;justify-content:space-between;background:var(--cardHi);border-radius:12px;padding:12px 14px}
   .icon-btn{background:var(--cardHi);border:1px solid var(--border);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;color:var(--muted);flex-shrink:0;padding:0}
+  .gym-note{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--green);background:var(--cardHi);border-radius:12px;padding:10px 12px;margin-bottom:12px;line-height:1.5}
   .hidden{display:none}
   .book-row{display:flex;gap:12px;margin-bottom:12px}
   .book-cover{width:56px;height:76px;border-radius:8px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:20px}
@@ -284,7 +285,6 @@
   .task-detail-label{font-size:19px;font-weight:700;font-family:'Quicksand',sans-serif;line-height:1.3;margin-bottom:12px}
   .task-detail-text{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:20px;white-space:pre-line}
   .task-detail-actions{display:flex;gap:10px;margin-top:16px}
-  .gym-note{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--green);background:var(--cardHi);border-radius:12px;padding:10px 12px;margin-bottom:12px;line-height:1.5}
   .gym-exercise-row{display:flex;align-items:center;gap:12px;padding:11px 12px;background:#fff;border-radius:14px;border:1px solid var(--border);margin-bottom:8px;cursor:pointer}
   .gym-exercise-row.active{background:var(--cardHi);border-color:var(--greenDim)}
   .gym-exercise-row.complete{opacity:.6}
@@ -749,6 +749,48 @@
     </div>
   </div>
 
+  <!-- MUSCULATION -->
+  <div class="view" id="view-musculation">
+    <div class="head-row">
+      <div class="eyebrow display">Discipline</div>
+    </div>
+    <div class="greeting-title display" id="musculationTitle">Musculation</div>
+    <div class="greeting-sub" id="musculationSub"></div>
+
+    <div class="card hidden" id="gymRestDayCard">
+      <div class="sub" id="gymRestDayText" style="margin:0"></div>
+    </div>
+
+    <div class="hidden" id="gymWorkoutSection">
+      <div class="gym-note hidden" id="gymAdditionNote"></div>
+      <div id="gymExerciseList"></div>
+      <div class="gym-active-card">
+        <div class="gym-active-title" id="gymActiveTitle"></div>
+        <div class="gym-active-target" id="gymActiveTarget"></div>
+        <div class="gym-active-cue" id="gymActiveCue"></div>
+        <div class="gym-set-pills" id="gymSetPills"></div>
+        <div class="hidden" id="gymRestBox">
+          <div class="gym-rest-ring-wrap">
+            <svg class="gym-rest-ring" viewBox="0 0 120 120">
+              <circle class="gym-rest-ring-bg" cx="60" cy="60" r="52"/>
+              <circle class="gym-rest-ring-fg" id="gymRestRingFg" cx="60" cy="60" r="52"/>
+            </svg>
+            <div class="gym-rest-ring-center">
+              <div class="gym-rest-time" id="gymRestTime"></div>
+              <div class="gym-rest-lbl" id="gymRestLbl"></div>
+            </div>
+          </div>
+          <div class="gym-rest-controls">
+            <button type="button" class="gym-rest-adj" id="gymRestMinus"></button>
+            <button type="button" class="gym-rest-adj" id="gymRestPlus"></button>
+          </div>
+          <button type="button" class="gym-rest-skip" id="gymRestSkip"></button>
+        </div>
+        <button type="button" class="btn btn-green" id="gymNextBtn" style="width:100%;margin-top:16px;padding:15px 18px"></button>
+      </div>
+    </div>
+  </div>
+
   <!-- SETTINGS -->
   <div class="view" id="view-settings">
     <div class="head-row">
@@ -825,6 +867,7 @@
     <div class="tabbar-inner">
       <button class="tab active" data-view="home" type="button"><span class="tab-pill"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg></span><span id="tabHomeLbl">Home</span></span></button>
       <button class="tab" data-view="progression" type="button"><span class="tab-pill"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V10"/><path d="M10 20V4"/><path d="M17 20v-7"/></svg></span><span id="tabProgressionLbl">Progression</span></span></button>
+      <button class="tab" data-view="musculation" type="button"><span class="tab-pill"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6"/><path d="M2 10v4"/><path d="M20 9v6"/><path d="M22 10v4"/><path d="M7 12h10"/><path d="M7 7v10"/><path d="M17 7v10"/></svg></span><span id="tabMusculationLbl">Musculation</span></span></button>
       <button class="tab" data-view="settings" type="button"><span class="tab-pill"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span><span id="tabSettingsLbl">Settings</span></span></button>
     </div>
   </nav>
@@ -843,34 +886,6 @@
   <div class="task-detail-card">
     <div class="task-detail-label" id="taskDetailLabel"></div>
     <div class="task-detail-text hidden" id="taskDetailText"></div>
-    <div class="hidden" id="gymWorkoutSection" style="margin-bottom:16px">
-      <div class="gym-note hidden" id="gymAdditionNote"></div>
-      <div id="gymExerciseList"></div>
-      <div class="gym-active-card">
-        <div class="gym-active-title" id="gymActiveTitle"></div>
-        <div class="gym-active-target" id="gymActiveTarget"></div>
-        <div class="gym-active-cue" id="gymActiveCue"></div>
-        <div class="gym-set-pills" id="gymSetPills"></div>
-        <div class="hidden" id="gymRestBox">
-          <div class="gym-rest-ring-wrap">
-            <svg class="gym-rest-ring" viewBox="0 0 120 120">
-              <circle class="gym-rest-ring-bg" cx="60" cy="60" r="52"/>
-              <circle class="gym-rest-ring-fg" id="gymRestRingFg" cx="60" cy="60" r="52"/>
-            </svg>
-            <div class="gym-rest-ring-center">
-              <div class="gym-rest-time" id="gymRestTime"></div>
-              <div class="gym-rest-lbl" id="gymRestLbl"></div>
-            </div>
-          </div>
-          <div class="gym-rest-controls">
-            <button type="button" class="gym-rest-adj" id="gymRestMinus"></button>
-            <button type="button" class="gym-rest-adj" id="gymRestPlus"></button>
-          </div>
-          <button type="button" class="gym-rest-skip" id="gymRestSkip"></button>
-        </div>
-        <button type="button" class="btn btn-green" id="gymNextBtn" style="width:100%;margin-top:16px;padding:15px 18px"></button>
-      </div>
-    </div>
     <div class="food-log hidden" id="foodLogSection">
       <div class="sub hidden" id="foodLogDateLabel" style="margin-bottom:6px;font-weight:700;color:var(--amber)"></div>
       <div class="food-log-total" id="foodLogTotal"></div>
@@ -1074,6 +1089,8 @@ const STRINGS = {
     weightSetGoalHint:"Entre ton objectif pour suivre ta progression.",
     weight7DayAvg:(kg,n)=>`Moyenne 7 jours : ${kg}kg${n<7?` (${n} pesée${n>1?"s":""})`:""}`,
     progressionTitle:"Progression", progressionSub:"Ta progression, jour après jour.",
+    musculationTitle:"Musculation", musculationSubRest:"Jour de repos.",
+    musculationSubFmt:day=>`Aujourd'hui : ${day}`,
     bizTitle:"Chiffre d'affaires mensuel", bizEyebrow:"Objectif business", bizGoalLbl:"Objectif CA", bizPlaceholder:"CA actuel (€)",
     bizPctCompleted:pct=>`${pct}% complété`, bizRemainingAmt:amt=>`${amt} restant`,
     bizVsLastMonth:(prev,sign,diff,pct)=>`Mois dernier : ${prev}€ → ${sign}${diff}€${pct!=null?` (${sign}${pct}%)`:""}`,
@@ -1227,7 +1244,7 @@ const STRINGS = {
     pastDayTitle:d=>`${d}`,
     pastDayBannerText:"Lecture seule — les jours passés ne peuvent plus être modifiés.",
     backToTodayBtn:"Aujourd'hui",
-    tabHome:"Accueil", tabProgression:"Progression", tabSettings:"Réglages",
+    tabHome:"Accueil", tabProgression:"Progression", tabMusculation:"Musculation", tabSettings:"Réglages",
     dayShort:["L","M","M","J","V","S","D"], todayLbl:"Auj.",
     defaultTasks:[
       {id:"wake",label:"🌞 Réveil sans téléphone + marche",period:"morning",category:"dev"},
@@ -1296,6 +1313,8 @@ const STRINGS = {
     weightSetGoalHint:"Enter your goal to track progress.",
     weight7DayAvg:(kg,n)=>`7-day average: ${kg}kg${n<7?` (${n} weigh-in${n>1?"s":""})`:""}`,
     progressionTitle:"Progress", progressionSub:"Your progress, day by day.",
+    musculationTitle:"Weightlifting", musculationSubRest:"Rest day.",
+    musculationSubFmt:day=>`Today: ${day}`,
     bizTitle:"Monthly revenue", bizEyebrow:"Business goal", bizGoalLbl:"Revenue goal", bizPlaceholder:"Current revenue (€)",
     bizPctCompleted:pct=>`${pct}% completed`, bizRemainingAmt:amt=>`${amt} remaining`,
     bizVsLastMonth:(prev,sign,diff,pct)=>`Last month: €${prev} → ${sign}€${diff}${pct!=null?` (${sign}${pct}%)`:""}`,
@@ -1444,7 +1463,7 @@ const STRINGS = {
     pastDayTitle:d=>`${d}`,
     pastDayBannerText:"Read-only — past days can no longer be edited.",
     backToTodayBtn:"Today",
-    tabHome:"Home", tabProgression:"Progress", tabSettings:"Settings",
+    tabHome:"Home", tabProgression:"Progress", tabMusculation:"Weightlifting", tabSettings:"Settings",
     dayShort:["M","T","W","T","F","S","S"], todayLbl:"Today",
     defaultTasks:[
       {id:"wake",label:"🌞 Wake up phone-free + walk",period:"morning",category:"dev"},
@@ -2019,6 +2038,7 @@ function applyStaticI18n(){
   document.getElementById("celebTap").textContent=t("celebTap");
   document.getElementById("tabHomeLbl").textContent=t("tabHome");
   document.getElementById("tabProgressionLbl").textContent=t("tabProgression");
+  document.getElementById("tabMusculationLbl").textContent=t("tabMusculation");
   document.getElementById("tabSettingsLbl").textContent=t("tabSettings");
   document.getElementById("langIconBtn").textContent=lang.toUpperCase();
   renderGreeting();
@@ -3411,18 +3431,23 @@ document.getElementById("foodLogTextBtn").onclick=estimateFoodFromText;
 
 function closeTaskDetail(){hideSheet("taskDetailSheet");}
 // ===== Guided gym workout: set tracking + rest timer =====
+// Lives in its own tab (view-musculation) and always reflects TODAY's
+// training, independent of whichever day the Home tab's day strip happens
+// to be browsing — deliberately keyed by today() rather than viewedDate,
+// so switching tabs mid-browse never shows a stale/past workout or writes
+// a finished set into the wrong day's record.
 // State persists per calendar day (tracker:workout:<dateKey>) so leaving
 // mid-workout and coming back — even after the app was fully closed, since
 // iOS suspends/evicts backgrounded PWAs aggressively — resumes exactly
 // where it left off. restEndsAt is stored as an absolute timestamp rather
 // than a countdown, so it's still correct no matter how long the gap was.
 function getWorkoutState(day){
-  const stored=load("tracker:workout:"+viewedDate,null);
+  const stored=load("tracker:workout:"+today(),null);
   if(stored)return stored;
   return{activeIdx:0,setsDone:day.exercises.map(ex=>Array(ex.sets).fill(false)),restEndsAt:null,restDurationSec:null};
 }
 function saveWorkoutState(state){
-  save("tracker:workout:"+viewedDate,state);
+  save("tracker:workout:"+today(),state);
 }
 let audioCtx=null;
 function getAudioCtx(){
@@ -3531,6 +3556,19 @@ document.getElementById("gymRestSkip").onclick=()=>{
 function renderGymWorkout(){
   const dow=dowOf(new Date());
   const day=t("gymWorkouts")[dow];
+  document.getElementById("musculationTitle").textContent=t("musculationTitle");
+  const restCard=document.getElementById("gymRestDayCard");
+  const workoutSection=document.getElementById("gymWorkoutSection");
+  if(day.rest){
+    document.getElementById("musculationSub").textContent=t("musculationSubRest");
+    document.getElementById("gymRestDayText").textContent=day.text;
+    restCard.classList.remove("hidden");
+    workoutSection.classList.add("hidden");
+    return;
+  }
+  document.getElementById("musculationSub").textContent=t("musculationSubFmt",day.title);
+  restCard.classList.add("hidden");
+  workoutSection.classList.remove("hidden");
   const state=getWorkoutState(day);
   document.getElementById("gymRestLbl").textContent=t("gymRestLbl");
   document.getElementById("gymRestMinus").textContent=t("gymRestMinus");
@@ -3576,8 +3614,14 @@ function renderGymWorkout(){
   nextBtn.textContent=isLast?t("gymFinishBtn"):t("gymNextBtn");
   nextBtn.onclick=()=>{
     if(isLast){
-      markTaskDoneForViewedDate("gym");
-      closeTaskDetail();
+      // Always today's own record — this tab is deliberately decoupled
+      // from the Home tab's day strip (see getWorkoutState above), so it
+      // must not go through the viewedDate-scoped helper other "mark done"
+      // actions use elsewhere in the app.
+      done["gym"]=true;
+      save("tracker:day:"+today(),done);
+      renderTasks();renderScore();renderHeatmap();renderPeriodStats();renderTaskConsistency();
+      switchView("home");
     }else{
       state.activeIdx+=1;
       saveWorkoutState(state);
@@ -3592,21 +3636,11 @@ function openTaskDetail(tk){
   document.getElementById("taskDetailLabel").textContent=taskDisplayLabel(tk);
   const detail=taskDetailText(tk);
   const detailEl=document.getElementById("taskDetailText");
-  const gymSection=document.getElementById("gymWorkoutSection");
-  // The guided workout (exercise list, set tracking, rest timer) only makes
-  // sense live, for today, on an actual training day — a rest day has
-  // nothing to guide, and a past day just needs the plain read-back text
-  // (its checkbox is already independently toggleable, see renderTaskRow).
-  const isGymLiveToday=tk.id==="gym"&&isViewingToday()&&!t("gymWorkouts")[dowOf(new Date())].rest;
-  if(isGymLiveToday){
-    detailEl.classList.add("hidden");
-    gymSection.classList.remove("hidden");
-    renderGymWorkout();
-  }else{
-    gymSection.classList.add("hidden");
-    if(detail){detailEl.textContent=detail;detailEl.classList.remove("hidden");}
-    else{detailEl.classList.add("hidden");}
-  }
+  // The guided workout (exercise list, set tracking, rest timer) lives in
+  // its own bottom-nav tab now (see view-musculation) — tapping the Muscu
+  // task itself just shows the same plain-text read-back as any other task.
+  if(detail){detailEl.textContent=detail;detailEl.classList.remove("hidden");}
+  else{detailEl.classList.add("hidden");}
   const foodSection=document.getElementById("foodLogSection");
   if(CALORIE_LOG_TASK_IDS.has(tk.id)){
     const dateLabelEl=document.getElementById("foodLogDateLabel");
@@ -3826,6 +3860,7 @@ function switchView(view){
   document.querySelectorAll(".tab").forEach(tb=>tb.classList.toggle("active",tb.dataset.view===view));
   document.getElementById("fabAdd").classList.toggle("hidden",view!=="home"||!isViewingToday());
   if(view==="settings")checkCalendarStatus();
+  if(view==="musculation")renderGymWorkout();
 }
 document.querySelectorAll(".tab").forEach(btn=>{
   btn.onclick=()=>switchView(btn.dataset.view);
@@ -3835,7 +3870,7 @@ function setLang(l){
   lang=l;
   save("tracker:lang",lang);
   applyStaticI18n();
-  renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderBodyAnalysis();renderReading();renderPeriodStats();renderTaskConsistency();renderBiz();
+  renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderBodyAnalysis();renderReading();renderPeriodStats();renderTaskConsistency();renderBiz();renderGymWorkout();
   if(document.getElementById("reminderCard")){
     setReminderBtnState(pushSubscribed);
     if(!(window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true)){
