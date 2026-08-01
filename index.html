@@ -303,6 +303,11 @@
   .gym-active-target{display:inline-block;background:var(--cardHi);color:var(--green);font-weight:700;font-size:13px;padding:6px 14px;border-radius:9999px;margin:10px 0}
   .gym-active-img{max-width:220px;max-height:220px;width:auto;height:auto;border-radius:12px;margin:4px 0 14px;object-fit:contain;animation:gymImgBreathe 2.4s ease-in-out infinite}
   @keyframes gymImgBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+  .gym-active-img-wrap{position:relative;width:220px;height:220px;margin:4px auto 14px}
+  .gym-active-img-wrap .gym-active-img{position:absolute;top:0;left:0;right:0;margin:0 auto}
+  .gym-active-img-wrap .gym-active-img.anim-a{animation:gymImgBreathe 2.4s ease-in-out infinite,gymCrossfade 4s ease-in-out infinite}
+  .gym-active-img-wrap .gym-active-img.anim-b{animation:gymImgBreathe 2.4s ease-in-out infinite,gymCrossfade 4s ease-in-out -2s infinite}
+  @keyframes gymCrossfade{0%,20%{opacity:1}50%,70%{opacity:0}100%{opacity:1}}
   .gym-day-picker-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:18px 0 8px}
   .gym-day-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px}
   .gym-day-tab{flex-shrink:0;padding:8px 14px;border-radius:9999px;border:1px solid var(--border);background:#fff;color:var(--muted);font-weight:700;font-size:13px;font-family:inherit;cursor:pointer}
@@ -816,7 +821,10 @@
       <div class="gym-active-card">
         <div class="gym-active-title" id="gymActiveTitle"></div>
         <div class="gym-active-target" id="gymActiveTarget"></div>
-        <img class="gym-active-img hidden" id="gymActiveImg" alt="">
+        <div class="gym-active-img-wrap hidden" id="gymActiveImgWrap">
+          <img class="gym-active-img" id="gymActiveImg" alt="">
+          <img class="gym-active-img hidden" id="gymActiveImg2" alt="">
+        </div>
         <div class="gym-active-equip" id="gymActiveEquip"></div>
         <div class="gym-active-cue" id="gymActiveCue"></div>
         <div class="gym-set-pills" id="gymSetPills"></div>
@@ -3525,6 +3533,13 @@ function closeTaskDetail(){hideSheet("taskDetailSheet");}
 // separate "test" key below, so it can never overwrite a real day's saved
 // progress. gymEffectiveDow() pins the displayed content to Monday (a real
 // training day) whenever this is on.
+// Exercises with a second Gemini-generated pose (e.g. "…-pose2.jpg") for
+// the crossfade animation. Not all 16 made it here — several exercises
+// (bench press, Bulgarian split squat, hip thrust, pull-up, calf raise)
+// kept coming back from the model with a pose nearly identical to the
+// reference no matter how the prompt was worded, so those stay static
+// single images rather than shipping a fake/invisible "animation".
+const GYM_ANIMATED_EXERCISES=new Set(["bent-over-row-barbell","biceps-curl-barbell","goblet-squat-kettlebell","hammer-curl-kettlebell","lateral-raise-kettlebell","plank","romanian-deadlift-barbell","single-arm-row-kettlebell","triceps-extension-kettlebell","walking-lunge-kettlebell","overhead-press-barbell"]);
 let gymTestMode=false;
 function gymEffectiveDow(){return gymTestMode?0:dowOf(new Date());}
 function workoutStateKey(){return gymTestMode?"tracker:workout:test":"tracker:workout:"+today();}
@@ -3841,9 +3856,30 @@ function renderGymWorkout(){
   const activeEx=day.exercises[state.activeIdx];
   document.getElementById("gymActiveTitle").textContent=activeEx.name;
   document.getElementById("gymActiveTarget").textContent=`${activeEx.sets}×${activeEx.reps}`;
+  const imgWrap=document.getElementById("gymActiveImgWrap");
   const imgEl=document.getElementById("gymActiveImg");
-  if(activeEx.img){imgEl.src="exercise-images/"+activeEx.img;imgEl.alt=activeEx.name;imgEl.classList.remove("hidden");}
-  else{imgEl.classList.add("hidden");imgEl.src="";}
+  const imgEl2=document.getElementById("gymActiveImg2");
+  imgEl.classList.remove("anim-a");
+  imgEl2.classList.remove("anim-b");
+  if(activeEx.img){
+    imgWrap.classList.remove("hidden");
+    imgEl.src="exercise-images/"+activeEx.img;
+    imgEl.alt=activeEx.name;
+    const baseName=activeEx.img.replace(/\.jpg$/,"");
+    if(GYM_ANIMATED_EXERCISES.has(baseName)){
+      imgEl2.src=`exercise-images/${baseName}-pose2.jpg`;
+      imgEl2.alt=activeEx.name;
+      imgEl2.classList.remove("hidden");
+      imgEl.classList.add("anim-a");
+      imgEl2.classList.add("anim-b");
+    }else{
+      imgEl2.classList.add("hidden");
+      imgEl2.src="";
+    }
+  }else{
+    imgWrap.classList.add("hidden");
+    imgEl.src="";imgEl2.src="";
+  }
   document.getElementById("gymActiveEquip").textContent=`${t("gymEquipLbl")} : ${activeEx.equip}`;
   document.getElementById("gymActiveCue").textContent=activeEx.cue;
   const pillsEl=document.getElementById("gymSetPills");

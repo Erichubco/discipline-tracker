@@ -1,4 +1,4 @@
-const CACHE = "discipline-v131";
+const CACHE = "discipline-v132";
 const ASSETS = ["./", "./index.html", "./manifest.json",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/avatar.png",
   "./exercise-images/bench-press-barbell.jpg",
@@ -16,7 +16,18 @@ const ASSETS = ["./", "./index.html", "./manifest.json",
   "./exercise-images/standing-calf-raise-kettlebell.jpg",
   "./exercise-images/bulgarian-split-squat-kettlebell.jpg",
   "./exercise-images/plank.jpg",
-  "./exercise-images/triceps-extension-kettlebell.jpg"];
+  "./exercise-images/triceps-extension-kettlebell.jpg",
+  "./exercise-images/bent-over-row-barbell-pose2.jpg",
+  "./exercise-images/biceps-curl-barbell-pose2.jpg",
+  "./exercise-images/goblet-squat-kettlebell-pose2.jpg",
+  "./exercise-images/hammer-curl-kettlebell-pose2.jpg",
+  "./exercise-images/lateral-raise-kettlebell-pose2.jpg",
+  "./exercise-images/plank-pose2.jpg",
+  "./exercise-images/romanian-deadlift-barbell-pose2.jpg",
+  "./exercise-images/single-arm-row-kettlebell-pose2.jpg",
+  "./exercise-images/triceps-extension-kettlebell-pose2.jpg",
+  "./exercise-images/walking-lunge-kettlebell-pose2.jpg",
+  "./exercise-images/overhead-press-barbell-pose2.jpg"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
