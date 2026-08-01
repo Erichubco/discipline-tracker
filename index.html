@@ -225,6 +225,7 @@
   .read-box{display:flex;align-items:center;justify-content:space-between;background:var(--cardHi);border-radius:12px;padding:12px 14px}
   .icon-btn{background:var(--cardHi);border:1px solid var(--border);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;color:var(--muted);flex-shrink:0;padding:0}
   .gym-note{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--green);background:var(--cardHi);border-radius:12px;padding:10px 12px;margin-bottom:12px;line-height:1.5}
+  .gym-sticky-timer{position:sticky;top:8px;z-index:30;display:flex;align-items:center;gap:8px;background:var(--green);color:#fff;border-radius:9999px;padding:8px 16px 8px 8px;margin:0 0 12px;box-shadow:0 4px 14px rgba(83,65,205,.35);width:fit-content}
   .hidden{display:none}
   .book-row{display:flex;gap:12px;margin-bottom:12px}
   .book-cover{width:56px;height:76px;border-radius:8px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:20px}
@@ -308,6 +309,7 @@
   .gym-preview-img{max-width:160px;max-height:160px;width:auto;height:auto;border-radius:10px;object-fit:contain;margin:6px 0}
   .gym-preview-cue{font-size:12.5px;color:var(--muted);font-style:italic;line-height:1.5;text-align:left;background:var(--bg);border-radius:10px;padding:10px 12px;margin-top:8px}
   .gym-active-cue{background:var(--bg);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--muted);font-style:italic;line-height:1.5;margin-bottom:18px;text-align:left}
+  .gym-active-equip,.gym-preview-equip{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.02em;margin:2px 0 10px}
   .gym-set-pills{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-bottom:18px}
   .gym-set-pill{width:38px;height:38px;border-radius:9999px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-weight:700;font-size:14px;font-family:inherit;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
   .gym-set-pill.done{background:var(--green);border-color:var(--green);color:#fff}
@@ -322,6 +324,12 @@
   .gym-rest-controls{display:flex;justify-content:center;gap:10px;margin-top:14px}
   .gym-rest-adj{border:1px solid var(--border);background:#fff;border-radius:9999px;padding:8px 16px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit}
   .gym-rest-skip{display:block;margin:12px auto 0;background:none;border:none;color:var(--green);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
+  .gym-sticky-timer-ring-wrap{position:relative;width:28px;height:28px;flex-shrink:0}
+  .gym-sticky-ring{width:100%;height:100%;transform:rotate(-90deg)}
+  .gym-sticky-ring-bg{fill:none;stroke:rgba(255,255,255,.35);stroke-width:4}
+  .gym-sticky-ring-fg{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .25s linear}
+  .gym-sticky-timer-lbl{font-size:12px;font-weight:700}
+  .gym-sticky-timer-time{font-family:'Quicksand',sans-serif;font-weight:700;font-size:15px;margin-left:auto}
   .book-clarify-icon{font-size:34px;text-align:center;margin-bottom:10px}
   .food-log{border-top:1px solid var(--border);margin-top:4px;padding-top:16px;margin-bottom:16px}
   .food-log-total{font-size:15px;font-weight:700;font-family:'Quicksand',sans-serif;margin-bottom:8px}
@@ -767,6 +775,17 @@
     <div class="greeting-title display" id="musculationTitle">Musculation</div>
     <div class="greeting-sub" id="musculationSub"></div>
 
+    <div class="gym-sticky-timer hidden" id="gymStickyTimer">
+      <div class="gym-sticky-timer-ring-wrap">
+        <svg class="gym-sticky-ring" viewBox="0 0 40 40">
+          <circle class="gym-sticky-ring-bg" cx="20" cy="20" r="16"/>
+          <circle class="gym-sticky-ring-fg" id="gymStickyRingFg" cx="20" cy="20" r="16"/>
+        </svg>
+      </div>
+      <span class="gym-sticky-timer-lbl" id="gymStickyTimerLbl"></span>
+      <span class="gym-sticky-timer-time" id="gymStickyTimerTime"></span>
+    </div>
+
     <div class="gym-day-picker-title" id="gymDayPickerTitle"></div>
     <div class="gym-day-tabs" id="gymDayTabs"></div>
 
@@ -783,6 +802,7 @@
         <div class="gym-active-title" id="gymActiveTitle"></div>
         <div class="gym-active-target" id="gymActiveTarget"></div>
         <img class="gym-active-img hidden" id="gymActiveImg" alt="">
+        <div class="gym-active-equip" id="gymActiveEquip"></div>
         <div class="gym-active-cue" id="gymActiveCue"></div>
         <div class="gym-set-pills" id="gymSetPills"></div>
         <div class="hidden" id="gymRestBox">
@@ -1200,39 +1220,39 @@ const STRINGS = {
     // squats on leg day get a longer rest than everything else that day.
     gymWorkouts:[
       {title:"Pec / Épaules / Triceps", exercises:[
-        {name:"Développé couché à la barre", sets:4, reps:"8-10", cue:"Allongé sur le banc, la barre au-dessus de la poitrine, descends jusqu'à effleurer la poitrine, pousse en explosif", restSec:90, img:"bench-press-barbell.jpg"},
-        {name:"Développé militaire à la barre", sets:3, reps:"10", cue:"Barre aux épaules (soulevée depuis les cuisses), pousse au-dessus de la tête bras tendus, redescends contrôlé", restSec:90, img:"overhead-press-barbell.jpg"},
-        {name:"Élévations latérales unilatérales", sets:3, reps:"15 / bras", cue:"Bras tendu sur le côté avec le dumbbell, monte jusqu'à l'horizontal, descends lentement, change de bras", restSec:90, img:"lateral-raise.jpg"},
-        {name:"Développé serré à la barre", sets:3, reps:"10", cue:"Mains rapprochées sur la barre, coudes proches du corps, descends jusqu'à la poitrine, pousse", restSec:90, img:"bench-press-barbell.jpg"},
-        {name:"Extensions triceps nuque avec le dumbbell", sets:3, reps:"12", cue:"Dumbbell tenu à deux mains au-dessus de la tête, descends derrière la nuque, coudes fixes, remonte", restSec:90},
+        {name:"Développé couché à la barre", sets:4, reps:"8-10", cue:"Allongé sur le banc, la barre au-dessus de la poitrine, descends jusqu'à effleurer la poitrine, pousse en explosif", restSec:90, img:"bench-press-barbell.jpg", equip:"Barre + banc"},
+        {name:"Développé militaire à la barre", sets:3, reps:"10", cue:"Barre aux épaules (soulevée depuis les cuisses), pousse au-dessus de la tête bras tendus, redescends contrôlé", restSec:90, img:"overhead-press-barbell.jpg", equip:"Barre"},
+        {name:"Élévations latérales unilatérales", sets:3, reps:"15 / bras", cue:"Bras tendu sur le côté avec le kettlebell, monte jusqu'à l'horizontal, descends lentement, change de bras", restSec:90, img:"lateral-raise-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
+        {name:"Développé serré à la barre", sets:3, reps:"10", cue:"Mains rapprochées sur la barre, coudes proches du corps, descends jusqu'à la poitrine, pousse", restSec:90, img:"bench-press-barbell.jpg", equip:"Barre + banc"},
+        {name:"Extensions triceps nuque avec le kettlebell", sets:3, reps:"12", cue:"Kettlebell tenu à deux mains au-dessus de la tête, descends derrière la nuque, coudes fixes, remonte", restSec:90, img:"triceps-extension-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
       ], restNote:"Repos 90 sec.", note:"Charge progressive : vise à ajouter un peu chaque semaine."},
       {title:"Dos / Biceps", exercises:[
-        {name:"Tractions", sets:4, reps:"8", cue:"Suspendu à la barre fixe, tire jusqu'à ce que le menton passe la barre, redescends contrôlé", restSec:90, img:"pullup.jpg"},
-        {name:"Rowing à la barre penché", sets:4, reps:"10", cue:"Penché à 45°, barre en prise pronation, tire vers le nombril, coudes proches du corps", restSec:90, img:"bent-over-row-barbell.jpg"},
-        {name:"Rowing unilatéral au dumbbell", sets:4, reps:"10 / bras", cue:"Genou et main sur le banc, tire le dumbbell vers la hanche, coude collé au corps", restSec:90, img:"single-arm-row.jpg"},
-        {name:"Curl biceps à la barre", sets:3, reps:"12", cue:"Debout, barre en prise supination largeur épaules, coudes fixes contre le corps, monte lentement", restSec:90, img:"biceps-curl-barbell.jpg"},
-        {name:"Curl marteau unilatéral", sets:3, reps:"12 / bras", cue:"Prise marteau (paume face à toi), coude fixe, monte et descends contrôlé, change de bras", restSec:90, img:"hammer-curl.jpg"},
+        {name:"Tractions", sets:4, reps:"8", cue:"Suspendu à la barre fixe, tire jusqu'à ce que le menton passe la barre, redescends contrôlé", restSec:90, img:"pullup.jpg", equip:"Barre de traction"},
+        {name:"Rowing à la barre penché", sets:4, reps:"10", cue:"Penché à 45°, barre en prise pronation, tire vers le nombril, coudes proches du corps", restSec:90, img:"bent-over-row-barbell.jpg", equip:"Barre"},
+        {name:"Rowing unilatéral au kettlebell", sets:4, reps:"10 / bras", cue:"Genou et main sur le banc, tire le kettlebell vers la hanche, coude collé au corps", restSec:90, img:"single-arm-row-kettlebell.jpg", equip:"1 kettlebell (12 kg) + banc"},
+        {name:"Curl biceps à la barre", sets:3, reps:"12", cue:"Debout, barre en prise supination largeur épaules, coudes fixes contre le corps, monte lentement", restSec:90, img:"biceps-curl-barbell.jpg", equip:"Barre"},
+        {name:"Curl marteau unilatéral", sets:3, reps:"12 / bras", cue:"Prise marteau (paume face à toi), coude fixe, monte et descends contrôlé, change de bras", restSec:90, img:"hammer-curl-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
       ], restNote:"Repos 90 sec.", note:"Serre bien les omoplates sur le rowing."},
       {title:"Quadris / Ischios / Fessiers / Mollets", exercises:[
-        {name:"Squat goblet", sets:4, reps:"10", cue:"Dumbbell tenu à deux mains contre la poitrine, descends cuisses parallèles au sol, dos droit, genoux dans l'axe des pieds", restSec:120, img:"goblet-squat.jpg"},
-        {name:"Fentes marchées avec le dumbbell", sets:3, reps:"12 / jambe", cue:"Dumbbell tenu à deux mains devant la poitrine, grand pas en avant, genou arrière proche du sol, alterne en avançant", restSec:90, img:"walking-lunge-dumbbell.jpg"},
-        {name:"Soulevé de terre à la barre", sets:4, reps:"10", cue:"Barre devant les cuisses, penche le buste dos droit, sens l'étirement des ischio", restSec:90, img:"romanian-deadlift-dumbbell.jpg"},
-        {name:"Hip thrust à la barre", sets:3, reps:"12", cue:"Dos calé contre le banc, barre sur les hanches (coussin recommandé), monte en serrant fort en haut, descends lentement", restSec:90, img:"hip-thrust-dumbbell.jpg"},
-        {name:"Mollets debout avec le dumbbell", sets:4, reps:"20", cue:"Dumbbell en main, monte sur la pointe des pieds, tiens 1 sec en haut", restSec:90, img:"standing-calf-raise.jpg"},
+        {name:"Squat goblet", sets:4, reps:"10", cue:"Kettlebell tenu à deux mains contre la poitrine, descends cuisses parallèles au sol, dos droit, genoux dans l'axe des pieds", restSec:120, img:"goblet-squat-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
+        {name:"Fentes marchées avec le kettlebell", sets:3, reps:"12 / jambe", cue:"Kettlebell tenu à deux mains devant la poitrine, grand pas en avant, genou arrière proche du sol, alterne en avançant", restSec:90, img:"walking-lunge-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
+        {name:"Soulevé de terre à la barre", sets:4, reps:"10", cue:"Barre devant les cuisses, penche le buste dos droit, sens l'étirement des ischio", restSec:90, img:"romanian-deadlift-barbell.jpg", equip:"Barre"},
+        {name:"Hip thrust à la barre", sets:3, reps:"12", cue:"Dos calé contre le banc, barre sur les hanches (coussin recommandé), monte en serrant fort en haut, descends lentement", restSec:90, img:"hip-thrust-barbell.jpg", equip:"Barre + banc"},
+        {name:"Mollets debout avec le kettlebell", sets:4, reps:"20", cue:"Kettlebell en main, monte sur la pointe des pieds, tiens 1 sec en haut", restSec:90, img:"standing-calf-raise-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
       ], restNote:"Repos 2 min sur le squat, 90 sec le reste.", note:"Les jambes = grosse prise de masse globale."},
       {title:"Haut du corps complet", exercises:[
-        {name:"Développé couché à la barre", sets:4, reps:"10", cue:"Allongé sur le banc, la barre au-dessus de la poitrine, descends lentement, pousse", restSec:90, img:"bench-press-barbell.jpg"},
-        {name:"Rowing à la barre penché", sets:4, reps:"10", cue:"Penché à 45°, tire la barre vers le nombril, coudes proches du corps", restSec:90, img:"bent-over-row-barbell.jpg"},
-        {name:"Développé militaire à la barre", sets:3, reps:"10", cue:"Barre aux épaules, pousse au-dessus de la tête bras tendus", restSec:90, img:"overhead-press-barbell.jpg"},
-        {name:"Curl biceps à la barre", sets:3, reps:"12", cue:"Debout, coudes fixes contre le corps, monte lentement, descends encore plus lentement", restSec:90, img:"biceps-curl-barbell.jpg"},
-        {name:"Extensions triceps nuque avec le dumbbell", sets:3, reps:"12", cue:"Dumbbell tenu à deux mains au-dessus de la tête, descends derrière la nuque, coudes fixes", restSec:90},
+        {name:"Développé couché à la barre", sets:4, reps:"10", cue:"Allongé sur le banc, la barre au-dessus de la poitrine, descends lentement, pousse", restSec:90, img:"bench-press-barbell.jpg", equip:"Barre + banc"},
+        {name:"Rowing à la barre penché", sets:4, reps:"10", cue:"Penché à 45°, tire la barre vers le nombril, coudes proches du corps", restSec:90, img:"bent-over-row-barbell.jpg", equip:"Barre"},
+        {name:"Développé militaire à la barre", sets:3, reps:"10", cue:"Barre aux épaules, pousse au-dessus de la tête bras tendus", restSec:90, img:"overhead-press-barbell.jpg", equip:"Barre"},
+        {name:"Curl biceps à la barre", sets:3, reps:"12", cue:"Debout, coudes fixes contre le corps, monte lentement, descends encore plus lentement", restSec:90, img:"biceps-curl-barbell.jpg", equip:"Barre"},
+        {name:"Extensions triceps nuque avec le kettlebell", sets:3, reps:"12", cue:"Kettlebell tenu à deux mains au-dessus de la tête, descends derrière la nuque, coudes fixes", restSec:90, img:"triceps-extension-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
       ], restNote:"Repos 90 sec.", note:"Deuxième passage sur le haut du corps dans la semaine = plus de volume = plus de muscle."},
       {title:"Bas du corps et gainage", exercises:[
-        {name:"Fentes bulgares avec le dumbbell", sets:4, reps:"10 / jambe", cue:"Pied arrière sur le banc, dumbbell en main, descends buste droit, genou avant ne dépasse pas le pied", restSec:90, img:"bulgarian-split-squat-dumbbell.jpg"},
-        {name:"Hip thrust à la barre", sets:4, reps:"12", cue:"Dos calé contre le banc, barre sur les hanches, monte en serrant fort en haut", restSec:90, img:"hip-thrust-dumbbell.jpg"},
-        {name:"Soulevé de terre à la barre", sets:3, reps:"12", cue:"Barre devant les cuisses, penche le buste dos droit", restSec:90, img:"romanian-deadlift-dumbbell.jpg"},
-        {name:"Mollets debout avec le dumbbell", sets:4, reps:"20", cue:"Dumbbell en main, monte sur la pointe des pieds", restSec:90, img:"standing-calf-raise.jpg"},
-        {name:"Gainage (planche)", sets:3, reps:"45 sec + relevés de jambes 3×15", cue:"Planche : corps aligné, gainage serré. Relevés : allongé, jambes tendues, sans cambrer le dos", restSec:90, img:"plank.jpg"},
+        {name:"Fentes bulgares avec le kettlebell", sets:4, reps:"10 / jambe", cue:"Pied arrière sur le banc, kettlebell en main, descends buste droit, genou avant ne dépasse pas le pied", restSec:90, img:"bulgarian-split-squat-kettlebell.jpg", equip:"1 kettlebell (12 kg) + banc"},
+        {name:"Hip thrust à la barre", sets:4, reps:"12", cue:"Dos calé contre le banc, barre sur les hanches, monte en serrant fort en haut", restSec:90, img:"hip-thrust-barbell.jpg", equip:"Barre + banc"},
+        {name:"Soulevé de terre à la barre", sets:3, reps:"12", cue:"Barre devant les cuisses, penche le buste dos droit", restSec:90, img:"romanian-deadlift-barbell.jpg", equip:"Barre"},
+        {name:"Mollets debout avec le kettlebell", sets:4, reps:"20", cue:"Kettlebell en main, monte sur la pointe des pieds", restSec:90, img:"standing-calf-raise-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
+        {name:"Gainage (planche)", sets:3, reps:"45 sec + relevés de jambes 3×15", cue:"Planche : corps aligné, gainage serré. Relevés : allongé, jambes tendues, sans cambrer le dos", restSec:90, img:"plank.jpg", equip:"Aucun (poids du corps)"},
       ], restNote:"Repos 90 sec.", note:"Dernière séance de la semaine — donne tout, puis repos bien mérité."},
       {rest:true, text:"Repos. Ton corps récupère et se reconstruit — la récup fait partie du programme. Pas de séance aujourd'hui."},
       {rest:true, text:"Repos. Profite du week-end, la prochaine séance (PUSH) reprend lundi."},
@@ -1266,6 +1286,7 @@ const STRINGS = {
     dayShort:["L","M","M","J","V","S","D"], todayLbl:"Auj.",
     dayAbbrev:["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"],
     musculationDayPickerTitle:"Quels exercices",
+    gymEquipLbl:"Matériel",
     defaultTasks:[
       {id:"wake",label:"🌞 Réveil sans téléphone + marche",period:"morning",category:"dev"},
       {id:"weighIn",label:"⚖️ Se peser",period:"morning",category:"dev",days:[0]},
@@ -1422,39 +1443,39 @@ const STRINGS = {
     gymSplitLbl:["PUSH","PULL","LEGS","UPPER","LOWER + abs","Rest","Rest"],
     gymWorkouts:[
       {title:"Chest / Shoulders / Triceps", exercises:[
-        {name:"Barbell bench press", sets:4, reps:"8-10", cue:"Lying on the bench, bar above your chest, lower until it lightly touches your chest, push up explosively", restSec:90, img:"bench-press-barbell.jpg"},
-        {name:"Standing barbell overhead press", sets:3, reps:"10", cue:"Bar at shoulder height (lifted from your thighs), press overhead until arms are straight, lower with control", restSec:90, img:"overhead-press-barbell.jpg"},
-        {name:"Single-arm lateral raise", sets:3, reps:"15 / arm", cue:"Arm straight at your side with the dumbbell, raise to horizontal, lower slowly, switch arms", restSec:90, img:"lateral-raise.jpg"},
-        {name:"Close-grip barbell bench press", sets:3, reps:"10", cue:"Hands close together on the bar, elbows tucked in, lower to your chest, push up", restSec:90, img:"bench-press-barbell.jpg"},
-        {name:"Dumbbell overhead triceps extension", sets:3, reps:"12", cue:"Dumbbell held with both hands overhead, lower behind your head, elbows fixed, extend back up", restSec:90},
+        {name:"Barbell bench press", sets:4, reps:"8-10", cue:"Lying on the bench, bar above your chest, lower until it lightly touches your chest, push up explosively", restSec:90, img:"bench-press-barbell.jpg", equip:"Barbell + bench"},
+        {name:"Standing barbell overhead press", sets:3, reps:"10", cue:"Bar at shoulder height (lifted from your thighs), press overhead until arms are straight, lower with control", restSec:90, img:"overhead-press-barbell.jpg", equip:"Barbell"},
+        {name:"Single-arm lateral raise", sets:3, reps:"15 / arm", cue:"Arm straight at your side with the kettlebell, raise to horizontal, lower slowly, switch arms", restSec:90, img:"lateral-raise-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
+        {name:"Close-grip barbell bench press", sets:3, reps:"10", cue:"Hands close together on the bar, elbows tucked in, lower to your chest, push up", restSec:90, img:"bench-press-barbell.jpg", equip:"Barbell + bench"},
+        {name:"Kettlebell overhead triceps extension", sets:3, reps:"12", cue:"Kettlebell held with both hands overhead, lower behind your head, elbows fixed, extend back up", restSec:90, img:"triceps-extension-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
       ], restNote:"Rest 90 sec.", note:"Progressive overload: aim to add a bit each week."},
       {title:"Back / Biceps", exercises:[
-        {name:"Pull-ups", sets:4, reps:"8", cue:"Hanging from the fixed bar, pull until your chin clears the bar, lower with control", restSec:90, img:"pullup.jpg"},
-        {name:"Bent-over barbell row", sets:4, reps:"10", cue:"Bent at 45°, overhand grip, pull the bar to your belly, elbows close to your body", restSec:90, img:"bent-over-row-barbell.jpg"},
-        {name:"Single-arm dumbbell row", sets:4, reps:"10 / arm", cue:"Knee and hand on the bench, pull the dumbbell to your hip, elbow close to body", restSec:90, img:"single-arm-row.jpg"},
-        {name:"Barbell curl", sets:3, reps:"12", cue:"Standing, underhand grip shoulder-width, elbows fixed against your body, curl up slowly", restSec:90, img:"biceps-curl-barbell.jpg"},
-        {name:"Single-arm hammer curl", sets:3, reps:"12 / arm", cue:"Neutral grip, elbow fixed, controlled up and down, switch arms", restSec:90, img:"hammer-curl.jpg"},
+        {name:"Pull-ups", sets:4, reps:"8", cue:"Hanging from the fixed bar, pull until your chin clears the bar, lower with control", restSec:90, img:"pullup.jpg", equip:"Pull-up bar"},
+        {name:"Bent-over barbell row", sets:4, reps:"10", cue:"Bent at 45°, overhand grip, pull the bar to your belly, elbows close to your body", restSec:90, img:"bent-over-row-barbell.jpg", equip:"Barbell"},
+        {name:"Single-arm kettlebell row", sets:4, reps:"10 / arm", cue:"Knee and hand on the bench, pull the kettlebell to your hip, elbow close to body", restSec:90, img:"single-arm-row-kettlebell.jpg", equip:"1 kettlebell (12 kg) + bench"},
+        {name:"Barbell curl", sets:3, reps:"12", cue:"Standing, underhand grip shoulder-width, elbows fixed against your body, curl up slowly", restSec:90, img:"biceps-curl-barbell.jpg", equip:"Barbell"},
+        {name:"Single-arm hammer curl", sets:3, reps:"12 / arm", cue:"Neutral grip, elbow fixed, controlled up and down, switch arms", restSec:90, img:"hammer-curl-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
       ], restNote:"Rest 90 sec.", note:"Squeeze your shoulder blades on the row."},
       {title:"Quads / Hamstrings / Glutes / Calves", exercises:[
-        {name:"Goblet squat", sets:4, reps:"10", cue:"Dumbbell held with both hands at your chest, lower until thighs are parallel to the floor, back straight, knees tracking toes", restSec:120, img:"goblet-squat.jpg"},
-        {name:"Dumbbell walking lunges", sets:3, reps:"12 / leg", cue:"Dumbbell held with both hands at your chest, big step forward, back knee close to the ground, alternate legs as you move", restSec:90, img:"walking-lunge-dumbbell.jpg"},
-        {name:"Barbell Romanian deadlift", sets:4, reps:"10", cue:"Bar in front of your thighs, hinge forward with a straight back, feel the hamstring stretch, stand back up", restSec:90, img:"romanian-deadlift-dumbbell.jpg"},
-        {name:"Barbell hip thrust", sets:3, reps:"12", cue:"Back against the edge of the bench, bar across your hips (pad recommended), drive hips up squeezing hard at the top, lower slowly", restSec:90, img:"hip-thrust-dumbbell.jpg"},
-        {name:"Standing dumbbell calf raise", sets:4, reps:"20", cue:"Dumbbell in hand, rise onto your toes, hold 1 sec at the top, lower back down", restSec:90, img:"standing-calf-raise.jpg"},
+        {name:"Goblet squat", sets:4, reps:"10", cue:"Kettlebell held with both hands at your chest, lower until thighs are parallel to the floor, back straight, knees tracking toes", restSec:120, img:"goblet-squat-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
+        {name:"Kettlebell walking lunges", sets:3, reps:"12 / leg", cue:"Kettlebell held with both hands at your chest, big step forward, back knee close to the ground, alternate legs as you move", restSec:90, img:"walking-lunge-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
+        {name:"Barbell Romanian deadlift", sets:4, reps:"10", cue:"Bar in front of your thighs, hinge forward with a straight back, feel the hamstring stretch, stand back up", restSec:90, img:"romanian-deadlift-barbell.jpg", equip:"Barbell"},
+        {name:"Barbell hip thrust", sets:3, reps:"12", cue:"Back against the edge of the bench, bar across your hips (pad recommended), drive hips up squeezing hard at the top, lower slowly", restSec:90, img:"hip-thrust-barbell.jpg", equip:"Barbell + bench"},
+        {name:"Standing kettlebell calf raise", sets:4, reps:"20", cue:"Kettlebell in hand, rise onto your toes, hold 1 sec at the top, lower back down", restSec:90, img:"standing-calf-raise-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
       ], restNote:"Rest 2 min on the squat, 90 sec the rest.", note:"Legs = biggest overall mass builder."},
       {title:"Full upper body", exercises:[
-        {name:"Barbell bench press", sets:4, reps:"10", cue:"Lying on the bench, bar above your chest, lower slowly, push up", restSec:90, img:"bench-press-barbell.jpg"},
-        {name:"Bent-over barbell row", sets:4, reps:"10", cue:"Bent at 45°, pull the bar to your belly, elbows close to your body", restSec:90, img:"bent-over-row-barbell.jpg"},
-        {name:"Standing barbell overhead press", sets:3, reps:"10", cue:"Bar at shoulder height, press overhead until arms are straight", restSec:90, img:"overhead-press-barbell.jpg"},
-        {name:"Barbell curl", sets:3, reps:"12", cue:"Standing, elbows fixed against your body, curl up slowly, lower even slower", restSec:90, img:"biceps-curl-barbell.jpg"},
-        {name:"Dumbbell overhead triceps extension", sets:3, reps:"12", cue:"Dumbbell held with both hands overhead, lower behind your head, elbows fixed", restSec:90},
+        {name:"Barbell bench press", sets:4, reps:"10", cue:"Lying on the bench, bar above your chest, lower slowly, push up", restSec:90, img:"bench-press-barbell.jpg", equip:"Barbell + bench"},
+        {name:"Bent-over barbell row", sets:4, reps:"10", cue:"Bent at 45°, pull the bar to your belly, elbows close to your body", restSec:90, img:"bent-over-row-barbell.jpg", equip:"Barbell"},
+        {name:"Standing barbell overhead press", sets:3, reps:"10", cue:"Bar at shoulder height, press overhead until arms are straight", restSec:90, img:"overhead-press-barbell.jpg", equip:"Barbell"},
+        {name:"Barbell curl", sets:3, reps:"12", cue:"Standing, elbows fixed against your body, curl up slowly, lower even slower", restSec:90, img:"biceps-curl-barbell.jpg", equip:"Barbell"},
+        {name:"Kettlebell overhead triceps extension", sets:3, reps:"12", cue:"Kettlebell held with both hands overhead, lower behind your head, elbows fixed", restSec:90, img:"triceps-extension-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
       ], restNote:"Rest 90 sec.", note:"Second upper-body pass this week = more volume = more muscle."},
       {title:"Lower body and core", exercises:[
-        {name:"Bulgarian split squat with dumbbell", sets:4, reps:"10 / leg", cue:"Back foot on the bench, dumbbell in hand, lower with a straight torso, front knee doesn't pass your toes", restSec:90, img:"bulgarian-split-squat-dumbbell.jpg"},
-        {name:"Barbell hip thrust", sets:4, reps:"12", cue:"Back against the edge of the bench, bar across your hips, drive hips up squeezing hard at the top", restSec:90, img:"hip-thrust-dumbbell.jpg"},
-        {name:"Barbell Romanian deadlift", sets:3, reps:"12", cue:"Bar in front of your thighs, hinge forward with a straight back", restSec:90, img:"romanian-deadlift-dumbbell.jpg"},
-        {name:"Standing dumbbell calf raise", sets:4, reps:"20", cue:"Dumbbell in hand, rise onto your toes", restSec:90, img:"standing-calf-raise.jpg"},
-        {name:"Plank", sets:3, reps:"45 sec + leg raises 3×15", cue:"Plank: body aligned, core tight. Leg raises: lying down, legs straight, no arching your back", restSec:90, img:"plank.jpg"},
+        {name:"Bulgarian split squat with kettlebell", sets:4, reps:"10 / leg", cue:"Back foot on the bench, kettlebell in hand, lower with a straight torso, front knee doesn't pass your toes", restSec:90, img:"bulgarian-split-squat-kettlebell.jpg", equip:"1 kettlebell (12 kg) + bench"},
+        {name:"Barbell hip thrust", sets:4, reps:"12", cue:"Back against the edge of the bench, bar across your hips, drive hips up squeezing hard at the top", restSec:90, img:"hip-thrust-barbell.jpg", equip:"Barbell + bench"},
+        {name:"Barbell Romanian deadlift", sets:3, reps:"12", cue:"Bar in front of your thighs, hinge forward with a straight back", restSec:90, img:"romanian-deadlift-barbell.jpg", equip:"Barbell"},
+        {name:"Standing kettlebell calf raise", sets:4, reps:"20", cue:"Kettlebell in hand, rise onto your toes", restSec:90, img:"standing-calf-raise-kettlebell.jpg", equip:"1 kettlebell (12 kg)"},
+        {name:"Plank", sets:3, reps:"45 sec + leg raises 3×15", cue:"Plank: body aligned, core tight. Leg raises: lying down, legs straight, no arching your back", restSec:90, img:"plank.jpg", equip:"None (bodyweight)"},
       ], restNote:"Rest 90 sec.", note:"Last session of the week — give it everything, then well-earned rest."},
       {rest:true, text:"Rest. Your body recovers and rebuilds — recovery is part of the program. No session today."},
       {rest:true, text:"Rest. Enjoy the weekend, next session (PUSH) starts Monday."},
@@ -1488,6 +1509,7 @@ const STRINGS = {
     dayShort:["M","T","W","T","F","S","S"], todayLbl:"Today",
     dayAbbrev:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
     musculationDayPickerTitle:"Which exercises",
+    gymEquipLbl:"Equipment",
     defaultTasks:[
       {id:"wake",label:"🌞 Wake up phone-free + walk",period:"morning",category:"dev"},
       {id:"weighIn",label:"⚖️ Weigh yourself",period:"morning",category:"dev",days:[0]},
@@ -3515,6 +3537,13 @@ function playRestDoneAlert(){
 }
 let gymRestInterval=null;
 const GYM_REST_RING_CIRC=2*Math.PI*52;
+// The full timer (ring + controls) sits inside the active-exercise card,
+// which is BELOW the 5-row exercise list — easy to scroll past and lose
+// sight of once running (Eric reported not seeing it). Strong app keeps its
+// rest timer pinned at the top of the screen at all times for exactly this
+// reason, so a second compact copy renders as a sticky bar right under the
+// page title, staying visible however far down the list you've scrolled.
+const GYM_STICKY_RING_CIRC=2*Math.PI*16;
 function renderGymRestTimer(){
   clearInterval(gymRestInterval);
   const day=t("gymWorkouts")[dowOf(new Date())];
@@ -3522,18 +3551,27 @@ function renderGymRestTimer(){
   const box=document.getElementById("gymRestBox");
   const ringFg=document.getElementById("gymRestRingFg");
   const timeEl=document.getElementById("gymRestTime");
+  const stickyBox=document.getElementById("gymStickyTimer");
+  const stickyRingFg=document.getElementById("gymStickyRingFg");
+  const stickyTimeEl=document.getElementById("gymStickyTimerTime");
+  document.getElementById("gymStickyTimerLbl").textContent=t("gymRestLbl");
   ringFg.style.strokeDasharray=GYM_REST_RING_CIRC;
+  stickyRingFg.style.strokeDasharray=GYM_STICKY_RING_CIRC;
   if(!state.restEndsAt){
     box.classList.add("hidden");
+    stickyBox.classList.add("hidden");
     return;
   }
   box.classList.remove("hidden");
+  stickyBox.classList.remove("hidden");
   function tick(){
     const remainingMs=state.restEndsAt-Date.now();
     if(remainingMs<=0){
       clearInterval(gymRestInterval);
       timeEl.textContent="0:00";
+      stickyTimeEl.textContent="0:00";
       ringFg.style.strokeDashoffset=0;
+      stickyRingFg.style.strokeDashoffset=0;
       ringFg.classList.add("rest-flash");
       playRestDoneAlert();
       setTimeout(()=>{
@@ -3544,9 +3582,12 @@ function renderGymRestTimer(){
       return;
     }
     const remainingSec=Math.ceil(remainingMs/1000);
-    timeEl.textContent=`${Math.floor(remainingSec/60)}:${String(remainingSec%60).padStart(2,"0")}`;
+    const timeText=`${Math.floor(remainingSec/60)}:${String(remainingSec%60).padStart(2,"0")}`;
+    timeEl.textContent=timeText;
+    stickyTimeEl.textContent=timeText;
     const pct=Math.max(0,Math.min(1,remainingMs/(state.restDurationSec*1000)));
     ringFg.style.strokeDashoffset=GYM_REST_RING_CIRC*(1-pct);
+    stickyRingFg.style.strokeDashoffset=GYM_STICKY_RING_CIRC*(1-pct);
   }
   tick();
   gymRestInterval=setInterval(tick,250);
@@ -3605,7 +3646,7 @@ function renderGymPreview(day){
     const card=document.createElement("div");
     card.className="gym-preview-card";
     const imgHtml=ex.img?`<img class="gym-preview-img" src="exercise-images/${ex.img}" alt="${ex.name}">`:"";
-    card.innerHTML=`<div class="gym-preview-name">${ex.name}</div><div class="gym-preview-target">${ex.sets}×${ex.reps}</div>${imgHtml}<div class="gym-preview-cue">${ex.cue}</div>`;
+    card.innerHTML=`<div class="gym-preview-name">${ex.name}</div><div class="gym-preview-target">${ex.sets}×${ex.reps}</div>${imgHtml}<div class="gym-preview-equip">${t("gymEquipLbl")} : ${ex.equip}</div><div class="gym-preview-cue">${ex.cue}</div>`;
     listEl.appendChild(card);
   });
 }
@@ -3665,6 +3706,7 @@ function renderGymWorkout(){
   const imgEl=document.getElementById("gymActiveImg");
   if(activeEx.img){imgEl.src="exercise-images/"+activeEx.img;imgEl.alt=activeEx.name;imgEl.classList.remove("hidden");}
   else{imgEl.classList.add("hidden");imgEl.src="";}
+  document.getElementById("gymActiveEquip").textContent=`${t("gymEquipLbl")} : ${activeEx.equip}`;
   document.getElementById("gymActiveCue").textContent=activeEx.cue;
   const pillsEl=document.getElementById("gymSetPills");
   pillsEl.innerHTML="";

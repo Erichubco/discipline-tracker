@@ -1,21 +1,22 @@
-const CACHE = "discipline-v127";
+const CACHE = "discipline-v128";
 const ASSETS = ["./", "./index.html", "./manifest.json",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/avatar.png",
   "./exercise-images/bench-press-barbell.jpg",
   "./exercise-images/overhead-press-barbell.jpg",
-  "./exercise-images/lateral-raise.jpg",
+  "./exercise-images/lateral-raise-kettlebell.jpg",
   "./exercise-images/pullup.jpg",
   "./exercise-images/bent-over-row-barbell.jpg",
-  "./exercise-images/single-arm-row.jpg",
+  "./exercise-images/single-arm-row-kettlebell.jpg",
   "./exercise-images/biceps-curl-barbell.jpg",
-  "./exercise-images/hammer-curl.jpg",
-  "./exercise-images/goblet-squat.jpg",
-  "./exercise-images/walking-lunge-dumbbell.jpg",
-  "./exercise-images/romanian-deadlift-dumbbell.jpg",
-  "./exercise-images/hip-thrust-dumbbell.jpg",
-  "./exercise-images/standing-calf-raise.jpg",
-  "./exercise-images/bulgarian-split-squat-dumbbell.jpg",
-  "./exercise-images/plank.jpg"];
+  "./exercise-images/hammer-curl-kettlebell.jpg",
+  "./exercise-images/goblet-squat-kettlebell.jpg",
+  "./exercise-images/walking-lunge-kettlebell.jpg",
+  "./exercise-images/romanian-deadlift-barbell.jpg",
+  "./exercise-images/hip-thrust-barbell.jpg",
+  "./exercise-images/standing-calf-raise-kettlebell.jpg",
+  "./exercise-images/bulgarian-split-squat-kettlebell.jpg",
+  "./exercise-images/plank.jpg",
+  "./exercise-images/triceps-extension-kettlebell.jpg"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
