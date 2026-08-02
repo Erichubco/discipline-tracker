@@ -62,7 +62,7 @@
   .ring-num{font-size:38px;font-weight:700;line-height:1;font-family:'Quicksand',sans-serif;color:var(--green)}
   .ring-den{color:var(--muted);font-size:22px;font-weight:600}
   .ring-lbl{color:var(--muted);font-size:12px;margin-top:4px}
-  .hero-slider-viewport{overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 10% 6px}
+  .hero-slider-viewport{overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:20px 10% 6px}
   .hero-slider-viewport::-webkit-scrollbar{display:none}
   .hero-slider{display:flex;gap:14px}
   .hero-panel{flex:0 0 80%;scroll-snap-align:center}
@@ -83,7 +83,6 @@
   .consistency-module{padding:0;overflow:hidden}
   .reading-streak-badge{position:absolute;top:0;right:0;display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;background:var(--cardHi);border:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text)}
   .reading-streak-badge svg{color:var(--red);vertical-align:-2px}
-  .consistency-module .period-picker{padding:16px 20px 0;margin:0}
   .consistency-category{margin-top:8px;border-top:1px solid var(--border)}
   .consistency-category-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:none;border:none;cursor:pointer;font-family:inherit}
   .consistency-category-toggle-lbl{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--text)}
@@ -492,12 +491,6 @@
 
     <!-- Unified Consistency module -->
     <div class="card consistency-module">
-      <div class="period-picker" id="consistencyPeriodPicker">
-        <button type="button" class="period-opt active" data-period-idx="0"><span id="consistencyPeriod0Btn"></span></button>
-        <button type="button" class="period-opt" data-period-idx="1"><span id="consistencyPeriod1Btn"></span></button>
-        <button type="button" class="period-opt" data-period-idx="2"><span id="consistencyPeriod2Btn"></span></button>
-        <button type="button" class="period-opt" data-period-idx="3"><span id="consistencyPeriod3Btn"></span></button>
-      </div>
       <div class="hero-slider-viewport" id="heroSliderViewport">
         <div class="hero-slider" id="heroSlider">
           <div class="hero-panel">
@@ -1149,7 +1142,6 @@ const STRINGS = {
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
     streakCardTitle:"Consistance", weeklyProgressTitle:"Détail par catégorie (cette semaine)", periodStatsTitle:"Semaine · mois", periodStatsSub:"% des tâches du jour cochées, tout confondu.", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série", daysUnit:"jours",
     taskConsistencyTitle:"Consistance", taskConsistencySub:"Glisse pour voir chaque habitude.", pagesReadLbl:"Pages lues",
-    periodWeek:"7j", periodMonth:"30j", periodBimonth:"60j", periodQuarter:"90j",
     heroLblGym:"Muscu", heroLblMeals:"Repas complets", heroLblReading:"Pages lues", pagesUnit:"pages",
     consistencyShowDetailBtn:"Voir le détail complet", consistencyHideDetailBtn:"Masquer le détail",
     daysActiveUnit:"j actifs",
@@ -1392,7 +1384,6 @@ const STRINGS = {
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
     streakCardTitle:"Consistency", weeklyProgressTitle:"Breakdown by category (this week)", periodStatsTitle:"Week · month", periodStatsSub:"% of today's tasks checked, all combined.", streakCurLbl:"current streak", streakBestLbl:"best streak", daysUnit:"days",
     taskConsistencyTitle:"Consistency", taskConsistencySub:"Swipe to see each habit.", pagesReadLbl:"Pages read",
-    periodWeek:"7d", periodMonth:"30d", periodBimonth:"60d", periodQuarter:"90d",
     heroLblGym:"Workout", heroLblMeals:"Full meal days", heroLblReading:"Pages read", pagesUnit:"pages",
     consistencyShowDetailBtn:"See full detail", consistencyHideDetailBtn:"Hide detail",
     daysActiveUnit:"d active",
@@ -2136,10 +2127,6 @@ function applyStaticI18n(){
   document.getElementById("bookClarifyCancelBtn").textContent=t("bookClarifyCancelBtn");
   document.getElementById("addTaskPhotoLbl").textContent=t("addTaskPhotoLbl");
   document.getElementById("addTaskPhotoIcon").innerHTML=CAMERA_SVG;
-  document.getElementById("consistencyPeriod0Btn").textContent=t("periodWeek");
-  document.getElementById("consistencyPeriod1Btn").textContent=t("periodMonth");
-  document.getElementById("consistencyPeriod2Btn").textContent=t("periodBimonth");
-  document.getElementById("consistencyPeriod3Btn").textContent=t("periodQuarter");
   document.getElementById("heroLblGym").textContent=t("heroLblGym");
   document.getElementById("heroLblMeals").textContent=t("heroLblMeals");
   document.getElementById("heroLblReading").textContent=t("heroLblReading");
@@ -3224,13 +3211,9 @@ function renderPeriodStats(){
   syncFullBackup();
 }
 
-const CONSISTENCY_PERIODS=[
-  {days:7,labelKey:"periodWeek"},
-  {days:30,labelKey:"periodMonth"},
-  {days:60,labelKey:"periodBimonth"},
-  {days:90,labelKey:"periodQuarter"},
-];
-let consistencyPeriodIdx=load("tracker:consistencyPeriodIdx",0);
+// Eric never touched the 7/30/60/90-day picker that used to sit here —
+// fixed to a single 7-day window instead of a selector nobody used.
+const CONSISTENCY_PERIOD={days:7};
 // Counts against how many days the task was actually SCHEDULED in the
 // window (respecting tk.days and tk.addedDate), not just /7 or /30 — a
 // weekday-only task like gym shouldn't look "inconsistent" for the
@@ -3309,8 +3292,7 @@ function setHeroRing(idPrefix,pct,bigNum,captionText){
   document.getElementById("heroSub"+idPrefix).textContent=captionText;
 }
 function renderTaskConsistency(){
-  document.querySelectorAll("#consistencyPeriodPicker .period-opt").forEach((btn,i)=>btn.classList.toggle("active",i===consistencyPeriodIdx));
-  const period=CONSISTENCY_PERIODS[consistencyPeriodIdx];
+  const period=CONSISTENCY_PERIOD;
   const now=new Date();
   const startDate=new Date(now.getTime()-(period.days-1)*DAY_MS);startDate.setHours(0,0,0,0);
   const records=getAllDoneRecords();
@@ -3330,9 +3312,6 @@ function renderTaskConsistency(){
   renderCategoryBreakdown(startDate,records);
   renderConsistencyInsight(period,startDate,now,records);
 }
-document.querySelectorAll("#consistencyPeriodPicker .period-opt").forEach((btn,i)=>{
-  btn.onclick=()=>{consistencyPeriodIdx=i;save("tracker:consistencyPeriodIdx",i);renderTaskConsistency();};
-});
 
 const CATEGORY_BADGE_COLORS=["#45B69C","var(--green)","#FF7E67","#F9C74F","#0984e3","#e84393"];
 function renderCategoryBreakdown(startDate,records){
