@@ -584,6 +584,15 @@
       </div>
     </div>
 
+    <!-- Combined monthly total (business + personal) -->
+    <div class="card" style="padding:16px 18px">
+      <span class="stat-lbl" id="revenueTotalLbl">Total ce mois-ci</span>
+      <div class="biz-amount" style="margin-top:2px">
+        <span class="biz-amount-cur" id="revenueTotalAmt">0€</span>
+      </div>
+      <div class="sub" id="revenueTotalBreakdown" style="margin-top:2px"></div>
+    </div>
+
     <!-- Business goal -->
     <div class="card">
       <div class="biz-head">
@@ -613,6 +622,30 @@
         <input id="bizInput" inputmode="numeric" placeholder="CA actuel (€)" />
         <button class="btn btn-amber" id="bizBtn">Enregistrer</button>
       </div>
+    </div>
+
+    <!-- Other income (salary, Airbnb, anything besides e-commerce):
+         additive dated entries, unlike the e-commerce card's single
+         running-total field tied to its own €10k goal — this is a log of
+         every other actual payment/income, summed for the current month. -->
+    <div class="card">
+      <div class="biz-head">
+        <div>
+          <span class="stat-lbl" id="personalRevEyebrow">Revenus</span>
+          <span class="biz-h-title" id="personalRevTitle">Autres revenus</span>
+        </div>
+      </div>
+      <div class="biz-amount">
+        <span class="biz-amount-cur" id="personalRevMonthTotal">0€</span>
+        <span class="biz-amount-goal" id="personalRevMonthSub">ce mois-ci</span>
+      </div>
+      <div id="personalRevList" style="margin-top:12px;display:flex;flex-direction:column;gap:6px"></div>
+      <div class="sub hidden" id="personalRevEmpty" style="margin-top:8px"></div>
+      <div class="row" style="margin-top:14px;gap:8px">
+        <input id="personalRevLabelInput" placeholder="Ex : Freelance, prime…" style="flex:1;min-width:0" />
+        <input id="personalRevAmountInput" inputmode="numeric" placeholder="€" style="width:70px" />
+      </div>
+      <button class="btn btn-amber" id="personalRevBtn" style="width:100%;margin-top:10px">Ajouter</button>
     </div>
 
     <!-- Reading -->
@@ -1150,11 +1183,17 @@ const STRINGS = {
     progressionTitle:"Progression", progressionSub:"Ta progression, jour après jour.",
     musculationTitle:"Musculation", musculationSubRest:"Jour de repos.",
     musculationSubFmt:day=>`Aujourd'hui : ${day}`,
-    bizTitle:"Chiffre d'affaires mensuel", bizEyebrow:"Objectif business", bizGoalLbl:"Objectif CA", bizPlaceholder:"CA actuel (€)",
+    bizTitle:"Chiffre d'affaires mensuel", bizEyebrow:"Objectif e-commerce", bizGoalLbl:"Objectif CA", bizPlaceholder:"CA actuel (€)",
     bizPctCompleted:pct=>`${pct}% complété`, bizRemainingAmt:amt=>`${amt} restant`,
     bizVsLastMonth:(prev,sign,diff,pct)=>`Mois dernier : ${prev}€ → ${sign}${diff}€${pct!=null?` (${sign}${pct}%)`:""}`,
     bizPaceInfo:date=>`Au rythme actuel, objectif atteint vers le ${date}`,
     bizDeleteConfirm:(amt,date)=>`Supprimer l'entrée ${amt}€ du ${date} ?`,
+    revenueTotalLbl:"Total ce mois-ci",
+    revenueTotalBreakdown:(biz,perso)=>`E-commerce ${biz}€ + Autres ${perso}€`,
+    personalRevEyebrow:"Revenus", personalRevTitle:"Autres revenus", personalRevMonthSub:"ce mois-ci",
+    personalRevLabelPlaceholder:"Ex : Salaire, Airbnb…", personalRevAddBtn:"Ajouter",
+    personalRevEmpty:"Aucune entrée ce mois-ci.",
+    personalRevDeleteConfirm:(label,amt)=>`Supprimer "${label}" (${amt}€) ?`,
     readingTitle:"Lecture · 1 chapitre/jour → 1 livre/mois",
     booksThisYear:n=>`${n} livre${n>1?"s":""} terminé${n>1?"s":""} cette année`,
     bookPlaceholder:"Titre du livre…", totalChapPlaceholder:"Nb de chapitres total (optionnel)",
@@ -1386,11 +1425,17 @@ const STRINGS = {
     progressionTitle:"Progress", progressionSub:"Your progress, day by day.",
     musculationTitle:"Weightlifting", musculationSubRest:"Rest day.",
     musculationSubFmt:day=>`Today: ${day}`,
-    bizTitle:"Monthly revenue", bizEyebrow:"Business goal", bizGoalLbl:"Revenue goal", bizPlaceholder:"Current revenue (€)",
+    bizTitle:"Monthly revenue", bizEyebrow:"E-commerce goal", bizGoalLbl:"Revenue goal", bizPlaceholder:"Current revenue (€)",
     bizPctCompleted:pct=>`${pct}% completed`, bizRemainingAmt:amt=>`${amt} remaining`,
     bizVsLastMonth:(prev,sign,diff,pct)=>`Last month: €${prev} → ${sign}€${diff}${pct!=null?` (${sign}${pct}%)`:""}`,
     bizPaceInfo:date=>`At the current pace, goal reached around ${date}`,
     bizDeleteConfirm:(amt,date)=>`Delete the €${amt} entry from ${date}?`,
+    revenueTotalLbl:"Total this month",
+    revenueTotalBreakdown:(biz,perso)=>`E-commerce €${biz} + Other €${perso}`,
+    personalRevEyebrow:"Income", personalRevTitle:"Other income", personalRevMonthSub:"this month",
+    personalRevLabelPlaceholder:"E.g.: Salary, Airbnb…", personalRevAddBtn:"Add",
+    personalRevEmpty:"No entries this month.",
+    personalRevDeleteConfirm:(label,amt)=>`Delete "${label}" (€${amt})?`,
     readingTitle:"Reading · 1 chapter/day → 1 book/month",
     booksThisYear:n=>`${n} book${n>1?"s":""} finished this year`,
     bookPlaceholder:"Book title…", totalChapPlaceholder:"Total chapters (optional)",
@@ -2124,6 +2169,13 @@ function applyStaticI18n(){
   document.getElementById("bizGoalLbl").textContent=t("bizGoalLbl");
   document.getElementById("bizInput").placeholder=t("bizPlaceholder");
   document.getElementById("bizBtn").textContent=t("weightSave");
+  document.getElementById("revenueTotalLbl").textContent=t("revenueTotalLbl");
+  document.getElementById("personalRevEyebrow").textContent=t("personalRevEyebrow");
+  document.getElementById("personalRevTitle").textContent=t("personalRevTitle");
+  document.getElementById("personalRevMonthSub").textContent=t("personalRevMonthSub");
+  document.getElementById("personalRevLabelInput").placeholder=t("personalRevLabelPlaceholder");
+  document.getElementById("personalRevBtn").textContent=t("personalRevAddBtn");
+  document.getElementById("personalRevEmpty").textContent=t("personalRevEmpty");
   document.getElementById("calorieUnitLbl").textContent=t("calorieUnitLbl");
   document.getElementById("calorieStreakLbl").textContent=t("calorieStreakLbl");
   document.getElementById("calorieLogMealBtn").textContent=t("calorieLogMealBtn");
@@ -2414,7 +2466,63 @@ function renderBiz(){
     bizChartEl.innerHTML="";bizChartEl.classList.add("hidden");
     paceEl.classList.add("hidden");
   }
+  renderRevenueTotal();
 }
+// Personal income: unlike bizRevenue (a single running month-to-date
+// figure you overwrite), this is an additive log of individual dated
+// entries — Eric wanted to see "everything I actually got paid", summed
+// for the current month, not one number to keep re-typing by hand.
+let personalRevenue=load("tracker:personalRevenue",[]);
+function personalRevenueThisMonth(){
+  const mk=today().slice(0,7);
+  return personalRevenue.filter(r=>r.date.slice(0,7)===mk);
+}
+function renderPersonalRev(){
+  const entries=personalRevenueThisMonth().slice().reverse();
+  const total=entries.reduce((s,r)=>s+r.amount,0);
+  document.getElementById("personalRevMonthTotal").textContent=`${total.toLocaleString(t("dateLocale"))}€`;
+  const listEl=document.getElementById("personalRevList");
+  listEl.innerHTML="";
+  document.getElementById("personalRevEmpty").classList.toggle("hidden",entries.length>0);
+  entries.forEach(r=>{
+    const row=document.createElement("div");
+    row.className="food-log-item";
+    row.innerHTML=`<span class="food-log-item-desc">${r.label||"—"}</span><span class="food-log-item-kcal">${r.amount.toLocaleString(t("dateLocale"))}€</span><button class="del" type="button">✕</button>`;
+    row.querySelector(".del").onclick=async(e)=>{
+      e.stopPropagation();
+      if(!(await showConfirmModal(t("personalRevDeleteConfirm",r.label||"—",r.amount),t("confirmModalDeleteBtn"))))return;
+      personalRevenue=personalRevenue.filter(x=>x.id!==r.id);
+      save("tracker:personalRevenue",personalRevenue);
+      renderPersonalRev();
+    };
+    listEl.appendChild(row);
+  });
+  renderRevenueTotal();
+}
+// bizRevenue's last entry IS the current month-to-date business figure by
+// the same convention renderBiz() already uses for bizCurrentAmt — reused
+// here rather than re-deriving it, so the two totals never disagree.
+function renderRevenueTotal(){
+  const bizAmt=bizRevenue.length?bizRevenue[bizRevenue.length-1].amount:0;
+  const persoAmt=personalRevenueThisMonth().reduce((s,r)=>s+r.amount,0);
+  const total=bizAmt+persoAmt;
+  document.getElementById("revenueTotalAmt").textContent=`${total.toLocaleString(t("dateLocale"))}€`;
+  document.getElementById("revenueTotalBreakdown").textContent=t("revenueTotalBreakdown",bizAmt.toLocaleString(t("dateLocale")),persoAmt.toLocaleString(t("dateLocale")));
+}
+function logPersonalRev(){
+  const labelI=document.getElementById("personalRevLabelInput");
+  const amtI=document.getElementById("personalRevAmountInput");
+  const amount=parseFloat(amtI.value.replace(",","."));
+  if(isNaN(amount)||amount<0)return;
+  personalRevenue.push({id:Math.random().toString(36).slice(2),date:today(),amount,label:labelI.value.trim()});
+  save("tracker:personalRevenue",personalRevenue);
+  labelI.value="";amtI.value="";
+  renderPersonalRev();
+  flashSaved(document.getElementById("personalRevBtn"));
+}
+document.getElementById("personalRevBtn").onclick=logPersonalRev;
+document.getElementById("personalRevAmountInput").addEventListener("keydown",e=>{if(e.key==="Enter")logPersonalRev();});
+document.getElementById("personalRevLabelInput").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("personalRevAmountInput").focus();});
 function weightRateKgPerWeek(){
   const first=weights[0], last=weights[weights.length-1];
   if(!first||!last||first===last)return 0;
@@ -4218,7 +4326,7 @@ function setLang(l){
   lang=l;
   save("tracker:lang",lang);
   applyStaticI18n();
-  renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderBodyAnalysis();renderReading();renderPeriodStats();renderTaskConsistency();renderBiz();renderGymWorkout();
+  renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderBodyAnalysis();renderReading();renderPeriodStats();renderTaskConsistency();renderBiz();renderPersonalRev();renderGymWorkout();
   if(document.getElementById("reminderCard")){
     setReminderBtnState(pushSubscribed);
     if(!(window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true)){
@@ -4918,7 +5026,7 @@ document.getElementById("finishBtn").onclick=async()=>{
 
 applyStaticI18n();
 maybeUpdateCalorieGoal();
-renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderBodyAnalysis();renderReading();renderPeriodStats();renderTaskConsistency();renderBiz();
+renderScore();renderTaskTabsAndPanels();renderTasks();renderHeatmap();renderWeight();renderCalories();renderProgressPhotos();renderBodyAnalysis();renderReading();renderPeriodStats();renderTaskConsistency();renderBiz();renderPersonalRev();
 
 async function loadHealthToday(){
   try{
