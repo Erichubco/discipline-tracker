@@ -335,13 +335,14 @@
   .gym-rest-controls{display:flex;justify-content:center;gap:10px;margin-top:14px}
   .gym-rest-adj{border:1px solid var(--border);background:#fff;border-radius:9999px;padding:8px 16px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit}
   .gym-rest-skip{display:block;margin:12px auto 0;background:none;border:none;color:var(--green);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
-  .gym-sticky-timer-ring-wrap{position:relative;width:28px;height:28px;flex-shrink:0}
+  .gym-sticky-timer-ring-wrap{position:relative;width:34px;height:34px;flex-shrink:0}
   .gym-sticky-ring{width:100%;height:100%;transform:rotate(-90deg)}
   .gym-sticky-ring-bg{fill:none;stroke:rgba(255,255,255,.35);stroke-width:4}
   .gym-sticky-ring-fg{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .25s linear}
   .gym-sticky-timer-lbl{font-size:12px;font-weight:700}
   .gym-sticky-timer-time{font-family:'Quicksand',sans-serif;font-weight:700;font-size:15px;margin-left:auto}
-  .gym-session-pause-btn{width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;padding:0}
+  .gym-session-pause-btn{width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;padding:0}
+  .gym-sticky-restart-btn{width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;padding:0;margin-left:2px}
   .book-clarify-icon{font-size:34px;text-align:center;margin-bottom:10px}
   .food-log{border-top:1px solid var(--border);margin-top:4px;padding-top:16px;margin-bottom:16px}
   .food-log-total{font-size:15px;font-weight:700;font-family:'Quicksand',sans-serif;margin-bottom:8px}
@@ -833,8 +834,10 @@
       <button type="button" class="gym-session-pause-btn" id="gymSessionPauseBtn"></button>
       <span class="gym-sticky-timer-lbl" id="gymSessionLbl"></span>
       <span class="gym-sticky-timer-time" id="gymSessionTime"></span>
+      <button type="button" class="gym-sticky-restart-btn hidden" id="gymSessionRestartBtn"></button>
     </div>
     <div class="gym-sticky-timer hidden" id="gymStickyTimer">
+      <button type="button" class="gym-session-pause-btn" id="gymRestPauseBtn"></button>
       <div class="gym-sticky-timer-ring-wrap">
         <svg class="gym-sticky-ring" viewBox="0 0 40 40">
           <circle class="gym-sticky-ring-bg" cx="20" cy="20" r="16"/>
@@ -843,6 +846,7 @@
       </div>
       <span class="gym-sticky-timer-lbl" id="gymStickyTimerLbl"></span>
       <span class="gym-sticky-timer-time" id="gymStickyTimerTime"></span>
+      <button type="button" class="gym-sticky-restart-btn" id="gymRestRestartBtn"></button>
     </div>
 
     <div class="gym-day-picker-title" id="gymDayPickerTitle"></div>
@@ -1201,7 +1205,7 @@ const STRINGS = {
     bizPaceInfo:date=>`Au rythme actuel, objectif atteint vers le ${date}`,
     bizDeleteConfirm:(amt,date)=>`Supprimer l'entrée ${amt}€ du ${date} ?`,
     revenueTotalLbl:"Total ce mois-ci",
-    revenueTotalBreakdown:(biz,perso)=>`E-commerce ${biz}€ + Autres ${perso}€`,
+    revenueTotalBreakdown:(biz,perso)=>`Bénéfice e-commerce ${biz}€ + Autres ${perso}€`,
     personalRevEyebrow:"Revenus", personalRevTitle:"Autres revenus", personalRevMonthSub:"ce mois-ci",
     personalRevLabelPlaceholder:"Ex : Salaire, Airbnb…", personalRevAddBtn:"Ajouter",
     personalRevEmpty:"Aucune entrée ce mois-ci.",
@@ -1363,6 +1367,7 @@ const STRINGS = {
     gymEquipLbl:"Matériel",
     gymSessionLbl:"Séance", gymSessionPauseBtn:"Mettre en pause", gymSessionResumeBtn:"Reprendre",
     gymSessionStartLbl:"Démarrer la séance",
+    gymRestartBtn:"Recommencer", gymRestPauseBtn:"Mettre le repos en pause", gymRestResumeBtn:"Reprendre le repos",
     gymTestModeBtn:"Essayer le chronomètre (test)",
     gymTestBannerText:"Mode test — les séries ne comptent pas dans ton programme",
     gymTestExitBtn:"Quitter",
@@ -1444,7 +1449,7 @@ const STRINGS = {
     bizPaceInfo:date=>`At the current pace, goal reached around ${date}`,
     bizDeleteConfirm:(amt,date)=>`Delete the €${amt} entry from ${date}?`,
     revenueTotalLbl:"Total this month",
-    revenueTotalBreakdown:(biz,perso)=>`E-commerce €${biz} + Other €${perso}`,
+    revenueTotalBreakdown:(biz,perso)=>`E-commerce profit €${biz} + Other €${perso}`,
     personalRevEyebrow:"Income", personalRevTitle:"Other income", personalRevMonthSub:"this month",
     personalRevLabelPlaceholder:"E.g.: Salary, Airbnb…", personalRevAddBtn:"Add",
     personalRevEmpty:"No entries this month.",
@@ -1601,6 +1606,7 @@ const STRINGS = {
     gymEquipLbl:"Equipment",
     gymSessionLbl:"Session", gymSessionPauseBtn:"Pause", gymSessionResumeBtn:"Resume",
     gymSessionStartLbl:"Start session",
+    gymRestartBtn:"Restart", gymRestPauseBtn:"Pause rest", gymRestResumeBtn:"Resume rest",
     gymTestModeBtn:"Try the timer (test)",
     gymTestBannerText:"Test mode — sets here don't count toward your program",
     gymTestExitBtn:"Exit",
@@ -1653,6 +1659,7 @@ const INFO_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" st
 const CLOCK_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
 const PAUSE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
 const PLAY_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l14 8-14 8V4z"/></svg>';
+const RESTART_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>';
 document.getElementById("bizIconBadge").innerHTML=TRENDING_SVG;
 document.getElementById("coverPlaceholder").innerHTML=CAMERA_SVG;
 document.getElementById("unifiedStreakIcon").innerHTML=FLAME_SVG;
@@ -2520,15 +2527,19 @@ function renderPersonalRev(){
   });
   renderRevenueTotal();
 }
-// bizRevenue's last entry IS the current month-to-date business figure by
-// the same convention renderBiz() already uses for bizCurrentAmt — reused
-// here rather than re-deriving it, so the two totals never disagree.
+// Uses PROFIT (bénéfice), not CA — Eric was explicit that a total mixing
+// raw e-commerce turnover with real income (salaire, Airbnb) "means
+// nothing", since turnover isn't money in his pocket. The CA card right
+// below keeps showing CA (that's its whole point, and it's what the
+// Shopify sync feeds), but the combined "how much will I actually get"
+// total is bénéfice + autres revenus, not CA + autres revenus.
 function renderRevenueTotal(){
-  const bizAmt=bizRevenue.length?bizRevenue[bizRevenue.length-1].amount:0;
+  const last=bizRevenue[bizRevenue.length-1];
+  const bizProfit=last&&last.profit!=null?last.profit:0;
   const persoAmt=personalRevenueThisMonth().reduce((s,r)=>s+r.amount,0);
-  const total=bizAmt+persoAmt;
+  const total=bizProfit+persoAmt;
   document.getElementById("revenueTotalAmt").textContent=`${total.toLocaleString(t("dateLocale"))}€`;
-  document.getElementById("revenueTotalBreakdown").textContent=t("revenueTotalBreakdown",bizAmt.toLocaleString(t("dateLocale")),persoAmt.toLocaleString(t("dateLocale")));
+  document.getElementById("revenueTotalBreakdown").textContent=t("revenueTotalBreakdown",bizProfit.toLocaleString(t("dateLocale")),persoAmt.toLocaleString(t("dateLocale")));
 }
 function logPersonalRev(){
   const labelI=document.getElementById("personalRevLabelInput");
@@ -3715,7 +3726,7 @@ function workoutStateKey(){return gymTestMode?"tracker:workout:test":"tracker:wo
 function getWorkoutState(day){
   const stored=load(workoutStateKey(),null);
   if(stored)return stored;
-  return{activeIdx:0,setsDone:day.exercises.map(ex=>Array(ex.sets).fill(false)),restEndsAt:null,restDurationSec:null,
+  return{activeIdx:0,setsDone:day.exercises.map(ex=>Array(ex.sets).fill(false)),restEndsAt:null,restDurationSec:null,restPausedRemainingSec:null,
     sessionElapsedMs:0,sessionRunningSince:null,sessionGoalAlerted:false,sessionMaxAlerted:false};
 }
 function saveWorkoutState(state){
@@ -3793,6 +3804,17 @@ function renderGymSessionTimer(){
   // repeatedly not being able to find it). Now the idle state itself is the
   // discoverable "start" control: a permanent, tappable button.
   box.classList.remove("hidden");
+  const restartBtn=document.getElementById("gymSessionRestartBtn");
+  restartBtn.innerHTML=RESTART_SVG;
+  restartBtn.title=t("gymRestartBtn");
+  restartBtn.onclick=()=>{
+    state.sessionElapsedMs=0;
+    state.sessionGoalAlerted=false;
+    state.sessionMaxAlerted=false;
+    if(state.sessionRunningSince)state.sessionRunningSince=Date.now();
+    saveWorkoutState(state);
+    renderGymSessionTimer();
+  };
   const started=state.sessionElapsedMs>0||state.sessionRunningSince;
   if(!started){
     lblEl.textContent=t("gymSessionStartLbl");
@@ -3804,8 +3826,10 @@ function renderGymSessionTimer(){
       saveWorkoutState(state);
       renderGymSessionTimer();
     };
+    restartBtn.classList.add("hidden");
     return;
   }
+  restartBtn.classList.remove("hidden");
   lblEl.textContent=t("gymSessionLbl");
   btn.innerHTML=state.sessionRunningSince?PAUSE_SVG:PLAY_SVG;
   btn.title=state.sessionRunningSince?t("gymSessionPauseBtn"):t("gymSessionResumeBtn");
@@ -3844,6 +3868,31 @@ const GYM_REST_RING_CIRC=2*Math.PI*52;
 // reason, so a second compact copy renders as a sticky bar right under the
 // page title, staying visible however far down the list you've scrolled.
 const GYM_STICKY_RING_CIRC=2*Math.PI*16;
+function toggleGymRestPause(){
+  const day=t("gymWorkouts")[gymEffectiveDow()];
+  const state=getWorkoutState(day);
+  if(state.restPausedRemainingSec!=null){
+    state.restEndsAt=Date.now()+state.restPausedRemainingSec*1000;
+    state.restPausedRemainingSec=null;
+  }else if(state.restEndsAt){
+    state.restPausedRemainingSec=Math.max(0,Math.ceil((state.restEndsAt-Date.now())/1000));
+    state.restEndsAt=null;
+  }else{
+    return;
+  }
+  saveWorkoutState(state);
+  renderGymRestTimer();
+}
+function restartGymRestTimer(){
+  const day=t("gymWorkouts")[gymEffectiveDow()];
+  const state=getWorkoutState(day);
+  if(!state.restDurationSec)return;
+  state.restEndsAt=Date.now()+state.restDurationSec*1000;
+  state.restPausedRemainingSec=null;
+  saveWorkoutState(state);
+  document.getElementById("gymRestRingFg").classList.remove("rest-flash");
+  renderGymRestTimer();
+}
 function renderGymRestTimer(){
   clearInterval(gymRestInterval);
   const day=t("gymWorkouts")[gymEffectiveDow()];
@@ -3854,16 +3903,35 @@ function renderGymRestTimer(){
   const stickyBox=document.getElementById("gymStickyTimer");
   const stickyRingFg=document.getElementById("gymStickyRingFg");
   const stickyTimeEl=document.getElementById("gymStickyTimerTime");
+  const pauseBtn=document.getElementById("gymRestPauseBtn");
+  const restartBtn=document.getElementById("gymRestRestartBtn");
   document.getElementById("gymStickyTimerLbl").textContent=t("gymRestLbl");
   ringFg.style.strokeDasharray=GYM_REST_RING_CIRC;
   stickyRingFg.style.strokeDasharray=GYM_STICKY_RING_CIRC;
-  if(!state.restEndsAt){
+  restartBtn.innerHTML=RESTART_SVG;
+  restartBtn.title=t("gymRestartBtn");
+  restartBtn.onclick=restartGymRestTimer;
+  pauseBtn.onclick=toggleGymRestPause;
+  const isPaused=state.restPausedRemainingSec!=null;
+  if(!state.restEndsAt&&!isPaused){
     box.classList.add("hidden");
     stickyBox.classList.add("hidden");
     return;
   }
   box.classList.remove("hidden");
   stickyBox.classList.remove("hidden");
+  pauseBtn.innerHTML=isPaused?PLAY_SVG:PAUSE_SVG;
+  pauseBtn.title=isPaused?t("gymRestResumeBtn"):t("gymRestPauseBtn");
+  if(isPaused){
+    const remainingSec=state.restPausedRemainingSec;
+    const timeText=`${Math.floor(remainingSec/60)}:${String(remainingSec%60).padStart(2,"0")}`;
+    timeEl.textContent=timeText;
+    stickyTimeEl.textContent=timeText;
+    const pct=Math.max(0,Math.min(1,remainingSec/state.restDurationSec));
+    ringFg.style.strokeDashoffset=GYM_REST_RING_CIRC*(1-pct);
+    stickyRingFg.style.strokeDashoffset=GYM_STICKY_RING_CIRC*(1-pct);
+    return;
+  }
   function tick(){
     const remainingMs=state.restEndsAt-Date.now();
     if(remainingMs<=0){
@@ -3875,9 +3943,17 @@ function renderGymRestTimer(){
       ringFg.classList.add("rest-flash");
       playRestDoneAlert();
       setTimeout(()=>{
-        state.restEndsAt=null;state.restDurationSec=null;
+        state.restEndsAt=null;state.restDurationSec=null;state.restPausedRemainingSec=null;
+        // Nothing left to rest FOR on this exercise once every set is
+        // checked off — move on automatically instead of leaving him
+        // staring at an idle 0:00. Never auto-finishes the whole session
+        // on the last exercise; that still needs a deliberate tap.
+        const allSetsDone=state.setsDone[state.activeIdx].every(Boolean);
+        if(allSetsDone&&state.activeIdx<day.exercises.length-1){
+          state.activeIdx+=1;
+        }
         saveWorkoutState(state);
-        renderGymRestTimer();
+        renderGymWorkout();
       },1200);
       return;
     }
@@ -3897,6 +3973,7 @@ function startGymRestTimer(sec){
   const state=getWorkoutState(day);
   state.restEndsAt=Date.now()+sec*1000;
   state.restDurationSec=sec;
+  state.restPausedRemainingSec=null;
   saveWorkoutState(state);
   document.getElementById("gymRestRingFg").classList.remove("rest-flash");
   renderGymRestTimer();
@@ -3904,8 +3981,13 @@ function startGymRestTimer(sec){
 function adjustGymRestTimer(deltaSec){
   const day=t("gymWorkouts")[gymEffectiveDow()];
   const state=getWorkoutState(day);
-  if(!state.restEndsAt)return;
-  state.restEndsAt=Math.max(Date.now(),state.restEndsAt+deltaSec*1000);
+  if(state.restPausedRemainingSec!=null){
+    state.restPausedRemainingSec=Math.max(0,state.restPausedRemainingSec+deltaSec);
+  }else if(state.restEndsAt){
+    state.restEndsAt=Math.max(Date.now(),state.restEndsAt+deltaSec*1000);
+  }else{
+    return;
+  }
   saveWorkoutState(state);
   renderGymRestTimer();
 }
@@ -3914,7 +3996,7 @@ document.getElementById("gymRestPlus").onclick=()=>adjustGymRestTimer(15);
 document.getElementById("gymRestSkip").onclick=()=>{
   const day=t("gymWorkouts")[gymEffectiveDow()];
   const state=getWorkoutState(day);
-  state.restEndsAt=null;state.restDurationSec=null;
+  state.restEndsAt=null;state.restDurationSec=null;state.restPausedRemainingSec=null;
   saveWorkoutState(state);
   renderGymRestTimer();
 };
@@ -4343,6 +4425,21 @@ function switchView(view){
 }
 document.querySelectorAll(".tab").forEach(btn=>{
   btn.onclick=()=>switchView(btn.dataset.view);
+});
+// A rest/session timer that finishes while the phone is locked or the app
+// is backgrounded never gets its completion sound/auto-advance, because
+// mobile Safari throttles or fully suspends setInterval while hidden —
+// the tick() that would have caught remainingMs<=0 just never runs. Both
+// timers are wall-clock based (restEndsAt/sessionRunningSince are
+// absolute timestamps, not counters) specifically so they're still
+// correct whenever this next runs — forcing a fresh render on resume is
+// what actually surfaces that correctness instead of leaving stale DOM
+// sitting there until some unrelated re-render happens to fire.
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState!=="visible")return;
+  if(!document.getElementById("view-musculation").classList.contains("active"))return;
+  renderGymRestTimer();
+  renderGymSessionTimer();
 });
 
 function setLang(l){
