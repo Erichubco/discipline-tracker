@@ -3800,12 +3800,19 @@ function renderGymDayTabs(selectedDow){
   const el=document.getElementById("gymDayTabs");
   el.innerHTML="";
   const labels=t("dayAbbrev");
-  const todayDow=dowOf(new Date());
+  const now=new Date();
+  const todayDow=dowOf(now);
+  // The tabs always represent the current calendar week (Monday-Sunday),
+  // never a browsable different week — showing each tab's actual day-of-
+  // month number (not just "Lun"/"Mar") removes the ambiguity Eric hit:
+  // an abbreviation alone doesn't say WHICH Monday it is.
   labels.forEach((label,i)=>{
+    const d=new Date(now);
+    d.setDate(now.getDate()+(i-todayDow));
     const btn=document.createElement("button");
     btn.type="button";
     btn.className="gym-day-tab"+(i===selectedDow?" active":"");
-    btn.textContent=i===todayDow?t("todayLbl"):label;
+    btn.textContent=`${i===todayDow?t("todayLbl"):label} ${d.getDate()}`;
     btn.onclick=()=>{musculationBrowseDow=i;renderGymWorkout();};
     el.appendChild(btn);
   });
