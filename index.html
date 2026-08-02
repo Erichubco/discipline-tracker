@@ -5122,6 +5122,32 @@ async function syncTaskSuggestions(){
   }catch(e){}
 }
 
+// Auto-fills the e-commerce CA from Harper Australia + Koré Shopify sales
+// (see shopify-revenue-sync.js on the VPS, runs every 4h) — but a manual
+// save always wins for the rest of that calendar day. Keying off "is
+// TODAY's last bizRevenue entry one I wrote" rather than "does a synced
+// entry exist somewhere today" matters: the naive version would silently
+// clobber a manual correction made before the day's first sync tick.
+async function syncShopifyRevenue(){
+  try{
+    const res=await apiFetch("/shopify-revenue");
+    if(!res.ok)return;
+    const data=await res.json();
+    if(!data||data.date!==today())return;
+    const lastIdx=bizRevenue.reduce((acc,r,i)=>r.date===data.date?i:acc,-1);
+    if(lastIdx===-1){
+      bizRevenue.push({date:data.date,amount:data.amount,synced:true});
+    }else if(bizRevenue[lastIdx].synced){
+      bizRevenue[lastIdx].amount=data.amount;
+    }else{
+      return;
+    }
+    save("tracker:bizRevenue",bizRevenue);
+    renderBiz();
+    await syncFullBackup();
+  }catch(e){}
+}
+
 async function restoreFromBackupIfEmpty(){
   let hasAnyDayData=false;
   for(let i=0;i<localStorage.length;i++){
@@ -5181,6 +5207,7 @@ if("serviceWorker" in navigator){
     initReminder();
     loadHealthToday();
     syncTaskSuggestions();
+    syncShopifyRevenue();
   });
 }else{
   backupPushReady=true;
