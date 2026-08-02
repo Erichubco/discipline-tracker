@@ -205,6 +205,8 @@
   .gym-sticky-timer{position:sticky;top:56px;z-index:30;display:flex;align-items:center;gap:8px;background:var(--green);color:#fff;border-radius:9999px;padding:8px 16px 8px 8px;margin:0 0 12px;box-shadow:0 4px 14px rgba(83,65,205,.35);width:fit-content}
   .home-streak-badge{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:20px;background:var(--cardHi);border:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text);margin-top:8px}
   .home-streak-badge svg{color:var(--red);vertical-align:-2px}
+  .home-motivation-card{margin:12px 0 0;padding:14px 16px;border-radius:16px;background:linear-gradient(135deg,var(--green),var(--amber));box-shadow:0 4px 14px rgba(83,65,205,.2)}
+  .home-motivation-msg{color:#fff;font-size:14px;font-weight:600;line-height:1.4}
   .hidden{display:none}
   .book-row{display:flex;gap:12px;margin-bottom:12px}
   .book-cover{width:56px;height:76px;border-radius:8px;background:var(--cardHi);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;font-size:20px}
@@ -391,6 +393,16 @@
     <div class="greeting-title display" id="greetingTitle"></div>
     <div class="greeting-sub" id="greetingSub"></div>
     <span class="home-streak-badge" id="homeStreakBadge"><span id="homeStreakIcon"></span><span id="homeStreakNum">0</span></span>
+    <div class="home-motivation-card hidden" id="homeMotivationCard">
+      <div class="home-motivation-msg" id="homeMotivationMsg"></div>
+    </div>
+    <div class="consistency-insight hidden" id="consistencyInsight">
+      <div class="consistency-insight-icon">💡</div>
+      <div>
+        <div class="consistency-insight-title" id="insightTitle"></div>
+        <div class="consistency-insight-sub" id="insightSub"></div>
+      </div>
+    </div>
     <div class="sync-toast" id="syncToast"></div>
     <div class="past-day-banner hidden" id="pastDayBanner">
       <span id="pastDayBannerText"></span>
@@ -482,13 +494,6 @@
           </span>
         </button>
         <div class="hidden consistency-category-rows" id="categoryContent"></div>
-      </div>
-      <div class="consistency-insight hidden" id="consistencyInsight">
-        <div class="consistency-insight-icon">💡</div>
-        <div>
-          <div class="consistency-insight-title" id="insightTitle"></div>
-          <div class="consistency-insight-sub" id="insightSub"></div>
-        </div>
       </div>
     </div>
 
@@ -5000,6 +5005,23 @@ async function syncShopifyRevenue(){
   }catch(e){}
 }
 
+// Regenerated once/day server-side (daily-motivation.js on the VPS) from
+// the same streak/week/month stats the client already POSTs to /stats on
+// every load — deliberately NOT a per-load AI call, both to keep this
+// cheap and because a message that changes every single time the app
+// opens would feel random rather than like a real daily check-in.
+async function syncDailyMotivation(){
+  try{
+    const res=await apiFetch("/daily-motivation");
+    if(!res.ok)return;
+    const data=await res.json();
+    const card=document.getElementById("homeMotivationCard");
+    if(!data||!data.message||data.date!==today()){card.classList.add("hidden");return;}
+    document.getElementById("homeMotivationMsg").textContent=data.message;
+    card.classList.remove("hidden");
+  }catch(e){}
+}
+
 async function restoreFromBackupIfEmpty(){
   let hasAnyDayData=false;
   for(let i=0;i<localStorage.length;i++){
@@ -5060,6 +5082,7 @@ if("serviceWorker" in navigator){
     loadHealthToday();
     syncTaskSuggestions();
     syncShopifyRevenue();
+    syncDailyMotivation();
   });
 }else{
   backupPushReady=true;
