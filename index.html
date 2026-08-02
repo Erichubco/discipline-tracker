@@ -1318,11 +1318,13 @@ const STRINGS = {
     defaultTasks:[
       {id:"wake",label:"🌞 Réveil sans téléphone + marche",period:"morning",category:"dev"},
       {id:"weighIn",label:"⚖️ Se peser",period:"morning",category:"dev",days:[0]},
+      {id:"photoReminder",label:"📸 Photo de progression physique",period:"morning",category:"dev",days:[5],monthlyFirstOnly:true},
       {id:"read",label:"📖 Lire 1 chapitre",period:"morning",category:"dev"},
       {id:"faceCareMorning",label:"🧴 Soin visage matin",period:"morning",category:"dev"},
       {id:"suppsMorning",label:"🌿 Fénugrec",period:"morning",category:"dev"},
       {id:"minoxidilMorning",label:"💇 Soin cheveux — Minoxidil matin",period:"morning",category:"dev"},
       {id:"breakfast",label:"🍳 Petit-déj",period:"morning",category:"dev"},
+      {id:"courses",label:"🛒 Courses + menus de la semaine",period:"day",category:"dev",days:[5]},
       {id:"gym",label:"💪 Muscu",period:"day",category:"dev",days:[0,1,2,3,4]},
       {id:"ecom",label:"💻 Tâche e-com du jour",period:"day",category:"business"},
       {id:"ecomAfternoon",label:"🛒 E-com — bloc après-midi",period:"day",category:"business"},
@@ -1547,11 +1549,13 @@ const STRINGS = {
     defaultTasks:[
       {id:"wake",label:"🌞 Wake up phone-free + walk",period:"morning",category:"dev"},
       {id:"weighIn",label:"⚖️ Weigh yourself",period:"morning",category:"dev",days:[0]},
+      {id:"photoReminder",label:"📸 Physical progress photo",period:"morning",category:"dev",days:[5],monthlyFirstOnly:true},
       {id:"read",label:"📖 Read 1 chapter",period:"morning",category:"dev"},
       {id:"faceCareMorning",label:"🧴 Face care — morning",period:"morning",category:"dev"},
       {id:"suppsMorning",label:"🌿 Fenugreek",period:"morning",category:"dev"},
       {id:"minoxidilMorning",label:"💇 Hair care — Minoxidil morning",period:"morning",category:"dev"},
       {id:"breakfast",label:"🍳 Breakfast",period:"morning",category:"dev"},
+      {id:"courses",label:"🛒 Groceries + weekly menu",period:"day",category:"dev",days:[5]},
       {id:"gym",label:"💪 Workout",period:"day",category:"dev",days:[0,1,2,3,4]},
       {id:"ecom",label:"💻 Today's e-com task",period:"day",category:"business"},
       {id:"ecomAfternoon",label:"🛒 E-com — afternoon block",period:"day",category:"business"},
@@ -1873,6 +1877,40 @@ if(!load("tracker:taskOrderV4Patched",false)){
     return ia-ib;
   });
   save("tracker:taskOrderV4Patched",true);
+}
+// One-off: "Courses + menus" and "Photo de progression" were already
+// firing weekly/monthly as Google Calendar email reminders
+// (calendar-notification@google.com), entirely outside the app — Eric
+// didn't realize that's where they came from and wanted real checkboxes
+// in the app instead. photoReminder uses the new monthlyFirstOnly flag
+// (see tasksForDate) since it's a monthly cadence, not weekly.
+if(!load("tracker:coursesPhotoTasksAddedV1",false)){
+  if(!tasks.some(tk=>tk.id==="courses")){
+    tasks.push({
+      id:"courses",
+      label:"🛒 Courses + menus de la semaine",
+      period:"day",
+      category:"dev",
+      days:[5],
+      addedDate:"2026-08-02",
+      detailOverride:"🕐 10h00 – 10h30\n\nAvant les courses : regarde ce qu'il te reste, complète pour la semaine.",
+      detailOverrideEn:"🕐 10:00am – 10:30am\n\nBefore shopping: check what you have left, fill in for the week.",
+    });
+  }
+  if(!tasks.some(tk=>tk.id==="photoReminder")){
+    tasks.push({
+      id:"photoReminder",
+      label:"📸 Photo de progression physique",
+      period:"morning",
+      category:"dev",
+      days:[5],
+      monthlyFirstOnly:true,
+      addedDate:"2026-08-02",
+      detailOverride:"🕐 08h00 – 08h05\n\nUne photo par mois pour voir ta vraie progression physique — à croiser avec ton poids, pas juste la balance.\n\nDans l'app : Progression → carte « Progression physique ».",
+      detailOverrideEn:"🕐 8:00am – 8:05am\n\nOne photo a month to see your real physical progress — cross-reference it with your weight, not just the scale.\n\nIn the app: Progress → \"Physical progress\" card.",
+    });
+  }
+  save("tracker:coursesPhotoTasksAddedV1",true);
 }
 save("tracker:taskMigVersion",taskMigVersion);
 save("tracker:template",tasks);
@@ -2987,17 +3025,22 @@ function getAllDoneRecords(){
   return out;
 }
 function dowOf(d){return (d.getDay()+6)%7;}
+// True for the FIRST occurrence of its weekday in the month (day 1-7) —
+// used by tk.monthlyFirstOnly for tasks that recur monthly rather than
+// weekly (e.g. "first Saturday of the month"), reusing the existing
+// tk.days weekday filter instead of a separate scheduling system.
+function isFirstWeekOfMonth(date){return date.getDate()<=7;}
 function tasksForDate(date){
   const dow=dowOf(date),key=keyFor(date);
-  return tasks.filter(tk=>(!tk.days||tk.days.includes(dow))&&(!tk.addedDate||tk.addedDate<=key));
+  return tasks.filter(tk=>(!tk.days||tk.days.includes(dow))&&(!tk.monthlyFirstOnly||isFirstWeekOfMonth(date))&&(!tk.addedDate||tk.addedDate<=key));
 }
 function mostRecentScheduledDayBefore(tk,beforeDateKey){
   const before=dateFromKey(beforeDateKey);
-  for(let i=1;i<=14;i++){
+  for(let i=1;i<=45;i++){
     const d=new Date(before);d.setDate(d.getDate()-i);
     const k=keyFor(d);
     if(tk.addedDate&&k<tk.addedDate)return null;
-    if(!tk.days||tk.days.includes(dowOf(d)))return k;
+    if((!tk.days||tk.days.includes(dowOf(d)))&&(!tk.monthlyFirstOnly||isFirstWeekOfMonth(d)))return k;
   }
   return null;
 }
@@ -3074,6 +3117,7 @@ function taskConsistency(tk,startDate,records){
     const key=keyFor(d);
     if(tk.addedDate&&key<tk.addedDate)continue;
     if(tk.days&&!tk.days.includes(dowOf(d)))continue;
+    if(tk.monthlyFirstOnly&&!isFirstWeekOfMonth(d))continue;
     scheduled++;
     if((records[key]||{})[tk.id])doneCount++;
   }
