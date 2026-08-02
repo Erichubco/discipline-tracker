@@ -62,24 +62,6 @@
   .ring-num{font-size:38px;font-weight:700;line-height:1;font-family:'Quicksand',sans-serif;color:var(--green)}
   .ring-den{color:var(--muted);font-size:22px;font-weight:600}
   .ring-lbl{color:var(--muted);font-size:12px;margin-top:4px}
-  .hero-slider-viewport{overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:20px 10% 6px}
-  .hero-slider-viewport::-webkit-scrollbar{display:none}
-  .hero-slider{display:flex;gap:14px}
-  .hero-panel{flex:0 0 80%;scroll-snap-align:center}
-  .hero-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:18px;box-shadow:0 8px 24px rgba(83,65,205,.08);display:flex;flex-direction:column;align-items:center;opacity:.55;transform:scale(.94);transition:opacity .25s ease,transform .25s ease}
-  .hero-panel.active .hero-card{opacity:1;transform:scale(1)}
-  .hero-card-header{width:100%;display:flex;margin-bottom:12px}
-  .hero-card-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
-  .hero-ring-wrap{position:relative;width:150px;height:150px}
-  .hero-ring-wrap svg{transform:rotate(-90deg);position:relative;z-index:1}
-  .hero-ring-glow{position:absolute;inset:14%;opacity:.22;filter:blur(24px);border-radius:50%}
-  .hero-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2}
-  .hero-ring-num{font-size:30px;font-weight:800;line-height:1;font-family:'Quicksand',sans-serif;color:var(--text)}
-  .hero-ring-unit{color:var(--muted);font-size:12px;font-weight:600;margin-top:2px}
-  .hero-caption{margin-top:14px;font-size:13px;color:var(--muted);text-align:center}
-  .hero-dots{display:flex;justify-content:center;gap:8px;margin-top:4px}
-  .hero-dot{width:8px;height:8px;border-radius:50%;background:var(--border);border:none;padding:0;cursor:pointer;transition:width .25s,background .25s}
-  .hero-dot.active{background:var(--green);width:20px;border-radius:4px}
   .consistency-module{padding:0;overflow:hidden}
   .reading-streak-badge{position:absolute;top:0;right:0;display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;background:var(--cardHi);border:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text)}
   .reading-streak-badge svg{color:var(--red);vertical-align:-2px}
@@ -491,66 +473,6 @@
 
     <!-- Unified Consistency module -->
     <div class="card consistency-module">
-      <div class="hero-slider-viewport" id="heroSliderViewport">
-        <div class="hero-slider" id="heroSlider">
-          <div class="hero-panel">
-            <div class="hero-card">
-              <div class="hero-card-header"><span class="hero-card-pill" style="background:#fff0ec;color:#e0603f">💪 <span id="heroLblGym">Muscu</span></span></div>
-              <div class="hero-ring-wrap">
-                <div class="hero-ring-glow" style="background:#FF7E67"></div>
-                <svg width="150" height="150" viewBox="0 0 150 150">
-                  <circle cx="75" cy="75" r="64" fill="none" stroke="var(--cardHi)" stroke-width="12"/>
-                  <circle id="heroRingGym" cx="75" cy="75" r="64" fill="none" stroke="#FF7E67" stroke-width="12" stroke-linecap="round" style="transition:stroke-dashoffset .6s ease"/>
-                </svg>
-                <div class="hero-ring-center">
-                  <div class="hero-ring-num" id="heroPctGym">0</div>
-                  <div class="hero-ring-unit" id="heroUnitGym">jours</div>
-                </div>
-              </div>
-              <div class="hero-caption" id="heroSubGym">0/0 jours</div>
-            </div>
-          </div>
-          <div class="hero-panel">
-            <div class="hero-card">
-              <div class="hero-card-header"><span class="hero-card-pill" style="background:#e6fbf5;color:#00966f">🍽️ <span id="heroLblMeals">Repas complets</span></span></div>
-              <div class="hero-ring-wrap">
-                <div class="hero-ring-glow" style="background:#45B69C"></div>
-                <svg width="150" height="150" viewBox="0 0 150 150">
-                  <circle cx="75" cy="75" r="64" fill="none" stroke="var(--cardHi)" stroke-width="12"/>
-                  <circle id="heroRingMeals" cx="75" cy="75" r="64" fill="none" stroke="#45B69C" stroke-width="12" stroke-linecap="round" style="transition:stroke-dashoffset .6s ease"/>
-                </svg>
-                <div class="hero-ring-center">
-                  <div class="hero-ring-num" id="heroPctMeals">0</div>
-                  <div class="hero-ring-unit" id="heroUnitMeals">jours</div>
-                </div>
-              </div>
-              <div class="hero-caption" id="heroSubMeals">0/0 jours</div>
-            </div>
-          </div>
-          <div class="hero-panel">
-            <div class="hero-card">
-              <div class="hero-card-header"><span class="hero-card-pill" style="background:#fef6e7;color:#b9770e">📖 <span id="heroLblReading">Pages lues</span></span></div>
-              <div class="hero-ring-wrap">
-                <div class="hero-ring-glow" style="background:#F9C74F"></div>
-                <svg width="150" height="150" viewBox="0 0 150 150">
-                  <circle cx="75" cy="75" r="64" fill="none" stroke="var(--cardHi)" stroke-width="12"/>
-                  <circle id="heroRingReading" cx="75" cy="75" r="64" fill="none" stroke="#F9C74F" stroke-width="12" stroke-linecap="round" style="transition:stroke-dashoffset .6s ease"/>
-                </svg>
-                <div class="hero-ring-center">
-                  <div class="hero-ring-num" id="heroPctReading">0</div>
-                  <div class="hero-ring-unit" id="heroUnitReading">pages</div>
-                </div>
-              </div>
-              <div class="hero-caption" id="heroSubReading">0/0 jours actifs</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="hero-dots" id="heroDots">
-        <button class="hero-dot active" data-idx="0" type="button"></button>
-        <button class="hero-dot" data-idx="1" type="button"></button>
-        <button class="hero-dot" data-idx="2" type="button"></button>
-      </div>
       <div class="consistency-category">
         <button type="button" class="consistency-category-toggle" id="categoryToggleBtn">
           <span class="consistency-category-toggle-lbl">📊 <span id="byCategoryLbl">Par catégorie</span></span>
@@ -1140,14 +1062,11 @@ const STRINGS = {
     addCategoryTitle:"Nouvelle catégorie", newCategoryPlaceholder:"Nom (ex : Sport, Études)…", addCategoryCancelBtn:"Annuler", addCategoryConfirmBtn:"Ajouter",
     addTaskPhotoLbl:"Avec photo à chaque fois", taskPhotoAddBtn:"Ajouter une photo", taskPhotoGalleryEmpty:"Aucune photo pour l'instant.",
     periodMorning:"Matin", periodDay:"Journée", periodEvening:"Soir",
-    streakCardTitle:"Consistance", weeklyProgressTitle:"Détail par catégorie (cette semaine)", periodStatsTitle:"Semaine · mois", periodStatsSub:"% des tâches du jour cochées, tout confondu.", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série", daysUnit:"jours",
+    streakCardTitle:"Consistance", weeklyProgressTitle:"Détail par catégorie (cette semaine)", periodStatsTitle:"Semaine · mois", periodStatsSub:"% des tâches du jour cochées, tout confondu.", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série",
     taskConsistencyTitle:"Consistance", taskConsistencySub:"Glisse pour voir chaque habitude.", pagesReadLbl:"Pages lues",
-    heroLblGym:"Muscu", heroLblMeals:"Repas complets", heroLblReading:"Pages lues", pagesUnit:"pages",
     consistencyShowDetailBtn:"Voir le détail complet", consistencyHideDetailBtn:"Masquer le détail",
-    daysActiveUnit:"j actifs",
     unifiedStreakLbl:"jours de suite", byCategoryLbl:"Par catégorie",
     insightTrendUp:(n,d)=>`En hausse de ${n}% vs les ${d} jours précédents`, insightTrendDown:(n,d)=>`En baisse de ${n}% vs les ${d} jours précédents`, insightTrendStable:(n,d)=>`Stable vs les ${d} jours précédents`,
-    habitCaption:(done,scheduled)=>`${done} jour${done>1?"s":""} sur ${scheduled} prévu${scheduled>1?"s":""}`,
     insightBestDay:d=>`Tu es le plus actif le ${d}.`,
     dayNamesFull:["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"],
     streakHint:"Une série se construit avec des journées à 100% (toutes les tâches cochées). Coche tout en une journée pour la démarrer.",
@@ -1382,14 +1301,11 @@ const STRINGS = {
     addCategoryTitle:"New category", newCategoryPlaceholder:"Name (e.g. Sport, Studies)…", addCategoryCancelBtn:"Cancel", addCategoryConfirmBtn:"Add",
     addTaskPhotoLbl:"With a photo each time", taskPhotoAddBtn:"Add a photo", taskPhotoGalleryEmpty:"No photos yet.",
     periodMorning:"Morning", periodDay:"Day", periodEvening:"Evening",
-    streakCardTitle:"Consistency", weeklyProgressTitle:"Breakdown by category (this week)", periodStatsTitle:"Week · month", periodStatsSub:"% of today's tasks checked, all combined.", streakCurLbl:"current streak", streakBestLbl:"best streak", daysUnit:"days",
+    streakCardTitle:"Consistency", weeklyProgressTitle:"Breakdown by category (this week)", periodStatsTitle:"Week · month", periodStatsSub:"% of today's tasks checked, all combined.", streakCurLbl:"current streak", streakBestLbl:"best streak",
     taskConsistencyTitle:"Consistency", taskConsistencySub:"Swipe to see each habit.", pagesReadLbl:"Pages read",
-    heroLblGym:"Workout", heroLblMeals:"Full meal days", heroLblReading:"Pages read", pagesUnit:"pages",
     consistencyShowDetailBtn:"See full detail", consistencyHideDetailBtn:"Hide detail",
-    daysActiveUnit:"d active",
     unifiedStreakLbl:"day streak", byCategoryLbl:"By category",
     insightTrendUp:(n,d)=>`Up ${n}% vs the previous ${d} days`, insightTrendDown:(n,d)=>`Down ${n}% vs the previous ${d} days`, insightTrendStable:(n,d)=>`Stable vs the previous ${d} days`,
-    habitCaption:(done,scheduled)=>`${done} of ${scheduled} scheduled day${scheduled>1?"s":""}`,
     insightBestDay:d=>`You're most active on ${d}.`,
     dayNamesFull:["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
     streakHint:"A streak is built from 100% days (every task checked). Complete a full day to start one.",
@@ -2127,12 +2043,6 @@ function applyStaticI18n(){
   document.getElementById("bookClarifyCancelBtn").textContent=t("bookClarifyCancelBtn");
   document.getElementById("addTaskPhotoLbl").textContent=t("addTaskPhotoLbl");
   document.getElementById("addTaskPhotoIcon").innerHTML=CAMERA_SVG;
-  document.getElementById("heroLblGym").textContent=t("heroLblGym");
-  document.getElementById("heroLblMeals").textContent=t("heroLblMeals");
-  document.getElementById("heroLblReading").textContent=t("heroLblReading");
-  document.getElementById("heroUnitGym").textContent=t("daysUnit");
-  document.getElementById("heroUnitMeals").textContent=t("daysUnit");
-  document.getElementById("heroUnitReading").textContent=t("pagesUnit");
   document.getElementById("homeStreakBadge").title=t("unifiedStreakLbl");
   document.getElementById("byCategoryLbl").textContent=t("byCategoryLbl");
   document.getElementById("reminderTitle").textContent=t("reminderTitle");
@@ -3214,60 +3124,6 @@ function renderPeriodStats(){
 // Eric never touched the 7/30/60/90-day picker that used to sit here —
 // fixed to a single 7-day window instead of a selector nobody used.
 const CONSISTENCY_PERIOD={days:7};
-// Counts against how many days the task was actually SCHEDULED in the
-// window (respecting tk.days and tk.addedDate), not just /7 or /30 — a
-// weekday-only task like gym shouldn't look "inconsistent" for the
-// weekends it was never supposed to run on.
-function taskConsistency(tk,startDate,records){
-  const now=new Date();now.setHours(0,0,0,0);
-  let scheduled=0,doneCount=0;
-  for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1)){
-    const key=keyFor(d);
-    if(tk.addedDate&&key<tk.addedDate)continue;
-    if(tk.days&&!tk.days.includes(dowOf(d)))continue;
-    if(tk.monthlyFirstOnly&&!isFirstWeekOfMonth(d))continue;
-    scheduled++;
-    if((records[key]||{})[tk.id])doneCount++;
-  }
-  return{scheduled,done:doneCount,pct:scheduled?doneCount/scheduled:null};
-}
-function pagesReadInPeriod(startDate){
-  const now=new Date();now.setHours(0,0,0,0);
-  let total=0;
-  for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1))total+=pagesReadLog[keyFor(d)]||0;
-  return total;
-}
-// "Did I eat all 3 meals" — an AND across breakfast/lunch/dinner, matching
-// how Eric actually thinks about it ("j'ai mangé 3 fois par jour... combien
-// de fois par semaine"), rather than 3 separate percentages he'd have to
-// combine himself.
-function mealsConsistency(startDate,records){
-  const now=new Date();now.setHours(0,0,0,0);
-  const mealTasks=tasks.filter(tk=>MEAL_TASK_IDS.has(tk.id));
-  let scheduled=0,doneCount=0;
-  for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1)){
-    const key=keyFor(d);
-    if(!mealTasks.length||mealTasks.some(tk=>tk.addedDate&&key<tk.addedDate))continue;
-    scheduled++;
-    const dayRecord=records[key]||{};
-    if(mealTasks.every(tk=>dayRecord[tk.id]))doneCount++;
-  }
-  return{scheduled,done:doneCount,pct:scheduled?doneCount/scheduled:null};
-}
-// Reading has no natural "done/not done" checkbox for a specific page
-// target, so its ring instead reflects how many days he actually logged
-// some progress — the page COUNT itself (what he actually asked for) is
-// the headline number in the center.
-function readingActiveDaysConsistency(startDate){
-  const now=new Date();now.setHours(0,0,0,0);
-  let scheduled=0,activeDays=0;
-  for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1)){
-    scheduled++;
-    if((pagesReadLog[keyFor(d)]||0)>0)activeDays++;
-  }
-  return{scheduled,done:activeDays,pct:scheduled?activeDays/scheduled:null};
-}
-const HERO_RING_C=2*Math.PI*64;
 // Generic count-up animation — reads the element's own last-shown value off
 // a data attribute so repeated renders (period toggle clicks, etc.) animate
 // from wherever the number currently is, not from 0 every time.
@@ -3286,29 +3142,11 @@ function animateNumber(el,toValue,opts){
   }
   requestAnimationFrame(tick);
 }
-function setHeroRing(idPrefix,pct,bigNum,captionText){
-  document.getElementById("heroRing"+idPrefix).style.strokeDashoffset=HERO_RING_C*(1-(pct||0));
-  animateNumber(document.getElementById("heroPct"+idPrefix),bigNum);
-  document.getElementById("heroSub"+idPrefix).textContent=captionText;
-}
 function renderTaskConsistency(){
   const period=CONSISTENCY_PERIOD;
   const now=new Date();
   const startDate=new Date(now.getTime()-(period.days-1)*DAY_MS);startDate.setHours(0,0,0,0);
   const records=getAllDoneRecords();
-
-  const gymTk=tasks.find(tk=>tk.id==="gym");
-  if(gymTk){
-    const{scheduled,done}=taskConsistency(gymTk,startDate,records);
-    setHeroRing("Gym",scheduled?done/scheduled:0,done,scheduled?t("habitCaption",done,scheduled):"—");
-  }
-  const meals=mealsConsistency(startDate,records);
-  setHeroRing("Meals",meals.scheduled?meals.done/meals.scheduled:0,meals.done,meals.scheduled?t("habitCaption",meals.done,meals.scheduled):"—");
-
-  const pages=pagesReadInPeriod(startDate);
-  const readingActive=readingActiveDaysConsistency(startDate);
-  setHeroRing("Reading",readingActive.pct,pages,readingActive.scheduled?`${readingActive.done}/${readingActive.scheduled} ${t("daysActiveUnit")}`:"—");
-
   renderCategoryBreakdown(startDate,records);
   renderConsistencyInsight(period,startDate,now,records);
 }
@@ -3372,45 +3210,6 @@ function getOldestRecordDate(records){
   if(!keys.length)return null;
   return keys.map(dateFromKey).reduce((a,b)=>a<b?a:b);
 }
-
-const heroSliderViewport=document.getElementById("heroSliderViewport");
-const HERO_PANEL_COUNT=3;
-let currentHeroIdx=load("tracker:currentHeroIdx",0);
-// Native scroll-snap carousel (like Stitch's own mockup) instead of a custom
-// touch-transform slider — the browser handles the gesture physics itself,
-// so there's no touchstart/touchmove/touchcancel math that can get out of
-// sync with a native vertical scroll on the page around it.
-function heroPanelEls(){return[...document.querySelectorAll("#heroSlider .hero-panel")];}
-function updateHeroActiveState(){
-  heroPanelEls().forEach((p,i)=>p.classList.toggle("active",i===currentHeroIdx));
-  document.querySelectorAll("#heroDots .hero-dot").forEach((d,i)=>d.classList.toggle("active",i===currentHeroIdx));
-}
-function goToHeroPanel(idx,animate){
-  currentHeroIdx=Math.max(0,Math.min(HERO_PANEL_COUNT-1,idx));
-  const panel=heroPanelEls()[currentHeroIdx];
-  const target=panel.offsetLeft+panel.offsetWidth/2-heroSliderViewport.clientWidth/2;
-  heroSliderViewport.scrollTo({left:target,behavior:animate===false?"auto":"smooth"});
-  updateHeroActiveState();
-}
-document.querySelectorAll("#heroDots .hero-dot").forEach((btn,i)=>{
-  btn.onclick=()=>{goToHeroPanel(i);save("tracker:currentHeroIdx",currentHeroIdx);};
-});
-updateHeroActiveState();
-requestAnimationFrame(()=>goToHeroPanel(currentHeroIdx,false));
-let heroScrollTimeout=null;
-heroSliderViewport.addEventListener("scroll",()=>{
-  clearTimeout(heroScrollTimeout);
-  heroScrollTimeout=setTimeout(()=>{
-    const viewportCenter=heroSliderViewport.scrollLeft+heroSliderViewport.clientWidth/2;
-    let closestIdx=0,closestDist=Infinity;
-    heroPanelEls().forEach((p,i)=>{
-      const dist=Math.abs((p.offsetLeft+p.offsetWidth/2)-viewportCenter);
-      if(dist<closestDist){closestDist=dist;closestIdx=i;}
-    });
-    if(closestIdx!==currentHeroIdx){currentHeroIdx=closestIdx;save("tracker:currentHeroIdx",currentHeroIdx);}
-    updateHeroActiveState();
-  },100);
-},{passive:true});
 
 // Guards against a real bug: on a fresh/empty device, the very first renderScore()
 // runs synchronously before the "load" handler below has had a chance to check
