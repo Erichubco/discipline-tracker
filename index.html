@@ -3600,6 +3600,14 @@ function formatMMSS(totalSec){
 // sessionRunningSince goes null, so no interval needs to run at all.
 const GYM_SESSION_GOAL_MS=45*60*1000;
 const GYM_SESSION_GOAL_MAX_MS=60*60*1000;
+// Session timer is wall-clock based on purpose (see below), so if the app
+// gets backgrounded/suspended mid-session and the user forgets to hit
+// pause, elapsed keeps accruing real time invisibly and can resurface as an
+// absurd number (e.g. "105 min") the moment the app is reopened — this was
+// mistaken for a data bug but is really a missing UX safeguard. Past this
+// threshold on resume, treat it as "forgot to pause" and auto-pause instead
+// of displaying the raw wall-clock gap.
+const GYM_SESSION_STALE_MS=90*60*1000;
 let gymSessionInterval=null;
 function currentSessionElapsedMs(state){
   return state.sessionElapsedMs+(state.sessionRunningSince?Date.now()-state.sessionRunningSince:0);
@@ -3731,6 +3739,16 @@ function restartGymRestTimer(){
   saveWorkoutState(state);
   document.getElementById("gymRestRingFg").classList.remove("rest-flash");
   renderGymRestTimer();
+}
+function autoPauseStaleGymSession(){
+  const day=t("gymWorkouts")[gymEffectiveDow()];
+  if(day.rest)return;
+  const state=getWorkoutState(day);
+  if(!state.sessionRunningSince)return;
+  if(currentSessionElapsedMs(state)<GYM_SESSION_STALE_MS)return;
+  state.sessionElapsedMs=GYM_SESSION_GOAL_MAX_MS;
+  state.sessionRunningSince=null;
+  saveWorkoutState(state);
 }
 function renderGymRestTimer(){
   clearInterval(gymRestInterval);
@@ -4331,6 +4349,7 @@ document.querySelectorAll(".tab").forEach(btn=>{
 // sitting there until some unrelated re-render happens to fire.
 document.addEventListener("visibilitychange",()=>{
   if(document.visibilityState!=="visible")return;
+  autoPauseStaleGymSession();
   if(!document.getElementById("view-musculation").classList.contains("active"))return;
   renderGymRestTimer();
   renderGymSessionTimer();
