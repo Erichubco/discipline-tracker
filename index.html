@@ -532,6 +532,7 @@
         <span class="biz-amount-cur" id="personalRevMonthTotal">0€</span>
         <span class="biz-amount-goal" id="personalRevMonthSub">ce mois-ci</span>
       </div>
+      <div class="sub hidden" id="personalRevVsLastMonth" style="margin-top:4px"></div>
       <div id="personalRevList" style="margin-top:12px;display:flex;flex-direction:column;gap:6px"></div>
       <div class="revenue-empty hidden" id="personalRevEmpty" style="margin-top:8px">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v3"/><path d="M3 7v10a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-7a1 1 0 0 0-1-1H5a2 2 0 0 1-2-2Z"/><circle cx="17" cy="14" r="1" fill="currentColor" stroke="none"/></svg>
@@ -2363,14 +2364,31 @@ function renderBiz(){
 // entries — Eric wanted to see "everything I actually got paid", summed
 // for the current month, not one number to keep re-typing by hand.
 let personalRevenue=load("tracker:personalRevenue",[]);
+function personalRevenueForMonth(monthKey){
+  return personalRevenue.filter(r=>r.date.slice(0,7)===monthKey);
+}
 function personalRevenueThisMonth(){
-  const mk=today().slice(0,7);
-  return personalRevenue.filter(r=>r.date.slice(0,7)===mk);
+  return personalRevenueForMonth(today().slice(0,7));
 }
 function renderPersonalRev(){
   const entries=personalRevenueThisMonth().slice().reverse();
   const total=entries.reduce((s,r)=>s+r.amount,0);
   document.getElementById("personalRevMonthTotal").textContent=`${total.toLocaleString(t("dateLocale"))}€`;
+
+  const now=new Date();
+  const prevMonthDate=new Date(now.getFullYear(),now.getMonth()-1,1);
+  const prevMonthKey=`${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth()+1).padStart(2,"0")}`;
+  const prevTotal=personalRevenueForMonth(prevMonthKey).reduce((s,r)=>s+r.amount,0);
+  const vsLastMonthEl=document.getElementById("personalRevVsLastMonth");
+  if(prevTotal>0){
+    const diff=total-prevTotal;
+    const pctDiff=Math.round((diff/prevTotal)*100);
+    vsLastMonthEl.textContent=t("bizVsLastMonth",prevTotal.toLocaleString(t("dateLocale")),diff>=0?"+":"",diff.toLocaleString(t("dateLocale")),pctDiff);
+    vsLastMonthEl.classList.remove("hidden");
+  }else{
+    vsLastMonthEl.classList.add("hidden");
+  }
+
   const listEl=document.getElementById("personalRevList");
   listEl.innerHTML="";
   document.getElementById("personalRevEmpty").classList.toggle("hidden",entries.length>0);
