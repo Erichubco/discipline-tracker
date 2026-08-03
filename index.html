@@ -193,8 +193,9 @@
   .gym-note{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--green);background:var(--cardHi);border-radius:12px;padding:10px 12px;margin-bottom:12px;line-height:1.5}
   .gym-test-banner{align-items:center;justify-content:space-between;color:#fff;background:var(--amber)}
   .gym-test-exit-btn{background:rgba(255,255,255,.25);border:none;border-radius:8px;color:#fff;font-size:11px;padding:6px 10px;flex-shrink:0;cursor:pointer}
-  .gym-sticky-session{position:sticky;top:8px;z-index:31;display:flex;align-items:center;gap:8px;background:var(--text);color:#fff;border-radius:9999px;padding:6px 16px 6px 6px;margin:0 0 8px;box-shadow:0 4px 14px rgba(22,29,31,.35);width:fit-content}
-  .gym-sticky-timer{position:sticky;top:56px;z-index:30;display:flex;align-items:center;gap:8px;background:var(--green);color:#fff;border-radius:9999px;padding:8px 16px 8px 8px;margin:0 0 12px;box-shadow:0 4px 14px rgba(83,65,205,.35);width:fit-content}
+  .gym-sticky-panel{position:sticky;top:8px;z-index:30;background:var(--text);border-radius:20px;padding:5px;margin:0 0 14px;box-shadow:0 6px 20px rgba(22,29,31,.35)}
+  .gym-sticky-row{display:flex;align-items:center;gap:10px;padding:9px 10px}
+  .gym-sticky-row-rest{background:var(--green);border-radius:16px;margin-top:4px}
   .home-streak-badge{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:20px;background:var(--cardHi);border:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text);margin-top:8px;transition:background .4s,box-shadow .4s}
   .home-streak-badge svg{color:var(--red);vertical-align:-2px}
   .home-streak-badge.streak-tier-1{background:#ffe9e2;border-color:transparent}
@@ -317,10 +318,15 @@
   .gym-sticky-ring{width:100%;height:100%;transform:rotate(-90deg)}
   .gym-sticky-ring-bg{fill:none;stroke:rgba(255,255,255,.35);stroke-width:4}
   .gym-sticky-ring-fg{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .25s linear}
-  .gym-sticky-timer-lbl{font-size:12px;font-weight:700}
-  .gym-sticky-timer-time{font-family:'Quicksand',sans-serif;font-weight:700;font-size:15px;margin-left:auto}
-  .gym-session-pause-btn{width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;padding:0}
-  .gym-sticky-restart-btn{width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;padding:0;margin-left:2px}
+  .gym-sticky-row-main{flex:1;min-width:0}
+  .gym-sticky-row-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+  .gym-sticky-row-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.04em}
+  .gym-sticky-row-time{font-family:'Quicksand',sans-serif;font-weight:700;font-size:18px;color:#fff;transition:color .3s}
+  .gym-sticky-row-time.over-time{color:#ffb3b3}
+  .gym-sticky-progress{height:4px;border-radius:2px;background:rgba(255,255,255,.18);margin-top:6px;overflow:hidden}
+  .gym-sticky-progress-fill{height:100%;border-radius:2px;background:var(--amber);transition:width .4s ease,background .4s ease;width:0%}
+  .gym-sticky-progress-fill.over-time{background:#ff4757}
+  .gym-sticky-icon-btn{width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;padding:0}
   .book-clarify-icon{font-size:34px;text-align:center;margin-bottom:10px}
   .food-log{border-top:1px solid var(--border);margin-top:4px;padding-top:16px;margin-bottom:16px}
   .food-log-total{font-size:15px;font-weight:700;font-family:'Quicksand',sans-serif;margin-bottom:8px}
@@ -728,23 +734,32 @@
     <div class="greeting-title display" id="musculationTitle">Musculation</div>
     <div class="greeting-sub" id="musculationSub"></div>
 
-    <div class="gym-sticky-session hidden" id="gymStickySession">
-      <button type="button" class="gym-session-pause-btn" id="gymSessionPauseBtn"></button>
-      <span class="gym-sticky-timer-lbl" id="gymSessionLbl"></span>
-      <span class="gym-sticky-timer-time" id="gymSessionTime"></span>
-      <button type="button" class="gym-sticky-restart-btn hidden" id="gymSessionRestartBtn"></button>
-    </div>
-    <div class="gym-sticky-timer hidden" id="gymStickyTimer">
-      <button type="button" class="gym-session-pause-btn" id="gymRestPauseBtn"></button>
-      <div class="gym-sticky-timer-ring-wrap">
-        <svg class="gym-sticky-ring" viewBox="0 0 40 40">
-          <circle class="gym-sticky-ring-bg" cx="20" cy="20" r="16"/>
-          <circle class="gym-sticky-ring-fg" id="gymStickyRingFg" cx="20" cy="20" r="16"/>
-        </svg>
+    <div class="gym-sticky-panel hidden" id="gymStickyPanel">
+      <div class="gym-sticky-row" id="gymStickySession">
+        <button type="button" class="gym-sticky-icon-btn" id="gymSessionPauseBtn"></button>
+        <div class="gym-sticky-row-main">
+          <div class="gym-sticky-row-top">
+            <span class="gym-sticky-row-lbl" id="gymSessionLbl"></span>
+            <span class="gym-sticky-row-time" id="gymSessionTime"></span>
+          </div>
+          <div class="gym-sticky-progress"><div class="gym-sticky-progress-fill" id="gymSessionProgressFill"></div></div>
+        </div>
+        <button type="button" class="gym-sticky-icon-btn hidden" id="gymSessionRestartBtn"></button>
       </div>
-      <span class="gym-sticky-timer-lbl" id="gymStickyTimerLbl"></span>
-      <span class="gym-sticky-timer-time" id="gymStickyTimerTime"></span>
-      <button type="button" class="gym-sticky-restart-btn" id="gymRestRestartBtn"></button>
+      <div class="gym-sticky-row gym-sticky-row-rest hidden" id="gymStickyTimer">
+        <button type="button" class="gym-sticky-icon-btn" id="gymRestPauseBtn"></button>
+        <div class="gym-sticky-timer-ring-wrap">
+          <svg class="gym-sticky-ring" viewBox="0 0 40 40">
+            <circle class="gym-sticky-ring-bg" cx="20" cy="20" r="16"/>
+            <circle class="gym-sticky-ring-fg" id="gymStickyRingFg" cx="20" cy="20" r="16"/>
+          </svg>
+        </div>
+        <div class="gym-sticky-row-main">
+          <span class="gym-sticky-row-lbl" id="gymStickyTimerLbl"></span>
+          <span class="gym-sticky-row-time" id="gymStickyTimerTime"></span>
+        </div>
+        <button type="button" class="gym-sticky-icon-btn" id="gymRestRestartBtn"></button>
+      </div>
     </div>
 
     <div class="gym-day-picker-title" id="gymDayPickerTitle"></div>
@@ -3569,16 +3584,17 @@ function renderGymSessionTimer(){
   clearInterval(gymSessionInterval);
   const day=t("gymWorkouts")[gymEffectiveDow()];
   const state=getWorkoutState(day);
-  const box=document.getElementById("gymStickySession");
+  const panel=document.getElementById("gymStickyPanel");
   const timeEl=document.getElementById("gymSessionTime");
   const btn=document.getElementById("gymSessionPauseBtn");
   const lblEl=document.getElementById("gymSessionLbl");
+  const progressFillEl=document.getElementById("gymSessionProgressFill");
   // Always visible, even before the session starts — it used to only
   // appear once the first set was checked off, which meant there was
   // nothing on screen to signal the feature existed at all (Eric reported
   // repeatedly not being able to find it). Now the idle state itself is the
   // discoverable "start" control: a permanent, tappable button.
-  box.classList.remove("hidden");
+  panel.classList.remove("hidden");
   const restartBtn=document.getElementById("gymSessionRestartBtn");
   restartBtn.innerHTML=RESTART_SVG;
   restartBtn.title=t("gymRestartBtn");
@@ -3594,6 +3610,9 @@ function renderGymSessionTimer(){
   if(!started){
     lblEl.textContent=t("gymSessionStartLbl");
     timeEl.textContent="";
+    timeEl.classList.remove("over-time");
+    progressFillEl.style.width="0%";
+    progressFillEl.classList.remove("over-time");
     btn.innerHTML=PLAY_SVG;
     btn.title=t("gymSessionStartLbl");
     btn.onclick=()=>{
@@ -3620,7 +3639,17 @@ function renderGymSessionTimer(){
   };
   function tick(){
     const elapsedMs=currentSessionElapsedMs(state);
+    // Past 60 min the raw minute count just keeps climbing with nothing to
+    // signal it ("105:00 / 45-60 min" reads as broken, not just "you went
+    // long") — capping the progress bar at 100% and switching both it and
+    // the time text to a warning color makes "you're well past target"
+    // obvious at a glance instead of a mysteriously large number.
+    const overTime=elapsedMs>=GYM_SESSION_GOAL_MAX_MS;
     timeEl.textContent=`${formatMMSS(Math.floor(elapsedMs/1000))} / 45-60 min`;
+    timeEl.classList.toggle("over-time",overTime);
+    const progressPct=Math.min(100,(elapsedMs/GYM_SESSION_GOAL_MAX_MS)*100);
+    progressFillEl.style.width=progressPct+"%";
+    progressFillEl.classList.toggle("over-time",overTime);
     if(elapsedMs>=GYM_SESSION_GOAL_MS&&!state.sessionGoalAlerted){
       state.sessionGoalAlerted=true;
       saveWorkoutState(state);
