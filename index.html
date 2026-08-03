@@ -3650,14 +3650,25 @@ function renderGymSessionTimer(){
     const progressPct=Math.min(100,(elapsedMs/GYM_SESSION_GOAL_MAX_MS)*100);
     progressFillEl.style.width=progressPct+"%";
     progressFillEl.classList.toggle("over-time",overTime);
+    // Same staleness risk as the rest timer's completion save (see its
+    // comment): this interval can run for many minutes off the `state`
+    // closed over at render time, so patch the flag onto FRESH state
+    // rather than saving this whole stale snapshot back — otherwise a
+    // rest-completion or activeIdx change that happened elsewhere in the
+    // meantime gets silently reverted. The closure's own flag still gets
+    // set too, purely to stop this tick from re-triggering the alert.
     if(elapsedMs>=GYM_SESSION_GOAL_MS&&!state.sessionGoalAlerted){
       state.sessionGoalAlerted=true;
-      saveWorkoutState(state);
+      const fresh=getWorkoutState(day);
+      fresh.sessionGoalAlerted=true;
+      saveWorkoutState(fresh);
       playRestDoneAlert();
     }
     if(elapsedMs>=GYM_SESSION_GOAL_MAX_MS&&!state.sessionMaxAlerted){
       state.sessionMaxAlerted=true;
-      saveWorkoutState(state);
+      const fresh=getWorkoutState(day);
+      fresh.sessionMaxAlerted=true;
+      saveWorkoutState(fresh);
       playRestDoneAlert();
     }
   }
@@ -3747,16 +3758,26 @@ function renderGymRestTimer(){
       ringFg.classList.add("rest-flash");
       playRestDoneAlert();
       setTimeout(()=>{
-        state.restEndsAt=null;state.restDurationSec=null;state.restPausedRemainingSec=null;
+        // Re-fetch fresh state instead of reusing the `state` this whole
+        // renderGymRestTimer() call closed over — that snapshot is up to
+        // ~restDurationSec+1.2s stale by the time this fires. Saving it
+        // as-is would silently revert anything that happened via a
+        // DIFFERENT state reference in the meantime — concretely, a
+        // session pause/resume during the rest window got clobbered back
+        // to a stale sessionRunningSince, resurrecting a timestamp from
+        // whenever THIS rest started and making elapsed time balloon
+        // (Eric's reported "105 minutes" after just switching exercises).
+        const fresh=getWorkoutState(day);
+        fresh.restEndsAt=null;fresh.restDurationSec=null;fresh.restPausedRemainingSec=null;
         // Nothing left to rest FOR on this exercise once every set is
         // checked off — move on automatically instead of leaving him
         // staring at an idle 0:00. Never auto-finishes the whole session
         // on the last exercise; that still needs a deliberate tap.
-        const allSetsDone=state.setsDone[state.activeIdx].every(Boolean);
-        if(allSetsDone&&state.activeIdx<day.exercises.length-1){
-          state.activeIdx+=1;
+        const allSetsDone=fresh.setsDone[fresh.activeIdx].every(Boolean);
+        if(allSetsDone&&fresh.activeIdx<day.exercises.length-1){
+          fresh.activeIdx+=1;
         }
-        saveWorkoutState(state);
+        saveWorkoutState(fresh);
         renderGymWorkout();
       },1200);
       return;
