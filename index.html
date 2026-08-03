@@ -278,6 +278,17 @@
   .gym-exercise-meta{font-size:12px;color:var(--muted);margin-top:2px}
   .gym-exercise-check{color:var(--green);flex-shrink:0;display:flex}
   .gym-active-card{background:#fff;border:1px solid var(--border);border-radius:20px;padding:22px 18px;margin-top:14px;text-align:center}
+  .gym-active-nav{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+  .gym-active-nav-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:#fff;color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;padding:0;transition:opacity .2s,transform .15s}
+  .gym-active-nav-btn:active{transform:scale(.88)}
+  .gym-active-nav-btn:disabled{opacity:.22;cursor:default}
+  .gym-active-nav-center{flex:1;min-width:0}
+  .gym-active-pos{font-size:11px;color:var(--muted);font-weight:700;margin-top:3px;letter-spacing:.03em}
+  .gym-active-swipe{overflow:hidden;touch-action:pan-y}
+  @keyframes gymSlideFromRight{from{opacity:0;transform:translateX(22px)}to{opacity:1;transform:translateX(0)}}
+  @keyframes gymSlideFromLeft{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:translateX(0)}}
+  .gym-active-swipe.slide-next{animation:gymSlideFromRight .26s ease}
+  .gym-active-swipe.slide-prev{animation:gymSlideFromLeft .26s ease}
   .gym-active-title{font-size:19px;font-weight:700;color:var(--green);font-family:'Quicksand',sans-serif;line-height:1.25}
   .gym-active-target{display:inline-block;background:var(--cardHi);color:var(--green);font-weight:700;font-size:13px;padding:6px 14px;border-radius:9999px;margin:10px 0}
   .gym-active-img{max-width:220px;max-height:220px;width:auto;height:auto;border-radius:12px;margin:4px 0 14px;object-fit:contain;animation:gymImgBreathe 2.4s ease-in-out infinite}
@@ -780,15 +791,24 @@
       <div class="gym-note hidden" id="gymAdditionNote"></div>
       <div id="gymExerciseList"></div>
       <div class="gym-active-card">
-        <div class="gym-active-title" id="gymActiveTitle"></div>
-        <div class="gym-active-target" id="gymActiveTarget"></div>
-        <div class="gym-active-img-wrap hidden" id="gymActiveImgWrap">
-          <img class="gym-active-img" id="gymActiveImg" alt="">
-          <img class="gym-active-img hidden" id="gymActiveImg2" alt="">
+        <div class="gym-active-nav">
+          <button type="button" class="gym-active-nav-btn" id="gymActivePrevBtn"></button>
+          <div class="gym-active-nav-center">
+            <div class="gym-active-title" id="gymActiveTitle"></div>
+            <div class="gym-active-pos" id="gymActivePos"></div>
+          </div>
+          <button type="button" class="gym-active-nav-btn" id="gymActiveNextBtn"></button>
         </div>
-        <div class="gym-active-equip" id="gymActiveEquip"></div>
-        <div class="gym-active-cue" id="gymActiveCue"></div>
-        <div class="gym-set-pills" id="gymSetPills"></div>
+        <div class="gym-active-swipe" id="gymActiveSwipe">
+          <div class="gym-active-target" id="gymActiveTarget"></div>
+          <div class="gym-active-img-wrap hidden" id="gymActiveImgWrap">
+            <img class="gym-active-img" id="gymActiveImg" alt="">
+            <img class="gym-active-img hidden" id="gymActiveImg2" alt="">
+          </div>
+          <div class="gym-active-equip" id="gymActiveEquip"></div>
+          <div class="gym-active-cue" id="gymActiveCue"></div>
+          <div class="gym-set-pills" id="gymSetPills"></div>
+        </div>
         <div class="hidden" id="gymRestBox">
           <div class="gym-rest-ring-wrap">
             <svg class="gym-rest-ring" viewBox="0 0 120 120">
@@ -1569,8 +1589,12 @@ const CLOCK_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" s
 const PAUSE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
 const PLAY_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l14 8-14 8V4z"/></svg>';
 const RESTART_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>';
+const CHEVRON_LEFT_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+const CHEVRON_RIGHT_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
 document.getElementById("bizIconBadge").innerHTML=TRENDING_SVG;
 document.getElementById("coverPlaceholder").innerHTML=CAMERA_SVG;
+document.getElementById("gymActivePrevBtn").innerHTML=CHEVRON_LEFT_SVG;
+document.getElementById("gymActiveNextBtn").innerHTML=CHEVRON_RIGHT_SVG;
 document.getElementById("homeStreakIcon").innerHTML=FLAME_SVG;
 document.getElementById("calorieStreakIcon").innerHTML=FLAME_SVG;
 document.getElementById("readingStreakIcon").innerHTML=FLAME_SVG;
@@ -3825,6 +3849,39 @@ document.getElementById("gymRestSkip").onclick=()=>{
   saveWorkoutState(state);
   renderGymRestTimer();
 };
+// Set by gymNavigateExercise right before a re-render, consumed once inside
+// renderGymWorkout to pick which way the exercise detail slides in — keeps
+// the animation direction consistent whether the switch came from a row
+// tap, a chevron, the bottom CTA, or a swipe gesture.
+let gymPendingSlideDir=null;
+function gymNavigateExercise(state,day,newIdx,dir){
+  if(newIdx<0||newIdx>=day.exercises.length)return;
+  state.activeIdx=newIdx;
+  saveWorkoutState(state);
+  gymPendingSlideDir=dir;
+  renderGymWorkout();
+}
+(function initGymSwipe(){
+  const el=document.getElementById("gymActiveSwipe");
+  let startX=0,startY=0,tracking=false;
+  el.addEventListener("touchstart",e=>{
+    if(e.touches.length!==1)return;
+    startX=e.touches[0].clientX;
+    startY=e.touches[0].clientY;
+    tracking=true;
+  },{passive:true});
+  el.addEventListener("touchend",e=>{
+    if(!tracking)return;
+    tracking=false;
+    const dx=e.changedTouches[0].clientX-startX;
+    const dy=e.changedTouches[0].clientY-startY;
+    if(Math.abs(dx)<50||Math.abs(dx)<Math.abs(dy)*1.3)return;
+    const day=t("gymWorkouts")[gymEffectiveDow()];
+    const state=getWorkoutState(day);
+    if(dx<0)gymNavigateExercise(state,day,state.activeIdx+1,"next");
+    else gymNavigateExercise(state,day,state.activeIdx-1,"prev");
+  },{passive:true});
+})();
 // Which weekday's split is currently BROWSED in the Musculation tab — only
 // ever equals "today" when the live guided session (timer, set pills) is
 // what's shown. Any other day is a read-only preview of that day's exercise
@@ -3935,11 +3992,18 @@ function renderGymWorkout(){
     const row=document.createElement("div");
     row.className="gym-exercise-row"+(i===state.activeIdx?" active":"")+(complete?" complete":"");
     row.innerHTML=`<div class="gym-exercise-icon">${complete?CHECK_SVG:(i+1)}</div><div class="gym-exercise-info"><div class="gym-exercise-name">${ex.name}</div><div class="gym-exercise-meta">${ex.sets}×${ex.reps} • ${t("gymSetsDoneFmt",doneCount,ex.sets)}</div></div>`;
-    row.onclick=()=>{state.activeIdx=i;saveWorkoutState(state);renderGymWorkout();};
+    row.onclick=()=>gymNavigateExercise(state,day,i,i>state.activeIdx?"next":"prev");
     listEl.appendChild(row);
   });
   const activeEx=day.exercises[state.activeIdx];
   document.getElementById("gymActiveTitle").textContent=activeEx.name;
+  document.getElementById("gymActivePos").textContent=`${state.activeIdx+1} / ${day.exercises.length}`;
+  const prevNavBtn=document.getElementById("gymActivePrevBtn");
+  const nextNavBtn=document.getElementById("gymActiveNextBtn");
+  prevNavBtn.disabled=state.activeIdx===0;
+  nextNavBtn.disabled=state.activeIdx===day.exercises.length-1;
+  prevNavBtn.onclick=()=>gymNavigateExercise(state,day,state.activeIdx-1,"prev");
+  nextNavBtn.onclick=()=>gymNavigateExercise(state,day,state.activeIdx+1,"next");
   document.getElementById("gymActiveTarget").textContent=`${activeEx.sets}×${activeEx.reps}`;
   const imgWrap=document.getElementById("gymActiveImgWrap");
   const imgEl=document.getElementById("gymActiveImg");
@@ -3987,6 +4051,13 @@ function renderGymWorkout(){
     };
     pillsEl.appendChild(pill);
   });
+  const swipeEl=document.getElementById("gymActiveSwipe");
+  swipeEl.classList.remove("slide-next","slide-prev");
+  if(gymPendingSlideDir){
+    void swipeEl.offsetWidth;
+    swipeEl.classList.add(gymPendingSlideDir==="next"?"slide-next":"slide-prev");
+    gymPendingSlideDir=null;
+  }
   const isLast=state.activeIdx===day.exercises.length-1;
   const nextBtn=document.getElementById("gymNextBtn");
   nextBtn.textContent=isLast?t("gymFinishBtn"):t("gymNextBtn");
@@ -4008,9 +4079,7 @@ function renderGymWorkout(){
       renderTasks();renderScore();renderHeatmap();renderPeriodStats();renderTaskConsistency();
       switchView("home");
     }else{
-      state.activeIdx+=1;
-      saveWorkoutState(state);
-      renderGymWorkout();
+      gymNavigateExercise(state,day,state.activeIdx+1,"next");
     }
   };
   renderGymRestTimer();
