@@ -3163,7 +3163,7 @@ function renderPeriodStats(){
   else if(current>=1)streakBadge.classList.add("streak-tier-1");
 
   checkCelebrations(current,weekPct,monthPct);
-  apiFetch("/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({weekPct,monthPct,streakCurrent:current,streakBest:best})}).catch(()=>{});
+  apiFetch("/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({weekPct,monthPct,streakCurrent:current,streakBest:best,lang})}).catch(()=>{});
   syncFullBackup();
 }
 
