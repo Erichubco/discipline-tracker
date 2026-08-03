@@ -62,19 +62,8 @@
   .ring-num{font-size:38px;font-weight:700;line-height:1;font-family:'Quicksand',sans-serif;color:var(--green)}
   .ring-den{color:var(--muted);font-size:22px;font-weight:600}
   .ring-lbl{color:var(--muted);font-size:12px;margin-top:4px}
-  .consistency-module{padding:0;overflow:hidden}
   .reading-streak-badge{position:absolute;top:0;right:0;display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;background:var(--cardHi);border:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text)}
   .reading-streak-badge svg{color:var(--red);vertical-align:-2px}
-  .consistency-category{margin-top:8px;border-top:1px solid var(--border)}
-  .consistency-category-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:none;border:none;cursor:pointer;font-family:inherit}
-  .consistency-category-toggle-lbl{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--text)}
-  .consistency-category-right{display:flex;align-items:center;gap:10px}
-  .category-badge-stack{display:flex}
-  .category-badge{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;border:2px solid #fff;margin-left:-7px}
-  .category-badge:first-child{margin-left:0}
-  .category-chevron{color:var(--muted);transition:transform .25s;font-size:13px}
-  .category-chevron.open{transform:rotate(180deg)}
-  .consistency-category-rows{padding:0 20px 18px}
   .consistency-insight{margin:18px 16px 20px;padding:14px;border-radius:16px;background:var(--cardHi);display:flex;align-items:flex-start;gap:12px}
   .consistency-insight-icon{width:34px;height:34px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
   .consistency-insight-title{font-size:13px;font-weight:700;color:var(--text)}
@@ -483,19 +472,6 @@
       </div>
     </div>
 
-    <!-- Unified Consistency module -->
-    <div class="card consistency-module">
-      <div class="consistency-category">
-        <button type="button" class="consistency-category-toggle" id="categoryToggleBtn">
-          <span class="consistency-category-toggle-lbl">📊 <span id="byCategoryLbl">Par catégorie</span></span>
-          <span class="consistency-category-right">
-            <span class="category-badge-stack" id="categoryBadgeStack"></span>
-            <span class="category-chevron" id="categoryChevron">⌄</span>
-          </span>
-        </button>
-        <div class="hidden consistency-category-rows" id="categoryContent"></div>
-      </div>
-    </div>
 
     <!-- Combined monthly total (business + personal) -->
     <div class="card" style="padding:16px 18px">
@@ -1070,7 +1046,7 @@ const STRINGS = {
     streakCardTitle:"Consistance", weeklyProgressTitle:"Détail par catégorie (cette semaine)", periodStatsTitle:"Semaine · mois", periodStatsSub:"% des tâches du jour cochées, tout confondu.", streakCurLbl:"série actuelle", streakBestLbl:"meilleure série",
     taskConsistencyTitle:"Consistance", taskConsistencySub:"Glisse pour voir chaque habitude.", pagesReadLbl:"Pages lues",
     consistencyShowDetailBtn:"Voir le détail complet", consistencyHideDetailBtn:"Masquer le détail",
-    unifiedStreakLbl:"jours de suite", byCategoryLbl:"Par catégorie",
+    unifiedStreakLbl:"jours de suite",
     insightTrendUp:(n,d)=>`En hausse de ${n}% vs les ${d} jours précédents`, insightTrendDown:(n,d)=>`En baisse de ${n}% vs les ${d} jours précédents`, insightTrendStable:(n,d)=>`Stable vs les ${d} jours précédents`,
     insightBestDay:d=>`Tu es le plus actif le ${d}.`,
     dayNamesFull:["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"],
@@ -1309,7 +1285,7 @@ const STRINGS = {
     streakCardTitle:"Consistency", weeklyProgressTitle:"Breakdown by category (this week)", periodStatsTitle:"Week · month", periodStatsSub:"% of today's tasks checked, all combined.", streakCurLbl:"current streak", streakBestLbl:"best streak",
     taskConsistencyTitle:"Consistency", taskConsistencySub:"Swipe to see each habit.", pagesReadLbl:"Pages read",
     consistencyShowDetailBtn:"See full detail", consistencyHideDetailBtn:"Hide detail",
-    unifiedStreakLbl:"day streak", byCategoryLbl:"By category",
+    unifiedStreakLbl:"day streak",
     insightTrendUp:(n,d)=>`Up ${n}% vs the previous ${d} days`, insightTrendDown:(n,d)=>`Down ${n}% vs the previous ${d} days`, insightTrendStable:(n,d)=>`Stable vs the previous ${d} days`,
     insightBestDay:d=>`You're most active on ${d}.`,
     dayNamesFull:["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
@@ -2049,7 +2025,6 @@ function applyStaticI18n(){
   document.getElementById("addTaskPhotoLbl").textContent=t("addTaskPhotoLbl");
   document.getElementById("addTaskPhotoIcon").innerHTML=CAMERA_SVG;
   document.getElementById("homeStreakBadge").title=t("unifiedStreakLbl");
-  document.getElementById("byCategoryLbl").textContent=t("byCategoryLbl");
   document.getElementById("reminderTitle").textContent=t("reminderTitle");
   document.getElementById("reminderHourLbl").textContent=t("reminderHourLbl");
   document.getElementById("reminderHourIcon").innerHTML=CLOCK_SVG;
@@ -3088,17 +3063,6 @@ function periodAvg(startDate,records){
   }
   return count?sum/count:0;
 }
-function periodAvgForCategory(startDate,records,category){
-  if(!tasks.some(tk=>tk.category===category))return null;
-  const now=new Date();now.setHours(0,0,0,0);
-  let sum=0,count=0;
-  for(let d=new Date(startDate);d<=now;d.setDate(d.getDate()+1)){
-    const doneObj=records[keyFor(d)]||{};
-    const catDayTasks=tasksForDate(d).filter(tk=>tk.category===category);
-    if(catDayTasks.length){sum+=catDayTasks.filter(tk=>doneObj[tk.id]).length/catDayTasks.length;count++;}
-  }
-  return count?sum/count:0;
-}
 function computeStreaks(records){
   let cur=0;
   let d=new Date();d.setHours(0,0,0,0);
@@ -3152,34 +3116,8 @@ function renderTaskConsistency(){
   const now=new Date();
   const startDate=new Date(now.getTime()-(period.days-1)*DAY_MS);startDate.setHours(0,0,0,0);
   const records=getAllDoneRecords();
-  renderCategoryBreakdown(startDate,records);
   renderConsistencyInsight(period,startDate,now,records);
 }
-
-const CATEGORY_BADGE_COLORS=["#45B69C","var(--green)","#FF7E67","#F9C74F","#0984e3","#e84393"];
-function renderCategoryBreakdown(startDate,records){
-  const stackEl=document.getElementById("categoryBadgeStack");
-  const contentEl=document.getElementById("categoryContent");
-  stackEl.innerHTML="";contentEl.innerHTML="";
-  categories.forEach((cat,i)=>{
-    const avg=periodAvgForCategory(startDate,records,cat.id);
-    if(avg==null)return;
-    const color=CATEGORY_BADGE_COLORS[i%CATEGORY_BADGE_COLORS.length];
-    const pctInt=Math.round(avg*100);
-    const badge=document.createElement("span");
-    badge.className="category-badge";badge.style.background=color;
-    badge.textContent=categoryLabel(cat).slice(0,1).toUpperCase();
-    stackEl.appendChild(badge);
-    const row=document.createElement("div");
-    row.style.cssText="display:flex;align-items:center;justify-content:space-between;padding:8px 0";
-    row.innerHTML=`<span style="display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text)"><span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block"></span>${categoryLabel(cat)}</span><b style="font-size:15px;color:${color}">${pctInt}%</b>`;
-    contentEl.appendChild(row);
-  });
-}
-document.getElementById("categoryToggleBtn").onclick=()=>{
-  document.getElementById("categoryContent").classList.toggle("hidden");
-  document.getElementById("categoryChevron").classList.toggle("open");
-};
 
 // Wide averaging window so the trend comparison isn't noisy day-to-day;
 // only shown once there's enough history on both sides to be meaningful.
