@@ -313,9 +313,6 @@
   .gym-set-pill.done{background:var(--green);border-color:var(--green);color:#fff}
   @keyframes gymStickyRingPulse{0%,100%{opacity:1}50%{opacity:.35}}
   .gym-sticky-ring-fg.rest-flash{animation:gymStickyRingPulse .5s ease 2}
-  .gym-sticky-rest-controls{display:flex;justify-content:center;align-items:center;gap:8px;padding:0 12px 10px}
-  .gym-sticky-rest-adj{border:none;background:rgba(255,255,255,.2);border-radius:9999px;padding:7px 15px;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit}
-  .gym-sticky-rest-skip{background:none;border:none;color:rgba(255,255,255,.85);font-weight:700;font-size:12.5px;text-decoration:underline;cursor:pointer;font-family:inherit;padding:7px 6px}
   .gym-sticky-timer-ring-wrap{position:relative;width:44px;height:44px;flex-shrink:0}
   .gym-sticky-ring{width:100%;height:100%;transform:rotate(-90deg)}
   .gym-sticky-ring-bg{fill:none;stroke:rgba(255,255,255,.35);stroke-width:4}
@@ -746,7 +743,6 @@
           </div>
           <div class="gym-sticky-progress"><div class="gym-sticky-progress-fill" id="gymSessionProgressFill"></div></div>
         </div>
-        <button type="button" class="gym-sticky-icon-btn hidden" id="gymSessionRestartBtn"></button>
       </div>
       <div class="gym-sticky-timer-block hidden" id="gymStickyTimer">
         <div class="gym-sticky-row">
@@ -761,12 +757,6 @@
             <span class="gym-sticky-row-lbl" id="gymStickyTimerLbl"></span>
             <span class="gym-sticky-row-time" id="gymStickyTimerTime"></span>
           </div>
-          <button type="button" class="gym-sticky-icon-btn" id="gymRestRestartBtn"></button>
-        </div>
-        <div class="gym-sticky-rest-controls">
-          <button type="button" class="gym-sticky-rest-adj" id="gymRestMinus"></button>
-          <button type="button" class="gym-sticky-rest-skip" id="gymRestSkip"></button>
-          <button type="button" class="gym-sticky-rest-adj" id="gymRestPlus"></button>
         </div>
       </div>
     </div>
@@ -1248,7 +1238,7 @@ const STRINGS = {
       {rest:true, text:"Repos. Profite du week-end, la prochaine séance (PUSH) reprend lundi."},
     ],
     shakeReminder:"🥤 Shake whey juste après.",
-    gymRestLbl:"REPOS", gymRestMinus:"-15s", gymRestPlus:"+15s", gymRestSkip:"Passer",
+    gymRestLbl:"REPOS",
     gymNextBtn:"Exercice suivant", gymFinishBtn:"Terminer la séance",
     gymSetsDoneFmt:(done,total)=>`${done}/${total} séries`,
     shakeDetail:"🕐 15h30 – 15h40\n\n🥤 Collation de l'après-midi, tous les jours :\n\n• 500 ml de lait (ou lait fermenté)\n• 30 g de whey ISO\n• 5 g de créatine\n\nBien après le déjeuner = léger, pas lourd. Parfait pour étaler tes calories et garantir tes protéines même les jours sans faim, sans te couper l'appétit du dîner.",
@@ -1279,7 +1269,7 @@ const STRINGS = {
     gymEquipLbl:"Matériel",
     gymSessionLbl:"Séance", gymSessionPauseBtn:"Mettre en pause", gymSessionResumeBtn:"Reprendre",
     gymSessionStartLbl:"Démarrer la séance",
-    gymRestartBtn:"Recommencer", gymRestPauseBtn:"Mettre le repos en pause", gymRestResumeBtn:"Reprendre le repos",
+    gymRestPauseBtn:"Mettre le repos en pause", gymRestResumeBtn:"Reprendre le repos",
     gymTestModeBtn:"Essayer le chronomètre (test)",
     gymTestBannerText:"Mode test — les séries ne comptent pas dans ton programme",
     gymTestExitBtn:"Quitter",
@@ -1485,7 +1475,7 @@ const STRINGS = {
       {rest:true, text:"Rest. Enjoy the weekend, next session (PUSH) starts Monday."},
     ],
     shakeReminder:"🥤 Whey shake right after.",
-    gymRestLbl:"REST", gymRestMinus:"-15s", gymRestPlus:"+15s", gymRestSkip:"Skip",
+    gymRestLbl:"REST",
     gymNextBtn:"Next exercise", gymFinishBtn:"Finish workout",
     gymSetsDoneFmt:(done,total)=>`${done}/${total} sets`,
     shakeDetail:"🕐 3:30pm – 3:40pm\n\n🥤 Afternoon snack, every day:\n\n• 500 ml milk (or fermented milk)\n• 30 g whey ISO\n• 5 g creatine\n\nWell after lunch = light, not heavy. Perfect for spreading out your calories and guaranteeing your protein even on low-appetite days, without killing your dinner appetite.",
@@ -1516,7 +1506,7 @@ const STRINGS = {
     gymEquipLbl:"Equipment",
     gymSessionLbl:"Session", gymSessionPauseBtn:"Pause", gymSessionResumeBtn:"Resume",
     gymSessionStartLbl:"Start session",
-    gymRestartBtn:"Restart", gymRestPauseBtn:"Pause rest", gymRestResumeBtn:"Resume rest",
+    gymRestPauseBtn:"Pause rest", gymRestResumeBtn:"Resume rest",
     gymTestModeBtn:"Try the timer (test)",
     gymTestBannerText:"Test mode — sets here don't count toward your program",
     gymTestExitBtn:"Exit",
@@ -1569,7 +1559,6 @@ const INFO_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" st
 const CLOCK_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
 const PAUSE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
 const PLAY_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l14 8-14 8V4z"/></svg>';
-const RESTART_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>';
 const CHEVRON_LEFT_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
 const CHEVRON_RIGHT_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
 document.getElementById("bizIconBadge").innerHTML=TRENDING_SVG;
@@ -3593,6 +3582,51 @@ let gymSessionInterval=null;
 function currentSessionElapsedMs(state){
   return state.sessionElapsedMs+(state.sessionRunningSince?Date.now()-state.sessionRunningSince:0);
 }
+// One button per timer, no separate restart/skip/adjust buttons — Eric found
+// the extra controls (restart icon, -15s/+15s, Passer) cluttered and
+// wasn't even sure which one actually started the timer. New model: a
+// single tap toggles on/off immediately (zero delay, no waiting to see if a
+// second tap follows); a RAPID second tap on top of that (within
+// GYM_DOUBLE_TAP_MS) is read as "restart" and overrides whatever the two
+// individual toggles would have left behind. Tap timestamp is stored on the
+// button's own dataset (not a closure var) so it survives the re-render
+// that happens after every tap.
+const GYM_DOUBLE_TAP_MS=350;
+function bindGymTimerBtn(btn,onSingle,onDouble){
+  btn.onclick=()=>{
+    const now=Date.now();
+    const last=Number(btn.dataset.lastTap||0);
+    if(now-last<GYM_DOUBLE_TAP_MS){
+      btn.dataset.lastTap=0;
+      onDouble();
+    }else{
+      btn.dataset.lastTap=now;
+      onSingle();
+    }
+  };
+}
+function toggleGymSessionPause(){
+  const day=t("gymWorkouts")[gymEffectiveDow()];
+  const state=getWorkoutState(day);
+  if(state.sessionRunningSince){
+    state.sessionElapsedMs+=Date.now()-state.sessionRunningSince;
+    state.sessionRunningSince=null;
+  }else{
+    state.sessionRunningSince=Date.now();
+  }
+  saveWorkoutState(state);
+  renderGymSessionTimer();
+}
+function restartGymSessionTimer(){
+  const day=t("gymWorkouts")[gymEffectiveDow()];
+  const state=getWorkoutState(day);
+  state.sessionElapsedMs=0;
+  state.sessionGoalAlerted=false;
+  state.sessionMaxAlerted=false;
+  state.sessionRunningSince=Date.now();
+  saveWorkoutState(state);
+  renderGymSessionTimer();
+}
 function renderGymSessionTimer(){
   clearInterval(gymSessionInterval);
   const day=t("gymWorkouts")[gymEffectiveDow()];
@@ -3608,17 +3642,7 @@ function renderGymSessionTimer(){
   // repeatedly not being able to find it). Now the idle state itself is the
   // discoverable "start" control: a permanent, tappable button.
   panel.classList.remove("hidden");
-  const restartBtn=document.getElementById("gymSessionRestartBtn");
-  restartBtn.innerHTML=RESTART_SVG;
-  restartBtn.title=t("gymRestartBtn");
-  restartBtn.onclick=()=>{
-    state.sessionElapsedMs=0;
-    state.sessionGoalAlerted=false;
-    state.sessionMaxAlerted=false;
-    if(state.sessionRunningSince)state.sessionRunningSince=Date.now();
-    saveWorkoutState(state);
-    renderGymSessionTimer();
-  };
+  bindGymTimerBtn(btn,toggleGymSessionPause,restartGymSessionTimer);
   const started=state.sessionElapsedMs>0||state.sessionRunningSince;
   if(!started){
     lblEl.textContent=t("gymSessionStartLbl");
@@ -3628,28 +3652,11 @@ function renderGymSessionTimer(){
     progressFillEl.classList.remove("over-time");
     btn.innerHTML=PLAY_SVG;
     btn.title=t("gymSessionStartLbl");
-    btn.onclick=()=>{
-      state.sessionRunningSince=Date.now();
-      saveWorkoutState(state);
-      renderGymSessionTimer();
-    };
-    restartBtn.classList.add("hidden");
     return;
   }
-  restartBtn.classList.remove("hidden");
   lblEl.textContent=t("gymSessionLbl");
   btn.innerHTML=state.sessionRunningSince?PAUSE_SVG:PLAY_SVG;
   btn.title=state.sessionRunningSince?t("gymSessionPauseBtn"):t("gymSessionResumeBtn");
-  btn.onclick=()=>{
-    if(state.sessionRunningSince){
-      state.sessionElapsedMs+=Date.now()-state.sessionRunningSince;
-      state.sessionRunningSince=null;
-    }else{
-      state.sessionRunningSince=Date.now();
-    }
-    saveWorkoutState(state);
-    renderGymSessionTimer();
-  };
   function tick(){
     const elapsedMs=currentSessionElapsedMs(state);
     // Past 60 min the raw minute count just keeps climbing with nothing to
@@ -3737,13 +3744,9 @@ function renderGymRestTimer(){
   const stickyRingFg=document.getElementById("gymStickyRingFg");
   const stickyTimeEl=document.getElementById("gymStickyTimerTime");
   const pauseBtn=document.getElementById("gymRestPauseBtn");
-  const restartBtn=document.getElementById("gymRestRestartBtn");
   document.getElementById("gymStickyTimerLbl").textContent=t("gymRestLbl");
   stickyRingFg.style.strokeDasharray=GYM_STICKY_RING_CIRC;
-  restartBtn.innerHTML=RESTART_SVG;
-  restartBtn.title=t("gymRestartBtn");
-  restartBtn.onclick=restartGymRestTimer;
-  pauseBtn.onclick=toggleGymRestPause;
+  bindGymTimerBtn(pauseBtn,toggleGymRestPause,restartGymRestTimer);
   const isPaused=state.restPausedRemainingSec!=null;
   if(!state.restEndsAt&&!isPaused){
     stickyBox.classList.add("hidden");
@@ -3812,28 +3815,6 @@ function startGymRestTimer(sec){
   document.getElementById("gymStickyRingFg").classList.remove("rest-flash");
   renderGymRestTimer();
 }
-function adjustGymRestTimer(deltaSec){
-  const day=t("gymWorkouts")[gymEffectiveDow()];
-  const state=getWorkoutState(day);
-  if(state.restPausedRemainingSec!=null){
-    state.restPausedRemainingSec=Math.max(0,state.restPausedRemainingSec+deltaSec);
-  }else if(state.restEndsAt){
-    state.restEndsAt=Math.max(Date.now(),state.restEndsAt+deltaSec*1000);
-  }else{
-    return;
-  }
-  saveWorkoutState(state);
-  renderGymRestTimer();
-}
-document.getElementById("gymRestMinus").onclick=()=>adjustGymRestTimer(-15);
-document.getElementById("gymRestPlus").onclick=()=>adjustGymRestTimer(15);
-document.getElementById("gymRestSkip").onclick=()=>{
-  const day=t("gymWorkouts")[gymEffectiveDow()];
-  const state=getWorkoutState(day);
-  state.restEndsAt=null;state.restDurationSec=null;state.restPausedRemainingSec=null;
-  saveWorkoutState(state);
-  renderGymRestTimer();
-};
 // Set by gymNavigateExercise right before a re-render, consumed once inside
 // renderGymWorkout to pick which way the exercise detail slides in — keeps
 // the animation direction consistent whether the switch came from a row
@@ -3961,9 +3942,6 @@ function renderGymWorkout(){
     testBanner.classList.add("hidden");
   }
   const state=getWorkoutState(day);
-  document.getElementById("gymRestMinus").textContent=t("gymRestMinus");
-  document.getElementById("gymRestPlus").textContent=t("gymRestPlus");
-  document.getElementById("gymRestSkip").textContent=t("gymRestSkip");
   const addition=bodyAnalysis&&bodyAnalysis.exerciseAdditions&&bodyAnalysis.exerciseAdditions[dow];
   const noteEl=document.getElementById("gymAdditionNote");
   if(addition){noteEl.textContent=`🎯 ${t("gymFocusAdditionLbl")} : ${addition}`;noteEl.classList.remove("hidden");}
