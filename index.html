@@ -195,7 +195,7 @@
   .gym-test-exit-btn{background:rgba(255,255,255,.25);border:none;border-radius:8px;color:#fff;font-size:11px;padding:6px 10px;flex-shrink:0;cursor:pointer}
   .gym-sticky-panel{position:sticky;top:8px;z-index:30;background:var(--text);border-radius:20px;padding:5px;margin:0 0 14px;box-shadow:0 6px 20px rgba(22,29,31,.35)}
   .gym-sticky-row{display:flex;align-items:center;gap:10px;padding:9px 10px}
-  .gym-sticky-row-rest{background:var(--green);border-radius:16px;margin-top:4px}
+  .gym-sticky-timer-block{background:var(--green);border-radius:16px;margin-top:4px}
   .home-streak-badge{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:20px;background:var(--cardHi);border:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text);margin-top:8px;transition:background .4s,box-shadow .4s}
   .home-streak-badge svg{color:var(--red);vertical-align:-2px}
   .home-streak-badge.streak-tier-1{background:#ffe9e2;border-color:transparent}
@@ -268,15 +268,12 @@
   .task-detail-label{font-size:19px;font-weight:700;font-family:'Quicksand',sans-serif;line-height:1.3;margin-bottom:12px}
   .task-detail-text{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:20px;white-space:pre-line}
   .task-detail-actions{display:flex;gap:10px;margin-top:16px}
-  .gym-exercise-row{display:flex;align-items:center;gap:12px;padding:11px 12px;background:#fff;border-radius:14px;border:1px solid var(--border);margin-bottom:8px;cursor:pointer}
-  .gym-exercise-row.active{background:var(--cardHi);border-color:var(--greenDim)}
-  .gym-exercise-row.complete{opacity:.6}
-  .gym-exercise-icon{width:34px;height:34px;border-radius:50%;background:var(--cardHi);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--green)}
-  .gym-exercise-row.active .gym-exercise-icon{background:var(--green);color:#fff}
-  .gym-exercise-info{flex:1;min-width:0}
-  .gym-exercise-name{font-weight:700;font-size:13.5px;color:var(--text)}
-  .gym-exercise-meta{font-size:12px;color:var(--muted);margin-top:2px}
-  .gym-exercise-check{color:var(--green);flex-shrink:0;display:flex}
+  .gym-exercise-stepper{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;scrollbar-width:none}
+  .gym-exercise-stepper::-webkit-scrollbar{display:none}
+  .gym-exercise-dot{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-weight:700;font-size:13px;font-family:inherit;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;padding:0;transition:transform .15s}
+  .gym-exercise-dot:active{transform:scale(.9)}
+  .gym-exercise-dot.active{border-color:var(--green);background:var(--cardHi);color:var(--green);box-shadow:0 0 0 2px var(--greenDim)}
+  .gym-exercise-dot.complete{background:var(--green);border-color:var(--green);color:#fff}
   .gym-active-card{background:#fff;border:1px solid var(--border);border-radius:20px;padding:22px 18px;margin-top:14px;text-align:center}
   .gym-active-nav{display:flex;align-items:center;gap:8px;margin-bottom:2px}
   .gym-active-nav-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:#fff;color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;padding:0;transition:opacity .2s,transform .15s}
@@ -314,18 +311,12 @@
   .gym-set-pills{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-bottom:18px}
   .gym-set-pill{width:38px;height:38px;border-radius:9999px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-weight:700;font-size:14px;font-family:inherit;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
   .gym-set-pill.done{background:var(--green);border-color:var(--green);color:#fff}
-  .gym-rest-ring-wrap{position:relative;width:172px;height:172px;margin:4px auto}
-  .gym-rest-ring{width:100%;height:100%;transform:rotate(-90deg)}
-  .gym-rest-ring-bg{fill:none;stroke:var(--border);stroke-width:8}
-  .gym-rest-ring-fg{fill:none;stroke:var(--green);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .25s linear,stroke .3s}
-  .gym-rest-ring-fg.rest-flash{stroke:#2fbf71}
-  .gym-rest-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-  .gym-rest-time{font-family:'Quicksand',sans-serif;font-size:34px;font-weight:700;color:var(--green)}
-  .gym-rest-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:700;margin-top:2px}
-  .gym-rest-controls{display:flex;justify-content:center;gap:10px;margin-top:14px}
-  .gym-rest-adj{border:1px solid var(--border);background:#fff;border-radius:9999px;padding:8px 16px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit}
-  .gym-rest-skip{display:block;margin:12px auto 0;background:none;border:none;color:var(--green);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
-  .gym-sticky-timer-ring-wrap{position:relative;width:34px;height:34px;flex-shrink:0}
+  @keyframes gymStickyRingPulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .gym-sticky-ring-fg.rest-flash{animation:gymStickyRingPulse .5s ease 2}
+  .gym-sticky-rest-controls{display:flex;justify-content:center;align-items:center;gap:8px;padding:0 12px 10px}
+  .gym-sticky-rest-adj{border:none;background:rgba(255,255,255,.2);border-radius:9999px;padding:7px 15px;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit}
+  .gym-sticky-rest-skip{background:none;border:none;color:rgba(255,255,255,.85);font-weight:700;font-size:12.5px;text-decoration:underline;cursor:pointer;font-family:inherit;padding:7px 6px}
+  .gym-sticky-timer-ring-wrap{position:relative;width:44px;height:44px;flex-shrink:0}
   .gym-sticky-ring{width:100%;height:100%;transform:rotate(-90deg)}
   .gym-sticky-ring-bg{fill:none;stroke:rgba(255,255,255,.35);stroke-width:4}
   .gym-sticky-ring-fg{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .25s linear}
@@ -757,19 +748,26 @@
         </div>
         <button type="button" class="gym-sticky-icon-btn hidden" id="gymSessionRestartBtn"></button>
       </div>
-      <div class="gym-sticky-row gym-sticky-row-rest hidden" id="gymStickyTimer">
-        <button type="button" class="gym-sticky-icon-btn" id="gymRestPauseBtn"></button>
-        <div class="gym-sticky-timer-ring-wrap">
-          <svg class="gym-sticky-ring" viewBox="0 0 40 40">
-            <circle class="gym-sticky-ring-bg" cx="20" cy="20" r="16"/>
-            <circle class="gym-sticky-ring-fg" id="gymStickyRingFg" cx="20" cy="20" r="16"/>
-          </svg>
+      <div class="gym-sticky-timer-block hidden" id="gymStickyTimer">
+        <div class="gym-sticky-row">
+          <button type="button" class="gym-sticky-icon-btn" id="gymRestPauseBtn"></button>
+          <div class="gym-sticky-timer-ring-wrap">
+            <svg class="gym-sticky-ring" viewBox="0 0 40 40">
+              <circle class="gym-sticky-ring-bg" cx="20" cy="20" r="16"/>
+              <circle class="gym-sticky-ring-fg" id="gymStickyRingFg" cx="20" cy="20" r="16"/>
+            </svg>
+          </div>
+          <div class="gym-sticky-row-main">
+            <span class="gym-sticky-row-lbl" id="gymStickyTimerLbl"></span>
+            <span class="gym-sticky-row-time" id="gymStickyTimerTime"></span>
+          </div>
+          <button type="button" class="gym-sticky-icon-btn" id="gymRestRestartBtn"></button>
         </div>
-        <div class="gym-sticky-row-main">
-          <span class="gym-sticky-row-lbl" id="gymStickyTimerLbl"></span>
-          <span class="gym-sticky-row-time" id="gymStickyTimerTime"></span>
+        <div class="gym-sticky-rest-controls">
+          <button type="button" class="gym-sticky-rest-adj" id="gymRestMinus"></button>
+          <button type="button" class="gym-sticky-rest-skip" id="gymRestSkip"></button>
+          <button type="button" class="gym-sticky-rest-adj" id="gymRestPlus"></button>
         </div>
-        <button type="button" class="gym-sticky-icon-btn" id="gymRestRestartBtn"></button>
       </div>
     </div>
 
@@ -789,7 +787,7 @@
         <button type="button" class="gym-test-exit-btn" id="gymTestExitBtn"></button>
       </div>
       <div class="gym-note hidden" id="gymAdditionNote"></div>
-      <div id="gymExerciseList"></div>
+      <div class="gym-exercise-stepper" id="gymExerciseList"></div>
       <div class="gym-active-card">
         <div class="gym-active-nav">
           <button type="button" class="gym-active-nav-btn" id="gymActivePrevBtn"></button>
@@ -808,23 +806,6 @@
           <div class="gym-active-equip" id="gymActiveEquip"></div>
           <div class="gym-active-cue" id="gymActiveCue"></div>
           <div class="gym-set-pills" id="gymSetPills"></div>
-        </div>
-        <div class="hidden" id="gymRestBox">
-          <div class="gym-rest-ring-wrap">
-            <svg class="gym-rest-ring" viewBox="0 0 120 120">
-              <circle class="gym-rest-ring-bg" cx="60" cy="60" r="52"/>
-              <circle class="gym-rest-ring-fg" id="gymRestRingFg" cx="60" cy="60" r="52"/>
-            </svg>
-            <div class="gym-rest-ring-center">
-              <div class="gym-rest-time" id="gymRestTime"></div>
-              <div class="gym-rest-lbl" id="gymRestLbl"></div>
-            </div>
-          </div>
-          <div class="gym-rest-controls">
-            <button type="button" class="gym-rest-adj" id="gymRestMinus"></button>
-            <button type="button" class="gym-rest-adj" id="gymRestPlus"></button>
-          </div>
-          <button type="button" class="gym-rest-skip" id="gymRestSkip"></button>
         </div>
         <button type="button" class="btn btn-green" id="gymNextBtn" style="width:100%;margin-top:16px;padding:15px 18px"></button>
       </div>
@@ -3707,13 +3688,11 @@ function renderGymSessionTimer(){
   tick();
   if(state.sessionRunningSince)gymSessionInterval=setInterval(tick,1000);
 }
-const GYM_REST_RING_CIRC=2*Math.PI*52;
-// The full timer (ring + controls) sits inside the active-exercise card,
-// which is BELOW the 5-row exercise list — easy to scroll past and lose
-// sight of once running (Eric reported not seeing it). Strong app keeps its
-// rest timer pinned at the top of the screen at all times for exactly this
-// reason, so a second compact copy renders as a sticky bar right under the
-// page title, staying visible however far down the list you've scrolled.
+// Rest timer lives ONLY in the sticky panel now (no more duplicate ring
+// inside the active-exercise card) — Eric found the two side-by-side
+// countdowns confusing, and the sticky one is already pinned at the top of
+// the screen at all times (Strong app does the same), so the in-card copy
+// was pure redundancy, not a fallback.
 const GYM_STICKY_RING_CIRC=2*Math.PI*16;
 function toggleGymRestPause(){
   const day=t("gymWorkouts")[gymEffectiveDow()];
@@ -3737,7 +3716,7 @@ function restartGymRestTimer(){
   state.restEndsAt=Date.now()+state.restDurationSec*1000;
   state.restPausedRemainingSec=null;
   saveWorkoutState(state);
-  document.getElementById("gymRestRingFg").classList.remove("rest-flash");
+  document.getElementById("gymStickyRingFg").classList.remove("rest-flash");
   renderGymRestTimer();
 }
 function autoPauseStaleGymSession(){
@@ -3754,16 +3733,12 @@ function renderGymRestTimer(){
   clearInterval(gymRestInterval);
   const day=t("gymWorkouts")[gymEffectiveDow()];
   const state=getWorkoutState(day);
-  const box=document.getElementById("gymRestBox");
-  const ringFg=document.getElementById("gymRestRingFg");
-  const timeEl=document.getElementById("gymRestTime");
   const stickyBox=document.getElementById("gymStickyTimer");
   const stickyRingFg=document.getElementById("gymStickyRingFg");
   const stickyTimeEl=document.getElementById("gymStickyTimerTime");
   const pauseBtn=document.getElementById("gymRestPauseBtn");
   const restartBtn=document.getElementById("gymRestRestartBtn");
   document.getElementById("gymStickyTimerLbl").textContent=t("gymRestLbl");
-  ringFg.style.strokeDasharray=GYM_REST_RING_CIRC;
   stickyRingFg.style.strokeDasharray=GYM_STICKY_RING_CIRC;
   restartBtn.innerHTML=RESTART_SVG;
   restartBtn.title=t("gymRestartBtn");
@@ -3771,21 +3746,17 @@ function renderGymRestTimer(){
   pauseBtn.onclick=toggleGymRestPause;
   const isPaused=state.restPausedRemainingSec!=null;
   if(!state.restEndsAt&&!isPaused){
-    box.classList.add("hidden");
     stickyBox.classList.add("hidden");
     return;
   }
-  box.classList.remove("hidden");
   stickyBox.classList.remove("hidden");
   pauseBtn.innerHTML=isPaused?PLAY_SVG:PAUSE_SVG;
   pauseBtn.title=isPaused?t("gymRestResumeBtn"):t("gymRestPauseBtn");
   if(isPaused){
     const remainingSec=state.restPausedRemainingSec;
     const timeText=`${Math.floor(remainingSec/60)}:${String(remainingSec%60).padStart(2,"0")}`;
-    timeEl.textContent=timeText;
     stickyTimeEl.textContent=timeText;
     const pct=Math.max(0,Math.min(1,remainingSec/state.restDurationSec));
-    ringFg.style.strokeDashoffset=GYM_REST_RING_CIRC*(1-pct);
     stickyRingFg.style.strokeDashoffset=GYM_STICKY_RING_CIRC*(1-pct);
     return;
   }
@@ -3793,11 +3764,9 @@ function renderGymRestTimer(){
     const remainingMs=state.restEndsAt-Date.now();
     if(remainingMs<=0){
       clearInterval(gymRestInterval);
-      timeEl.textContent="0:00";
       stickyTimeEl.textContent="0:00";
-      ringFg.style.strokeDashoffset=0;
       stickyRingFg.style.strokeDashoffset=0;
-      ringFg.classList.add("rest-flash");
+      stickyRingFg.classList.add("rest-flash");
       playRestDoneAlert();
       setTimeout(()=>{
         // Re-fetch fresh state instead of reusing the `state` this whole
@@ -3826,10 +3795,8 @@ function renderGymRestTimer(){
     }
     const remainingSec=Math.ceil(remainingMs/1000);
     const timeText=`${Math.floor(remainingSec/60)}:${String(remainingSec%60).padStart(2,"0")}`;
-    timeEl.textContent=timeText;
     stickyTimeEl.textContent=timeText;
     const pct=Math.max(0,Math.min(1,remainingMs/(state.restDurationSec*1000)));
-    ringFg.style.strokeDashoffset=GYM_REST_RING_CIRC*(1-pct);
     stickyRingFg.style.strokeDashoffset=GYM_STICKY_RING_CIRC*(1-pct);
   }
   tick();
@@ -3842,7 +3809,7 @@ function startGymRestTimer(sec){
   state.restDurationSec=sec;
   state.restPausedRemainingSec=null;
   saveWorkoutState(state);
-  document.getElementById("gymRestRingFg").classList.remove("rest-flash");
+  document.getElementById("gymStickyRingFg").classList.remove("rest-flash");
   renderGymRestTimer();
 }
 function adjustGymRestTimer(deltaSec){
@@ -3994,7 +3961,6 @@ function renderGymWorkout(){
     testBanner.classList.add("hidden");
   }
   const state=getWorkoutState(day);
-  document.getElementById("gymRestLbl").textContent=t("gymRestLbl");
   document.getElementById("gymRestMinus").textContent=t("gymRestMinus");
   document.getElementById("gymRestPlus").textContent=t("gymRestPlus");
   document.getElementById("gymRestSkip").textContent=t("gymRestSkip");
@@ -4007,11 +3973,13 @@ function renderGymWorkout(){
   day.exercises.forEach((ex,i)=>{
     const doneCount=state.setsDone[i].filter(Boolean).length;
     const complete=doneCount===ex.sets;
-    const row=document.createElement("div");
-    row.className="gym-exercise-row"+(i===state.activeIdx?" active":"")+(complete?" complete":"");
-    row.innerHTML=`<div class="gym-exercise-icon">${complete?CHECK_SVG:(i+1)}</div><div class="gym-exercise-info"><div class="gym-exercise-name">${ex.name}</div><div class="gym-exercise-meta">${ex.sets}×${ex.reps} • ${t("gymSetsDoneFmt",doneCount,ex.sets)}</div></div>`;
-    row.onclick=()=>gymNavigateExercise(state,day,i,i>state.activeIdx?"next":"prev");
-    listEl.appendChild(row);
+    const dot=document.createElement("button");
+    dot.type="button";
+    dot.className="gym-exercise-dot"+(i===state.activeIdx?" active":"")+(complete?" complete":"");
+    dot.innerHTML=complete?CHECK_SVG:String(i+1);
+    dot.title=`${ex.name} — ${t("gymSetsDoneFmt",doneCount,ex.sets)}`;
+    dot.onclick=()=>gymNavigateExercise(state,day,i,i>state.activeIdx?"next":"prev");
+    listEl.appendChild(dot);
   });
   const activeEx=day.exercises[state.activeIdx];
   document.getElementById("gymActiveTitle").textContent=activeEx.name;
