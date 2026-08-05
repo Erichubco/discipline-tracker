@@ -3531,6 +3531,18 @@ function getAudioCtx(){
 (function setupAudioUnlock(){
   const events=["touchstart","touchend","mousedown","keydown"];
   function unlock(){
+    // Web Audio defaults to the "ambient" iOS audio session category — the
+    // same one system sound effects use, which the hardware ring/silent
+    // switch mutes. Eric reported never hearing the timer ring; this is why
+    // (his phone is presumably on silent during a workout, same as most
+    // people). navigator.audioSession (Safari 16.4+) lets a page opt into
+    // the "playback" category instead, the same one music/alarm apps use,
+    // which does play through the silent switch. Experimental/Safari-only,
+    // hence the feature check — degrades to the old muted-on-silent
+    // behavior everywhere else instead of throwing.
+    if("audioSession" in navigator){
+      try{navigator.audioSession.type="playback";}catch(e){}
+    }
     const ctx=getAudioCtx();
     if(ctx.state==="suspended")ctx.resume();
     events.forEach(e=>document.body.removeEventListener(e,unlock));
@@ -3658,12 +3670,16 @@ function renderGymSessionTimer(){
   btn.innerHTML=state.sessionRunningSince?PAUSE_SVG:PLAY_SVG;
   btn.title=state.sessionRunningSince?t("gymSessionPauseBtn"):t("gymSessionResumeBtn");
   function tick(){
-    const elapsedMs=currentSessionElapsedMs(state);
-    // Past 60 min the raw minute count just keeps climbing with nothing to
-    // signal it ("105:00 / 45-60 min" reads as broken, not just "you went
-    // long") — capping the progress bar at 100% and switching both it and
-    // the time text to a warning color makes "you're well past target"
-    // obvious at a glance instead of a mysteriously large number.
+    let elapsedMs=currentSessionElapsedMs(state);
+    // Past 60 min the raw minute count used to just keep climbing forever
+    // ("105:00 / 45-60 min" reads as broken, not just "you went long", and
+    // Eric explicitly wants it to actually stop) — so the FIRST tick that
+    // crosses the max goal now freezes elapsed right at 60:00 and auto-
+    // pauses, instead of leaving it running indefinitely. He can still tap
+    // to resume counting past 60 min if he wants; it just no longer does
+    // that silently on its own.
+    const justHitMax=elapsedMs>=GYM_SESSION_GOAL_MAX_MS&&!state.sessionMaxAlerted;
+    if(justHitMax)elapsedMs=GYM_SESSION_GOAL_MAX_MS;
     const overTime=elapsedMs>=GYM_SESSION_GOAL_MAX_MS;
     timeEl.textContent=`${formatMMSS(Math.floor(elapsedMs/1000))} / 45-60 min`;
     timeEl.classList.toggle("over-time",overTime);
@@ -3684,12 +3700,19 @@ function renderGymSessionTimer(){
       saveWorkoutState(fresh);
       playRestDoneAlert();
     }
-    if(elapsedMs>=GYM_SESSION_GOAL_MAX_MS&&!state.sessionMaxAlerted){
+    if(justHitMax){
       state.sessionMaxAlerted=true;
+      state.sessionElapsedMs=GYM_SESSION_GOAL_MAX_MS;
+      state.sessionRunningSince=null;
       const fresh=getWorkoutState(day);
       fresh.sessionMaxAlerted=true;
+      fresh.sessionElapsedMs=GYM_SESSION_GOAL_MAX_MS;
+      fresh.sessionRunningSince=null;
       saveWorkoutState(fresh);
       playRestDoneAlert();
+      clearInterval(gymSessionInterval);
+      btn.innerHTML=PLAY_SVG;
+      btn.title=t("gymSessionResumeBtn");
     }
   }
   tick();
