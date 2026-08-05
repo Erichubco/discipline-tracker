@@ -3612,7 +3612,14 @@ function currentSessionElapsedMs(state){
 // individual toggles would have left behind. Tap timestamp is stored on the
 // button's own dataset (not a closure var) so it survives the re-render
 // that happens after every tap.
-const GYM_DOUBLE_TAP_MS=350;
+// 350ms turned out too generous: confirmed via repro that two completely
+// ordinary quick taps (pause, then "oops" un-pause ~250ms later — no
+// double-tap intent at all) landed inside that window and silently reset
+// the timer instead of just toggling it back — reads exactly like "the
+// button doesn't work" since the number jumps instead of doing what was
+// expected. Tightened so only a genuinely rapid, deliberate double-tap
+// (people can comfortably do this well under 200ms) triggers a restart.
+const GYM_DOUBLE_TAP_MS=200;
 function bindGymTimerBtn(btn,onSingle,onDouble){
   btn.onclick=()=>{
     const now=Date.now();
