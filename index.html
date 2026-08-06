@@ -3664,6 +3664,38 @@ function restartGymSessionTimer(){
   saveWorkoutState(state);
   renderGymSessionTimer();
 }
+// Eric reported never hearing the rest/session alert even after the iOS
+// silent-switch fix — turns out the phone's screen was simply dimming and
+// auto-locking from inactivity during a rest period (completely normal iOS
+// behavior when nothing's been touched for a while), which fully SUSPENDS
+// the setInterval driving the alert — no amount of audio fixing helps if
+// the tick() that would fire it never runs. The Wake Lock API keeps the
+// screen on for as long as a timer is actually counting down, so the
+// existing alert logic gets a real chance to fire in real time. Doesn't
+// help if he explicitly switches to a different app (that's a genuine,
+// unavoidable platform limit for a web app — see research from the
+// silent-switch fix), but covers the much more common "set the phone down
+// mid-rest" case.
+let gymWakeLock=null;
+async function syncGymWakeLock(){
+  if(!("wakeLock" in navigator))return;
+  const day=t("gymWorkouts")[gymEffectiveDow()];
+  if(day.rest){
+    if(gymWakeLock){gymWakeLock.release().catch(()=>{});gymWakeLock=null;}
+    return;
+  }
+  const state=getWorkoutState(day);
+  const shouldHold=!!state.sessionRunningSince||(!!state.restEndsAt&&state.restPausedRemainingSec==null);
+  if(shouldHold&&!gymWakeLock){
+    try{
+      gymWakeLock=await navigator.wakeLock.request("screen");
+      gymWakeLock.addEventListener("release",()=>{gymWakeLock=null;});
+    }catch(e){}
+  }else if(!shouldHold&&gymWakeLock){
+    gymWakeLock.release().catch(()=>{});
+    gymWakeLock=null;
+  }
+}
 function renderGymSessionTimer(){
   clearInterval(gymSessionInterval);
   const day=t("gymWorkouts")[gymEffectiveDow()];
@@ -3742,6 +3774,7 @@ function renderGymSessionTimer(){
   }
   tick();
   if(state.sessionRunningSince)gymSessionInterval=setInterval(tick,1000);
+  syncGymWakeLock();
 }
 // Rest timer lives ONLY in the sticky panel now (no more duplicate ring
 // inside the active-exercise card) — Eric found the two side-by-side
@@ -3798,6 +3831,7 @@ function renderGymRestTimer(){
   const isPaused=state.restPausedRemainingSec!=null;
   if(!state.restEndsAt&&!isPaused){
     stickyBox.classList.add("hidden");
+    syncGymWakeLock();
     return;
   }
   stickyBox.classList.remove("hidden");
@@ -3809,6 +3843,7 @@ function renderGymRestTimer(){
     stickyTimeEl.textContent=timeText;
     const pct=Math.max(0,Math.min(1,remainingSec/state.restDurationSec));
     stickyRingFg.style.strokeDashoffset=GYM_STICKY_RING_CIRC*(1-pct);
+    syncGymWakeLock();
     return;
   }
   function tick(){
@@ -3852,6 +3887,7 @@ function renderGymRestTimer(){
   }
   tick();
   gymRestInterval=setInterval(tick,250);
+  syncGymWakeLock();
 }
 function startGymRestTimer(sec){
   const day=t("gymWorkouts")[gymEffectiveDow()];
