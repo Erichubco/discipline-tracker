@@ -2686,12 +2686,21 @@ function renderWeight(){
   const statusEl=document.getElementById("weightStatus");
   const paceEl=document.getElementById("weightPaceInfo");
   if(weightGoal!=null&&trackedKg!=null){
+    // The headline "reste à faire" figure must match what's actually shown
+    // as "Actuel" a few lines above (last.kg) — Eric logged 76kg and the
+    // goal math was still quietly using the smoothed 7-day average (75kg),
+    // so "reste à faire" showed 5kg instead of the 4kg his own displayed
+    // current weight implies. Trend/pace below still deliberately uses the
+    // smoothed trackedKg/rate (that's the part that should stay resistant
+    // to a single noisy weigh-in) — only the number a user can directly
+    // eyeball against "Actuel" needs to agree with it.
     const remaining=weightGoal-trackedKg;
+    const displayRemaining=weightGoal-last.kg;
     remainingBlock.classList.remove("hidden");
-    if(Math.abs(remaining)<=0.3){
+    if(Math.abs(displayRemaining)<=0.3){
       remainingNumEl.textContent=t("weightGoalReached");
     }else{
-      remainingNumEl.textContent=`${Math.abs(remaining).toFixed(1)}kg ${t("weightRemaining")}`;
+      remainingNumEl.textContent=`${Math.abs(displayRemaining).toFixed(1)}kg ${t("weightRemaining")}`;
     }
     let info;
     if(Math.abs(remaining)<=0.3)info={key:"weightGoalReached",color:"var(--green)"};
